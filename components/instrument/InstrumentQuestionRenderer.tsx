@@ -53,13 +53,43 @@ export default function InstrumentQuestionRenderer({
         );
     }
 
-    if (question.type.name === "single-choice" || question.type.name === "likert") {
+    if (question.type.name === "likert") {
+        const sortedOptions = [...question.options].sort((a, b) => {
+            const aVal = typeof a.value === "number" ? a.value : Number(a.value);
+            const bVal = typeof b.value === "number" ? b.value : Number(b.value);
+            return aVal - bVal;
+        });
         return (
             <SingleChoiceGroup
                 name={question.questionId}
                 label={question.text}
                 isRequired={question.isRequired}
-                options={question.options.map((option) => ({
+                options={sortedOptions.map((option) => ({
+                    id: option.optionId,
+                    label: option.text,
+                }))}
+                selectedOptionId={answer?.optionId}
+                onChange={(optionId) =>
+                    onAnswerChange({
+                        questionId: question.questionId,
+                        optionId,
+                    })
+                }
+            />
+        );
+    }
+
+    if (question.type.name === "single-choice") {
+        const sortedOptions = [
+            ...question.options.filter((o) => !o.isOther),
+            ...question.options.filter((o) => o.isOther),
+        ];
+        return (
+            <SingleChoiceGroup
+                name={question.questionId}
+                label={question.text}
+                isRequired={question.isRequired}
+                options={sortedOptions.map((option) => ({
                     id: option.optionId,
                     label: option.text,
                 }))}
@@ -102,20 +132,37 @@ export default function InstrumentQuestionRenderer({
     }
 
     if (question.type.name === "multiple_choice") {
+        const otherOption = question.options.find((o) => o.isOther);
+        const sortedOptions = [
+            ...question.options.filter((o) => !o.isOther),
+            ...question.options.filter((o) => o.isOther),
+        ];
         return (
             <CheckboxGroup
                 name={question.questionId}
                 label={question.text}
                 isRequired={question.isRequired}
-                options={question.options.map((option) => ({
+                options={sortedOptions.map((option) => ({
                     id: option.optionId,
                     label: option.text,
+                    isOther: option.isOther,
                 }))}
                 selectedOptionIds={answer?.optionIds ?? []}
+                otherText={answer?.otherText}
                 onChange={(optionIds) =>
                     onAnswerChange({
                         questionId: question.questionId,
                         optionIds,
+                        otherText: optionIds.includes(otherOption?.optionId ?? "")
+                            ? (answer?.otherText ?? "")
+                            : undefined,
+                    })
+                }
+                onOtherTextChange={(text) =>
+                    onAnswerChange({
+                        questionId: question.questionId,
+                        optionIds: answer?.optionIds ?? [],
+                        otherText: text,
                     })
                 }
             />

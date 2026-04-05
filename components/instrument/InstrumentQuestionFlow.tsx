@@ -75,8 +75,15 @@ export default function InstrumentQuestionFlow({
                 return answer.numericValue !== undefined;
             case "yes_no":
                 return answer.booleanValue !== undefined;
-            case "multiple_choice":
-                return (answer.optionIds?.length ?? 0) > 0;
+            case "multiple_choice": {
+                const selectedIds = answer.optionIds ?? [];
+                if (selectedIds.length === 0) return false;
+                const otherOption = question.options.find((o) => o.isOther);
+                if (otherOption && selectedIds.includes(otherOption.optionId)) {
+                    return Boolean(answer.otherText?.trim());
+                }
+                return true;
+            }
             case "single-choice":
             case "likert":
                 return Boolean(answer.optionId);
@@ -147,7 +154,7 @@ export default function InstrumentQuestionFlow({
                 </div>
             </div>
 
-            <div className="px-4 max-w-xl mx-auto">
+            <div className="p-4 max-w-xl mx-auto ">
                 {currentQuestion ? (
                     <>
                         <InstrumentQuestionRenderer

@@ -7,6 +7,7 @@ export interface InstrumentOption {
   optionId: string;
   text: string;
   value: string | number | boolean | null;
+  isOther?: boolean;
 }
 
 export interface InstrumentQuestion {
@@ -25,6 +26,7 @@ export interface InstrumentDraftAnswer {
   textValue?: string;
   numericValue?: number;
   booleanValue?: boolean;
+  otherText?: string;
 }
 
 export interface CreateResponsePayload extends InstrumentDraftAnswer {
