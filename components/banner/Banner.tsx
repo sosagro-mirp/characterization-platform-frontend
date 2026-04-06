@@ -3,7 +3,7 @@ import Image from "next/image"
 export const Banner = () => {
     return (
         <div className='lg:flex'>
-            <div className="lg:w-[60%] px-6 lg:pl-64 lg:pt-32 ">
+            <div className="lg:w-[50%] 2xl:w-[60%] px-6 lg:pl-32 2xl:pl-64 lg:pt-32 ">
                 <div className="max-w-max rounded-lg px-3 py-1 text-xs lg:text-sm border border-gray-200 mb-4 flex items-center font-medium">
                     <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2">
                     </div>
@@ -40,7 +40,7 @@ export const Banner = () => {
                     </div>
                 </div>
             </div>
-            <div className="lg:w-[40%] mt-12 md:mt-6 lg:mt-0">
+            <div className="lg:w-[50%] 2xl:w-[40%] mt-12 md:mt-6 lg:mt-0">
                 <div className='bg-white w-full lg:h-full overflow-hidden'>
                     <Image src="/campesino.jpg" alt="campesino" width={1000} height={1000} className="w-full h-full object-cover" />
                     <Image src="/campesino2.jpg" alt="campesino2" width={1000} height={1000} className="w-full h-full object-cover lg:hidden" />
