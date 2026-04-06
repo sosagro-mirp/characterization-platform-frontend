@@ -151,15 +151,57 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     submitResponses: async (apiBaseUrl: string) => {
-      const { buildResponsesPayload } = get();
+      const { flattenedQuestions, answers, buildResponsesPayload } = get();
+
+      set({ submitting: true, error: undefined });
+
+      // Pre-paso: crear opciones dinámicas para respuestas con otherText
+      const updatedAnswers = { ...answers };
+
+      for (const { question } of flattenedQuestions) {
+        const answer = answers[question.questionId];
+        if (!answer?.otherText?.trim()) continue;
+
+        const otherOption = question.options.find((o) => o.isOther);
+        if (!otherOption || !(answer.optionIds ?? []).includes(otherOption.optionId)) continue;
+
+        try {
+          const res = await fetch(
+            `${apiBaseUrl}/api/questions/${question.questionId}/options`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: answer.otherText.trim() }),
+            },
+          );
+
+          if (!res.ok) throw new Error("Failed to create option");
+
+          const newOption = await res.json();
+
+          // Reemplazar el optionId de "Otros" por el nuevo optionId real
+          updatedAnswers[question.questionId] = {
+            ...answer,
+            optionIds: [
+              ...(answer.optionIds ?? []).filter((id) => id !== otherOption.optionId),
+              newOption.optionId,
+            ],
+            otherText: undefined,
+          };
+        } catch {
+          set({ error: "Error al guardar la nueva opción. Intenta nuevamente.", submitting: false });
+          return false;
+        }
+      }
+
+      set({ answers: updatedAnswers });
+
       const payload = buildResponsesPayload();
 
       if (payload.length === 0) {
-        set({ error: "No hay respuestas para enviar" });
+        set({ error: "No hay respuestas para enviar", submitting: false });
         return false;
       }
-
-      set({ submitting: true, error: undefined });
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/responses/batch`, {
