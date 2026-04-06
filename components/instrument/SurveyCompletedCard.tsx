@@ -10,8 +10,8 @@ interface SurveyCompletedCardProps {
 export default function SurveyCompletedCard({
     title = "Encuesta completada",
     message = "Gracias por completar la encuesta. Sus respuestas han sido registradas correctamente.",
-    ctaText = "Realizar otra encuesta",
-    ctaHref = "/instrument",
+    ctaText = "Volver al inicio",
+    ctaHref = "/",
 }: SurveyCompletedCardProps) {
     return (
         <section className="w-full max-w-xl mx-auto mt-19 h-[calc(100vh-76px)] bg-white flex flex-col justify-center items-center">
