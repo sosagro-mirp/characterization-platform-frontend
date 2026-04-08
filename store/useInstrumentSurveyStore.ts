@@ -4,7 +4,14 @@ import type {
   InitializeSurveyPayload,
   InstrumentDraftAnswer,
   InstrumentQuestion,
+  SubmitResult,
 } from "@/app/(instrument)/types";
+import {
+  updateSurveyProgress,
+  markSurveyAsDone,
+  savePendingOption,
+} from "@/lib/db/offlineSurveyService";
+import { offlineDb } from "@/lib/db/offlineDb";
 
 interface FlattenedQuestionItem {
   sectionId: string;
@@ -14,6 +21,7 @@ interface FlattenedQuestionItem {
 }
 
 interface InstrumentSurveyState {
+  localId?: string;
   surveyId?: string;
   instrumentName: string;
   flattenedQuestions: FlattenedQuestionItem[];
@@ -29,10 +37,11 @@ interface InstrumentSurveyState {
   clearError: () => void;
   resetSurvey: () => void;
   buildResponsesPayload: () => CreateResponsePayload[];
-  submitResponses: (apiBaseUrl: string) => Promise<boolean>;
+  submitResponses: (apiBaseUrl: string) => Promise<SubmitResult>;
 }
 
 const initialState = {
+  localId: undefined,
   surveyId: undefined,
   instrumentName: "",
   flattenedQuestions: [],
@@ -47,10 +56,10 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
   (set, get) => ({
     ...initialState,
 
-    initializeSurvey: ({ surveyId, instrumentName, sections }) => {
+    initializeSurvey: ({ localId, instrumentName, sections }) => {
       const state = get();
 
-      if (state.initialized && state.surveyId === surveyId) {
+      if (state.initialized && state.localId === localId) {
         return;
       }
 
@@ -68,7 +77,8 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         );
 
       set({
-        surveyId,
+        localId,
+        surveyId: undefined,
         instrumentName,
         flattenedQuestions,
         currentIndex: 0,
@@ -80,12 +90,24 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     setAnswer: (answer) => {
-      set((state) => ({
-        answers: {
+      set((state) => {
+        const updatedAnswers = {
           ...state.answers,
           [answer.questionId]: answer,
-        },
-      }));
+        };
+
+        if (state.localId) {
+          updateSurveyProgress(
+            state.localId,
+            updatedAnswers,
+            state.currentIndex,
+          ).catch((e) =>
+            console.warn("[offlineDb] updateSurveyProgress failed:", e),
+          );
+        }
+
+        return { answers: updatedAnswers };
+      });
     },
 
     goNext: () => {
@@ -107,6 +129,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
     resetSurvey: () => set(initialState),
 
+    // * Convertir las respuestas guardadas en el store en una lista para enviar al servidor
     buildResponsesPayload: () => {
       const { surveyId, flattenedQuestions, answers } = get();
 
@@ -150,12 +173,19 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
       return payload;
     },
 
-    submitResponses: async (apiBaseUrl: string) => {
-      const { flattenedQuestions, answers, buildResponsesPayload } = get();
+    // * Enviar respuestas al servidor
+    submitResponses: async (apiBaseUrl: string): Promise<SubmitResult> => {
+      // * 1. Validaciones iniciales
+      const { localId, flattenedQuestions, answers, buildResponsesPayload } =
+        get();
+
+      if (!localId) {
+        return { outcome: "error", message: "No hay encuesta activa" };
+      }
 
       set({ submitting: true, error: undefined });
 
-      // Pre-paso: crear opciones dinámicas para respuestas con otherText
+      // * 2. Pre-paso: crear opciones dinámicas para respuestas con otherText
       const updatedAnswers = { ...answers };
 
       for (const { question } of flattenedQuestions) {
@@ -163,7 +193,11 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         if (!answer?.otherText?.trim()) continue;
 
         const otherOption = question.options.find((o) => o.isOther);
-        if (!otherOption || !(answer.optionIds ?? []).includes(otherOption.optionId)) continue;
+        if (
+          !otherOption ||
+          !(answer.optionIds ?? []).includes(otherOption.optionId)
+        )
+          continue;
 
         try {
           const res = await fetch(
@@ -175,55 +209,104 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
             },
           );
 
-          if (!res.ok) throw new Error("Failed to create option");
+          if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
           const newOption = await res.json();
-
-          // Reemplazar el optionId de "Otros" por el nuevo optionId real
           updatedAnswers[question.questionId] = {
             ...answer,
             optionIds: [
-              ...(answer.optionIds ?? []).filter((id) => id !== otherOption.optionId),
+              ...(answer.optionIds ?? []).filter(
+                (id) => id !== otherOption.optionId,
+              ),
               newOption.optionId,
             ],
             otherText: undefined,
           };
-        } catch {
-          set({ error: "Error al guardar la nueva opción. Intenta nuevamente.", submitting: false });
-          return false;
+        } catch (e) {
+          if (e instanceof TypeError) {
+            // * Sin red: guardar opción "Otros" en IndexedDB para resolver en sync
+            await savePendingOption(
+              question.questionId,
+              otherOption.optionId,
+              answer.otherText.trim(),
+            );
+            set({ submitting: false });
+            return { outcome: "saved_offline" };
+          }
+          const message =
+            "Error al guardar la nueva opción. Intenta nuevamente.";
+          set({ error: message, submitting: false });
+          return { outcome: "error", message };
         }
       }
 
       set({ answers: updatedAnswers });
 
+      // *3. Crear encuesta en el servidor para obtener surveyId real
+      let surveyId: string;
+
+      try {
+        const pendingSurvey = await offlineDb.pendingSurveys.get(localId);
+        if (!pendingSurvey) {
+          throw new Error("No se encontró la encuesta local");
+        }
+
+        const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            instrumentIds: [pendingSurvey.instrumentId],
+          }),
+        });
+
+        if (!surveyRes.ok) throw new Error(`Server error: ${surveyRes.status}`);
+
+        const surveyData = await surveyRes.json();
+        surveyId = surveyData.surveyId;
+        set({ surveyId });
+      } catch (e) {
+        if (e instanceof TypeError) {
+          set({ submitting: false });
+          return { outcome: "saved_offline" };
+        }
+        const message =
+          e instanceof Error
+            ? e.message
+            : "Error al crear la encuesta en el servidor";
+        set({ error: message, submitting: false });
+        return { outcome: "error", message };
+      }
+
+      // *4. Construir payload con el surveyId real ya disponible en state
       const payload = buildResponsesPayload();
 
       if (payload.length === 0) {
         set({ error: "No hay respuestas para enviar", submitting: false });
-        return false;
+        return { outcome: "error", message: "No hay respuestas para enviar" };
       }
 
+      // *5. Enviar respuestas al servidor
       try {
-        const response = await fetch(`${apiBaseUrl}/api/responses/batch`, {
+        const res = await fetch(`${apiBaseUrl}/api/responses/batch`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to submit responses");
-        }
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-        await response.json();
-        return true;
-      } catch (error) {
-        console.error("Error submitting responses:", error);
-        set({ error: "Error al enviar respuestas. Intenta nuevamente." });
-        return false;
-      } finally {
+        await markSurveyAsDone(localId, surveyId);
         set({ submitting: false });
+        return { outcome: "submitted" };
+      } catch (e) {
+        if (e instanceof TypeError) {
+          set({ submitting: false });
+          return { outcome: "saved_offline" };
+        }
+        const message =
+          e instanceof Error ? e.message : "Error al enviar respuestas";
+        set({ error: message, submitting: false });
+        return { outcome: "error", message };
       }
     },
   }),

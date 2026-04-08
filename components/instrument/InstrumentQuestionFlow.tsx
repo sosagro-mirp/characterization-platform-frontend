@@ -40,7 +40,7 @@ export default function InstrumentQuestionFlow({
 
     useEffect(() => {
         initializeSurvey({
-            surveyId,
+            localId: surveyId,
             instrumentName,
             sections,
         });
@@ -110,9 +110,9 @@ export default function InstrumentQuestionFlow({
         }
 
         if (isLastQuestion) {
-            const success = await submitResponses(apiBaseUrl);
+            const result = await submitResponses(apiBaseUrl);
 
-            if (success) {
+            if (result.outcome === "submitted" || result.outcome === "saved_offline") {
                 setCompleted(true);
             }
 

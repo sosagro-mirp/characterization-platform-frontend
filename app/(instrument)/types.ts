@@ -53,8 +53,13 @@ export interface SurveyResponse {
   surveyId: string;
 }
 
+export type SubmitResult =
+  | { outcome: 'submitted' }
+  | { outcome: 'saved_offline' }
+  | { outcome: 'error'; message: string };
+
 export interface InitializeSurveyPayload {
-  surveyId: string;
+  localId: string;
   instrumentName: string;
   sections: InstrumentSection[];
 }
