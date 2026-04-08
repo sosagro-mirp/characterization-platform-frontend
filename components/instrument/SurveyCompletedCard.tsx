@@ -5,6 +5,7 @@ interface SurveyCompletedCardProps {
     message?: string;
     ctaText?: string;
     ctaHref?: string;
+    savedOffline?: boolean;
 }
 
 export default function SurveyCompletedCard({
@@ -12,7 +13,12 @@ export default function SurveyCompletedCard({
     message = "Gracias por completar la encuesta. Sus respuestas han sido registradas correctamente.",
     ctaText = "Volver al inicio",
     ctaHref = "/",
+    savedOffline = false,
 }: SurveyCompletedCardProps) {
+    const displayMessage = savedOffline
+        ? "Sus respuestas han sido guardadas localmente y se enviaran al servidor cuando haya conexion."
+        : message;
+
     return (
         <section className="w-full max-w-xl mx-auto mt-19 h-[calc(100vh-76px)] bg-white flex flex-col justify-center items-center">
             <div className="bg-green-700 max-w-max p-6 rounded-full text-gray-200">
@@ -32,7 +38,7 @@ export default function SurveyCompletedCard({
                 </svg>
             </div>
             <h2 className="font-bold text-3xl mt-6">{title}</h2>
-            <p className="text-gray-500 mt-2 px-4 text-center">{message}</p>
+            <p className="text-gray-500 mt-2 px-4 text-center">{displayMessage}</p>
             <Link
                 href={ctaHref}
                 className="bg-green-900 px-4 py-3 rounded-xl text-gray-200 flex items-center gap-2 mt-12"

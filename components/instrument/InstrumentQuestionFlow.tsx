@@ -11,19 +11,23 @@ import type {
 import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
 
 interface InstrumentQuestionFlowProps {
-    surveyId: string;
+    localId: string;
     instrumentName: string;
     sections: InstrumentSection[];
+    isOffline: boolean;
+    apiBaseUrl: string;
 }
 
 export default function InstrumentQuestionFlow({
-    surveyId,
+    localId,
     instrumentName,
     sections,
+    isOffline,
+    apiBaseUrl,
 }: InstrumentQuestionFlowProps) {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
+    const [savedOffline, setSavedOffline] = useState(false);
     const {
         initializeSurvey,
         flattenedQuestions,
@@ -40,11 +44,11 @@ export default function InstrumentQuestionFlow({
 
     useEffect(() => {
         initializeSurvey({
-            localId: surveyId,
+            localId,
             instrumentName,
             sections,
         });
-    }, [initializeSurvey, surveyId, instrumentName, sections]);
+    }, [initializeSurvey, localId, instrumentName, sections]);
 
     const totalQuestions = flattenedQuestions.length;
     const currentItem = flattenedQuestions[currentIndex];
@@ -103,22 +107,28 @@ export default function InstrumentQuestionFlow({
         setAnswer(answer);
     };
 
+    // * Validar respuesta antes de avanzar o enviar
     const handleNext = async () => {
+        // * Validar que la respuesta actual esté completa antes de avanzar
         if (currentQuestion && !isAnswerComplete(currentQuestion, currentAnswer)) {
             setValidationError("Debes responder esta pregunta antes de continuar.");
             return;
         }
 
+        // * Si es la última pregunta, enviar respuestas al servidor
         if (isLastQuestion) {
             const result = await submitResponses(apiBaseUrl);
 
-            if (result.outcome === "submitted" || result.outcome === "saved_offline") {
+            if (result.outcome === "submitted") {
+                // * Si se envió correctamente, marcar como completado
                 setCompleted(true);
+            } else if (result.outcome === "saved_offline") {
+                // * Si se guardó offline, marcar como completado y guardado offline
+                setCompleted(true);
+                setSavedOffline(true);
             }
-
             return;
         }
-
         goNext();
     };
 
@@ -129,11 +139,16 @@ export default function InstrumentQuestionFlow({
     };
 
     if (completed) {
-        return <SurveyCompletedCard />;
+        return <SurveyCompletedCard savedOffline={savedOffline} />;
     }
 
     return (
         <section className=" h-screen bg-white flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
+            {isOffline && (
+                <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
+                    Sin conexion. Las respuestas se guardaran localmente y se enviaran cuando haya red.
+                </div>
+            )}
             <div className="border-b border-b-gray-200 p-4">
                 <div className="w-full flex items-center justify-between max-w-xl mx-auto">
                     <div>

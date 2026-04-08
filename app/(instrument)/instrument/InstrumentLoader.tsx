@@ -192,14 +192,15 @@ export default function InstrumentLoader({ apiBaseUrl }: InstrumentLoaderProps) 
   }
 
   // phase === 'ready'
-  // Nota: surveyId recibirá localId hasta que el paso 3.3/3.4 renombre la prop
-  const { instrument, localId } = state;
+  const { instrument, localId, isOffline } = state;
 
   return (
     <InstrumentQuestionFlow
-      surveyId={localId}
+      localId={localId}
       instrumentName={instrument.name}
       sections={instrument.sections}
+      isOffline={isOffline}
+      apiBaseUrl={apiBaseUrl}
     />
   );
 }
