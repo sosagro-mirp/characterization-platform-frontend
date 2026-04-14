@@ -13,7 +13,7 @@ export default function InstrumentLayout({
 }>) {
   const { syncState, runSync } = useOfflineSync(apiBaseUrl);
 
-  // * Al montar el layout, reseteamos cualquier encuesta que haya quedado en estado "syncing" 
+  // *Al montar el layout, reseteamos cualquier encuesta que haya quedado en estado "syncing" 
   useEffect(() => {
     resetStaleSync();
   }, []);
