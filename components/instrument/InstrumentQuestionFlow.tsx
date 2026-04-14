@@ -144,30 +144,34 @@ export default function InstrumentQuestionFlow({
 
     return (
         <section className=" h-screen bg-white flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
-            {isOffline && (
-                <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
-                    Sin conexion. Las respuestas se guardaran localmente y se enviaran cuando haya red.
-                </div>
-            )}
-            <div className="border-b border-b-gray-200 p-4">
-                <div className="w-full flex items-center justify-between max-w-xl mx-auto">
-                    <div>
-                        <h3 className="uppercase text-gray-400">{currentSectionName}</h3>
-                        <h2 className="font-bold">{instrumentName}</h2>
+            <div>
+                {isOffline && (
+                    <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
+                        Sin conexion. Las respuestas se guardaran localmente y se enviaran cuando haya red.
                     </div>
-                    <div className="text-gray-400 ">
-                        <span>
-                            {totalQuestions === 0 ? 0 : currentIndex + 1} / {totalQuestions}
-                        </span>
+                )}
+                <div className="border-b border-b-gray-200 p-4">
+                    <div className="w-full flex items-center justify-between max-w-xl mx-auto">
+                        <div>
+                            <h3 className="uppercase text-gray-400">{currentSectionName}</h3>
+                            <h2 className="font-bold">{instrumentName}</h2>
+                        </div>
+                        <div className="text-gray-400 ">
+                            <span>
+                                {totalQuestions === 0 ? 0 : currentIndex + 1} / {totalQuestions}
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div className="bg-gray-200 h-2 rounded-xl mt-4 max-w-xl mx-auto">
-                    <div
-                        className="bg-green-500 h-2 rounded-xl"
-                        style={{ width: `${progress}%` }}
-                    />
+                    <div className="bg-gray-200 h-2 rounded-xl mt-4 max-w-xl mx-auto">
+                        <div
+                            className="bg-green-500 h-2 rounded-xl"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
                 </div>
             </div>
+
+
 
             <div className="p-4 max-w-xl mx-auto ">
                 {currentQuestion ? (
