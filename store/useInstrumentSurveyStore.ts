@@ -12,6 +12,7 @@ import {
   savePendingOption,
 } from "@/lib/db/offlineSurveyService";
 import { offlineDb } from "@/lib/db/offlineDb";
+import { isQuestionVisible } from "@/lib/isQuestionVisible";
 
 interface FlattenedQuestionItem {
   sectionId: string;
@@ -111,18 +112,33 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     goNext: () => {
-      set((state) => ({
-        currentIndex:
-          state.currentIndex < state.flattenedQuestions.length - 1
-            ? state.currentIndex + 1
-            : state.currentIndex,
-      }));
+      set((state) => {
+        const { currentIndex, flattenedQuestions, answers } = state;
+        let next = currentIndex + 1;
+        while (
+          next < flattenedQuestions.length &&
+          !isQuestionVisible(flattenedQuestions[next].question, answers)
+        ) {
+          next++;
+        }
+        return {
+          currentIndex: next < flattenedQuestions.length ? next : currentIndex,
+        };
+      });
     },
 
     goPrevious: () => {
-      set((state) => ({
-        currentIndex: state.currentIndex > 0 ? state.currentIndex - 1 : 0,
-      }));
+      set((state) => {
+        const { currentIndex, flattenedQuestions, answers } = state;
+        let prev = currentIndex - 1;
+        while (
+          prev >= 0 &&
+          !isQuestionVisible(flattenedQuestions[prev].question, answers)
+        ) {
+          prev--;
+        }
+        return { currentIndex: prev >= 0 ? prev : currentIndex };
+      });
     },
 
     clearError: () => set({ error: undefined }),

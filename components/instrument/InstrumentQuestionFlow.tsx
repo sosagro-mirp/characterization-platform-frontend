@@ -9,6 +9,7 @@ import type {
     InstrumentSection,
 } from "@/app/(instrument)/types";
 import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
+import { isQuestionVisible } from "@/lib/isQuestionVisible";
 
 interface InstrumentQuestionFlowProps {
     localId: string;
@@ -50,12 +51,20 @@ export default function InstrumentQuestionFlow({
         });
     }, [initializeSurvey, localId, instrumentName, sections]);
 
-    const totalQuestions = flattenedQuestions.length;
     const currentItem = flattenedQuestions[currentIndex];
     const currentQuestion = currentItem?.question as InstrumentQuestion | undefined;
     const currentAnswer = currentQuestion ? answers[currentQuestion.questionId] : undefined;
-    const isLastQuestion = currentIndex === totalQuestions - 1;
-    const progress = totalQuestions > 0 ? ((currentIndex + 1) / totalQuestions) * 100 : 0;
+
+    const visibleQuestions = useMemo(
+        () => flattenedQuestions.filter(({ question }) => isQuestionVisible(question, answers)),
+        [flattenedQuestions, answers],
+    );
+    const totalVisible = visibleQuestions.length;
+    const visibleIndex = visibleQuestions.findIndex(
+        ({ question }) => question.questionId === currentQuestion?.questionId,
+    );
+    const isLastQuestion = visibleIndex === totalVisible - 1;
+    const progress = totalVisible > 0 ? ((visibleIndex + 1) / totalVisible) * 100 : 0;
 
     const sortedSections = useMemo(
         () => [...sections].sort((a, b) => a.order - b.order),
@@ -109,6 +118,12 @@ export default function InstrumentQuestionFlow({
 
     // * Validar respuesta antes de avanzar o enviar
     const handleNext = async () => {
+        // * Salvaguarda: si la pregunta actual no es visible, saltar sin validar
+        if (currentQuestion && !isQuestionVisible(currentQuestion, answers)) {
+            goNext();
+            return;
+        }
+
         // * Validar que la respuesta actual esté completa antes de avanzar
         if (currentQuestion && !isAnswerComplete(currentQuestion, currentAnswer)) {
             setValidationError("Debes responder esta pregunta antes de continuar.");
@@ -158,7 +173,7 @@ export default function InstrumentQuestionFlow({
                         </div>
                         <div className="text-gray-400 ">
                             <span>
-                                {totalQuestions === 0 ? 0 : currentIndex + 1} / {totalQuestions}
+                                {totalVisible === 0 ? 0 : visibleIndex + 1} / {totalVisible}
                             </span>
                         </div>
                     </div>
