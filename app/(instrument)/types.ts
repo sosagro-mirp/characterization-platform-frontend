@@ -17,6 +17,8 @@ export interface InstrumentQuestion {
   order: number;
   type: InstrumentType;
   options: InstrumentOption[];
+  conditionQuestionId?: string | null;
+  conditionValue?: string | null;
 }
 
 export interface InstrumentDraftAnswer {
