@@ -155,7 +155,9 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       const payload: CreateResponsePayload[] = [];
 
-      flattenedQuestions.forEach(({ question }) => {
+      flattenedQuestions
+        .filter(({ question }) => isQuestionVisible(question, answers))
+        .forEach(({ question }) => {
         const answer = answers[question.questionId];
 
         if (!answer) {
