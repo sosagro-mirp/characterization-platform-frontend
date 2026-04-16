@@ -37,10 +37,10 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
         <div className="flex flex-wrap gap-2">
           {instrument.actorTypes.map((actor) => (
             <span
-              key={actor}
+              key={actor.actorTypeId}
               className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600"
             >
-              {actor}
+              {actor.name}
             </span>
           ))}
         </div>
