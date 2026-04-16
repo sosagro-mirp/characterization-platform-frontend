@@ -65,3 +65,12 @@ export interface InitializeSurveyPayload {
   instrumentName: string;
   sections: InstrumentSection[];
 }
+
+export interface InstrumentSummary {
+  instrumentId: string;
+  name: string;
+  version: number;
+  publishDate: string;
+  isActive: boolean;
+  actorTypes: string[];
+}
