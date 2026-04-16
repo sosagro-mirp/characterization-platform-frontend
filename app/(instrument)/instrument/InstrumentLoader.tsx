@@ -11,10 +11,7 @@ import { offlineDb } from '@/lib/db/offlineDb';
 import type { InstrumentResponse } from '@/app/(instrument)/types';
 import type { PendingSurvey } from '@/lib/db/offlineDb';
 
-// TODO: obtener desde URL params o configuración cuando se soporte multi-instrumento
-const INSTRUMENT_ID = '3b7bae0d-4bea-4a56-af4c-bfe65a9f887c';
-
-// * Distintos estados de carga 
+// * Distintos estados de carga
 type LoaderState =
   | { phase: 'loading' }
   | { phase: 'error'; message: string }
@@ -32,10 +29,11 @@ type LoaderState =
   };
 
 interface InstrumentLoaderProps {
+  instrumentId: string;
   apiBaseUrl: string;
 }
 
-export default function InstrumentLoader({ apiBaseUrl }: InstrumentLoaderProps) {
+export default function InstrumentLoader({ instrumentId, apiBaseUrl }: InstrumentLoaderProps) {
   const [state, setState] = useState<LoaderState>({ phase: 'loading' });
 
   useEffect(() => {
@@ -48,7 +46,7 @@ export default function InstrumentLoader({ apiBaseUrl }: InstrumentLoaderProps) 
       // Paso 1: intentar fetch al servidor
       try {
         const res = await fetch(
-          `${apiBaseUrl}/api/instruments/${INSTRUMENT_ID}/render`,
+          `${apiBaseUrl}/api/instruments/${instrumentId}/render`,
         );
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         instrument = await res.json() as InstrumentResponse;
@@ -59,7 +57,7 @@ export default function InstrumentLoader({ apiBaseUrl }: InstrumentLoaderProps) 
         isOffline = true;
 
         // Paso 3: intentar leer desde caché
-        instrument = await getCachedInstrument(INSTRUMENT_ID);
+        instrument = await getCachedInstrument(instrumentId);
       }
 
       // Paso 4: sin red y sin caché → error irrecuperable
@@ -77,7 +75,7 @@ export default function InstrumentLoader({ apiBaseUrl }: InstrumentLoaderProps) 
       // Paso 5: buscar encuesta local pendiente para el mismo instrumento
       const existing = await offlineDb.pendingSurveys
         .where('instrumentId')
-        .equals(INSTRUMENT_ID)
+        .equals(instrumentId)
         .and((s) => s.syncStatus === 'pending')
         .first();
 
@@ -101,7 +99,7 @@ export default function InstrumentLoader({ apiBaseUrl }: InstrumentLoaderProps) 
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl]);
+  }, [instrumentId, apiBaseUrl]);
 
   if (state.phase === 'loading') {
     return (
