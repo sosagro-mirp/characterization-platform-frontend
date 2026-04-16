@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Banner } from '../../components/banner/Banner';
 
 export default function Home() {
@@ -160,7 +161,7 @@ export default function Home() {
         <h1 className="text-white text-4xl md:text-4xl lg:text-5xl  font-bold capitalize text-center max-w-3xl mx-auto">Lorem ipsum, dolor sit amet consectetur adipisicing elit</h1>
         <p className="mt-6 text-center px-4 text-gray-200 font-light max-w-xl mx-auto">Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas, voluptate.</p>
         <div className="flex justify-center">
-          <button className="w-full md:max-w-max mt-6 bg-green-400 py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors">Empecemos</button>
+          <Link href="/instruments" className="w-full md:max-w-max mt-6 bg-green-400 py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors inline-block text-center">Empecemos</Link>
         </div>
       </div>
     </section >

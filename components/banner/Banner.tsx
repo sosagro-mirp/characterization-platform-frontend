@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 
 export const Banner = () => {
     return (
@@ -11,7 +12,7 @@ export const Banner = () => {
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold capitalize pr-12 lg:max-w-xl md:pr-0">Lorem ipsum, dolor sit amet consectetur adipisicing elit</h1>
                 <p className="mt-6 text-gray-500 font-light max-w-xl">Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas, voluptate.</p>
-                <button className="w-full md:max-w-max mt-6 bg-green-400 py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors md:mr-4">Empecemos</button>
+                <Link href="/instruments" className="w-full md:max-w-max mt-6 bg-green-400 py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors md:mr-4 inline-block text-center">Empecemos</Link>
                 <button className="w-full md:max-w-max mt-4 bg-transparent py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors border ">Lorem ipsum dolor</button>
                 <div className="text-xs mt-4 lg:mt-6 font-light text-gray-500 flex flex-col gap-4 ">
                     <p>Lorem ipsum dolor sit amet.</p>
