@@ -46,6 +46,7 @@ export const Navbar = () => {
                         <div className='hidden lg:flex gap-2'>
                             <Link href="/login" className='hidden lg:inline-block px-4 py-2 rounded-2xl border border-gray-200 text-sm font-bold tracking-normal'>Iniciar sesion</Link>
                             <Link href="/instruments" className='hidden lg:inline-block px-4 py-2 rounded-2xl bg-green-400 text-sm font-bold tracking-normal'>Instrumentos</Link>
+                            <Link href="/admin/instruments" className='hidden lg:inline-block px-4 py-2 rounded-2xl border border-green-700 text-green-700 text-sm font-bold tracking-normal'>Administrar</Link>
                         </div>
                         <button
                             type="button"
@@ -100,6 +101,9 @@ export const Navbar = () => {
                     </li>
                     <li className='mt-4 rounded-2xl bg-green-400 py-3 text-center text-sm font-bold tracking-normal'>
                         <Link href="/instruments" onClick={closeMenu} className='block'>Instrumentos</Link>
+                    </li>
+                    <li className='mt-2 rounded-2xl border border-green-700 py-3 text-center text-sm font-bold tracking-normal'>
+                        <Link href="/admin/instruments" onClick={closeMenu} className='block text-green-700'>Administrar</Link>
                     </li>
                 </ul>
             </div>
