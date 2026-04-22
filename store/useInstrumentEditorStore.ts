@@ -35,6 +35,7 @@ export type EditorSelection =
   | { kind: "instrument" }
   | { kind: "section"; sectionId: string }
   | { kind: "question"; sectionId: string; questionId: string }
+  | { kind: "new-question"; sectionId: string }
   | null;
 
 interface InstrumentEditorState {
@@ -44,6 +45,7 @@ interface InstrumentEditorState {
   instrumentPublishDate: string;
   instrumentIsActive: boolean;
   instrumentActorTypes: ActorTypeSummary[];
+  questionTypes: TypeOfQuestionSummary[];
   sections: SectionDetail[];
   selection: EditorSelection;
   saveStatus: SaveStatus;
@@ -57,6 +59,7 @@ interface InstrumentEditorState {
     isActive: boolean;
     actorTypes: ActorTypeSummary[];
     sections: SectionDetail[];
+    questionTypes: TypeOfQuestionSummary[];
   }) => void;
 
   setSelection: (selection: EditorSelection) => void;
@@ -125,6 +128,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       instrumentPublishDate: "",
       instrumentIsActive: false,
       instrumentActorTypes: [],
+      questionTypes: [],
       sections: [],
       selection: { kind: "instrument" },
       saveStatus: "idle",
@@ -138,6 +142,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
           instrumentPublishDate: payload.publishDate,
           instrumentIsActive: payload.isActive,
           instrumentActorTypes: payload.actorTypes ?? [],
+          questionTypes: payload.questionTypes ?? [],
           sections: payload.sections,
           selection: { kind: "instrument" },
           saveStatus: "idle",
@@ -160,6 +165,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       },
 
       addSection: async (data) => {
+        if (!get().instrumentId) return;
         await withSave(async () => {
           const created = await createSection(get().instrumentId, data);
           const newSection: SectionDetail = { ...created, questions: [] };
@@ -219,6 +225,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       },
 
       addQuestion: async (sectionId, data) => {
+        if (!sectionId || !data.typeId) return;
         await withSave(async () => {
           const created = await createQuestion(sectionId, data);
           const question: QuestionDetail = {

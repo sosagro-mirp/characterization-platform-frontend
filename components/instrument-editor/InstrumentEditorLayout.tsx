@@ -13,6 +13,7 @@ import StructureTree from "./StructureTree";
 import InstrumentForm from "./InstrumentForm";
 import SectionForm from "./SectionForm";
 import QuestionForm from "./QuestionForm";
+import NewQuestionForm from "./NewQuestionForm";
 import SaveStatusIndicator from "./SaveStatusIndicator";
 
 interface InstrumentEditorLayoutProps {
@@ -61,6 +62,7 @@ export default function InstrumentEditorLayout({
       isActive,
       actorTypes,
       sections,
+      questionTypes,
     });
   }, [instrumentId]);
 
@@ -98,6 +100,10 @@ export default function InstrumentEditorLayout({
       );
       if (!section) return null;
       return <SectionForm section={section} />;
+    }
+
+    if (selection.kind === "new-question") {
+      return <NewQuestionForm sectionId={selection.sectionId} />;
     }
 
     if (selection.kind === "question") {

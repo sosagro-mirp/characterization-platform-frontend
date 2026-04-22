@@ -23,8 +23,6 @@ export default function SectionNode({
     setSelection,
     reorderSection,
     removeSectionFromStore,
-    addQuestion,
-    sections,
   } = useInstrumentEditorStore();
 
   const isSelected =
@@ -32,13 +30,7 @@ export default function SectionNode({
 
   const handleAddQuestion = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const nextOrder = section.questions.length + 1;
-    addQuestion(section.sectionId, {
-      text: "Nueva pregunta",
-      typeId: "",
-      isRequired: false,
-      order: nextOrder,
-    });
+    setSelection({ kind: "new-question", sectionId: section.sectionId });
   };
 
   return (
