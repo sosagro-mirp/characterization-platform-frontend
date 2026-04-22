@@ -8,7 +8,6 @@ const TYPE_LABELS: Record<string, string> = {
   numeric: "Número",
   yes_no: "Sí/No",
   single_choice: "Única",
-  "single-choice": "Única",
   likert: "Likert",
   multiple_choice: "Múltiple",
 };
@@ -37,9 +36,8 @@ export default function QuestionNode({
 
   return (
     <div
-      className={`group flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors ${
-        isSelected ? "bg-green-50 text-green-800" : "hover:bg-neutral-50"
-      }`}
+      className={`group flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors ${isSelected ? "bg-green-50 text-green-800" : "hover:bg-neutral-50"
+        }`}
       onClick={() =>
         setSelection({ kind: "question", sectionId, questionId: question.questionId })
       }

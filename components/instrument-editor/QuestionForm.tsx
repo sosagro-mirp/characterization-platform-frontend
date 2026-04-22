@@ -6,7 +6,7 @@ import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import OptionsEditor from "./OptionsEditor";
 import ConfirmDialog from "./ConfirmDialog";
 
-const TYPES_WITH_OPTIONS = ["single_choice", "single-choice", "likert", "multiple_choice"];
+const TYPES_WITH_OPTIONS = ["single_choice", "likert", "multiple_choice"];
 
 interface QuestionFormProps {
   question: QuestionDetail;
