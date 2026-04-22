@@ -79,7 +79,7 @@ export async function getInstrumentForEditor(id: string): Promise<{
     version: meta.version,
     publishDate: meta.publishDate,
     isActive: meta.isActive,
-    actorTypes: meta.actorTypes,
+    actorTypes: meta.actorTypes ?? [],
     sections: (render.sections ?? []).map(
       (sec: {
         sectionId: string;

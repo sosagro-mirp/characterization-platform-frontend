@@ -137,7 +137,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
           instrumentVersion: payload.version,
           instrumentPublishDate: payload.publishDate,
           instrumentIsActive: payload.isActive,
-          instrumentActorTypes: payload.actorTypes,
+          instrumentActorTypes: payload.actorTypes ?? [],
           sections: payload.sections,
           selection: { kind: "instrument" },
           saveStatus: "idle",
