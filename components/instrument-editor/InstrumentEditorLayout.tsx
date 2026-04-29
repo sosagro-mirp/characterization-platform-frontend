@@ -88,7 +88,7 @@ export default function InstrumentEditorLayout({
               actorTypeIds: instrumentActorTypes.map((a) => a.actorTypeId),
             }}
             onSubmit={updateInstrumentMeta}
-            submitLabel="Guardar cambios"
+            autoSave
           />
         </div>
       );

@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { ActorTypeSummary, CreateInstrumentRequest, UpdateInstrumentRequest } from "@/app/(admin)/types";
+import { useRef, useState } from "react";
+import {
+  ActorTypeSummary,
+  CreateInstrumentRequest,
+  UpdateInstrumentRequest,
+} from "@/app/(admin)/types";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 
 interface InstrumentFormProps {
@@ -13,8 +17,17 @@ interface InstrumentFormProps {
     isActive: boolean;
     actorTypeIds: string[];
   };
-  onSubmit: (data: CreateInstrumentRequest | UpdateInstrumentRequest) => Promise<void>;
+  onSubmit: (
+    data: CreateInstrumentRequest | UpdateInstrumentRequest,
+  ) => Promise<void>;
   submitLabel?: string;
+  /**
+   * Si es true, el formulario auto-guarda cada cambio (en blur o change según el
+   * tipo de campo) y oculta el botón de submit. Pensado para edición de
+   * instrumentos ya creados, donde la fuente de verdad vive en el store y el
+   * indicador global del header refleja el estado.
+   */
+  autoSave?: boolean;
 }
 
 export default function InstrumentForm({
@@ -22,27 +35,75 @@ export default function InstrumentForm({
   initialValues,
   onSubmit,
   submitLabel = "Guardar",
+  autoSave = false,
 }: InstrumentFormProps) {
   const [name, setName] = useState(initialValues?.name ?? "");
   const [version, setVersion] = useState(initialValues?.version ?? 1);
   const [publishDate, setPublishDate] = useState(
-    initialValues?.publishDate ?? new Date().toISOString().slice(0, 10)
+    initialValues?.publishDate ?? new Date().toISOString().slice(0, 10),
   );
   const [isActive, setIsActive] = useState(initialValues?.isActive ?? true);
   const [selectedActorTypeIds, setSelectedActorTypeIds] = useState<string[]>(
-    initialValues?.actorTypeIds ?? []
+    initialValues?.actorTypeIds ?? [],
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
 
+  const lastPersisted = useRef({
+    name: initialValues?.name ?? "",
+    version: initialValues?.version ?? 1,
+    publishDate:
+      initialValues?.publishDate ?? new Date().toISOString().slice(0, 10),
+  });
+
+  const persist = async (patch: UpdateInstrumentRequest) => {
+    try {
+      await onSubmit(patch);
+    } catch {
+      // El indicador global del header ya muestra el error vía el store.
+    }
+  };
+
+  const handleNameBlur = () => {
+    const trimmed = name.trim();
+    if (!autoSave || !trimmed || trimmed === lastPersisted.current.name) return;
+    lastPersisted.current.name = trimmed;
+    void persist({ name: trimmed });
+  };
+
+  const handleVersionBlur = () => {
+    if (!autoSave) return;
+    if (!Number.isFinite(version) || version < 1) return;
+    if (version === lastPersisted.current.version) return;
+    lastPersisted.current.version = version;
+    void persist({ version });
+  };
+
+  const handlePublishDateBlur = () => {
+    if (!autoSave || !publishDate) return;
+    if (publishDate === lastPersisted.current.publishDate) return;
+    lastPersisted.current.publishDate = publishDate;
+    void persist({ publishDate });
+  };
+
+  const handleIsActiveChange = (checked: boolean) => {
+    setIsActive(checked);
+    if (autoSave) void persist({ isActive: checked });
+  };
+
   const toggleActorType = (id: string) => {
-    setSelectedActorTypeIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelectedActorTypeIds((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id];
+      if (autoSave) void persist({ actorTypeIds: next });
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (autoSave) return;
     setSaveStatus("saving");
     setErrorMessage(undefined);
     try {
@@ -73,6 +134,7 @@ export default function InstrumentForm({
           maxLength={255}
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onBlur={handleNameBlur}
           className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
         />
       </div>
@@ -88,6 +150,7 @@ export default function InstrumentForm({
             min={1}
             value={version}
             onChange={(e) => setVersion(Number(e.target.value))}
+            onBlur={handleVersionBlur}
             className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
         </div>
@@ -100,6 +163,7 @@ export default function InstrumentForm({
             required
             value={publishDate}
             onChange={(e) => setPublishDate(e.target.value)}
+            onBlur={handlePublishDateBlur}
             className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
         </div>
@@ -110,7 +174,7 @@ export default function InstrumentForm({
           type="checkbox"
           id="isActive"
           checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
+          onChange={(e) => handleIsActiveChange(e.target.checked)}
           className="h-4 w-4 rounded border-neutral-300 accent-green-700"
         />
         <label htmlFor="isActive" className="text-sm text-neutral-700">
@@ -142,16 +206,22 @@ export default function InstrumentForm({
         </div>
       )}
 
-      <div className="flex items-center gap-4 pt-2">
-        <button
-          type="submit"
-          disabled={saveStatus === "saving"}
-          className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors disabled:opacity-50"
-        >
-          {submitLabel}
-        </button>
-        <SaveStatusIndicator status={saveStatus} errorMessage={errorMessage} />
-      </div>
+      {autoSave ? (
+        <p className="pt-2 text-xs text-neutral-500">
+          Los cambios se guardan automáticamente.
+        </p>
+      ) : (
+        <div className="flex items-center gap-4 pt-2">
+          <button
+            type="submit"
+            disabled={saveStatus === "saving"}
+            className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors disabled:opacity-50"
+          >
+            {submitLabel}
+          </button>
+          <SaveStatusIndicator status={saveStatus} errorMessage={errorMessage} />
+        </div>
+      )}
     </form>
   );
 }
