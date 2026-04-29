@@ -11,7 +11,6 @@ const sectionLinks = [
   { href: "/#cultivos", label: "Cultivos" },
   { href: "/#territorios", label: "Territorios" },
   { href: "/#ejes", label: "Ejes" },
-  { href: "/#plataforma", label: "Plataforma" },
   { href: "/#participar", label: "Participar" },
   { href: "/#aliados", label: "Aliados" },
   { href: "/#resultados", label: "Resultados" },
@@ -82,6 +81,11 @@ export const Navbar = () => {
     : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200";
 
   const showSession = hydrated && isAuthenticated && user;
+  const isAdmin = !!showSession && user.role === "admin";
+
+  const adminLinkClass = isOverHero
+    ? "border-white/40 text-white hover:bg-white/10"
+    : "border-brand/40 text-brand-dark hover:bg-brand/10";
 
   return (
     <>
@@ -114,9 +118,17 @@ export const Navbar = () => {
 
           <div className="flex gap-3 items-center">
             {showSession ? (
-              <div className="hidden lg:flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-6">
+                {isAdmin && (
+                  <Link
+                    href="/admin/instruments"
+                    className={`inline-flex items-center px-4 py-2 rounded-lg border text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
+                  >
+                    Panel administrativo
+                  </Link>
+                )}
                 <span
-                  className={`text-sm font-medium transition-colors duration-300 ${sessionTextClass}`}
+                  className={`text-sm font-semibold transition-colors duration-300 ${sessionTextClass}`}
                   title={user.email}
                 >
                   {user.name} {user.lastName}
@@ -200,6 +212,15 @@ export const Navbar = () => {
                 <span className="block py-2 text-center text-sm font-medium text-gray-700">
                   {user.name} {user.lastName}
                 </span>
+                {isAdmin && (
+                  <Link
+                    href="/admin/instruments"
+                    onClick={closeMenu}
+                    className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
+                  >
+                    Panel administrativo
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={handleLogout}
