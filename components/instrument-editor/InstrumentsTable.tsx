@@ -91,6 +91,25 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex items-center gap-2">
+                    {inst.isActive ? (
+                      <Link
+                        href={`/instrument/${inst.instrumentId}`}
+                        target="_blank"
+                        rel="noopener"
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-green-700 hover:bg-green-800 transition-colors"
+                        title="Iniciar una nueva sesión de encuesta con este instrumento"
+                      >
+                        Aplicar
+                      </Link>
+                    ) : (
+                      <span
+                        aria-disabled="true"
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 border border-neutral-200 cursor-not-allowed"
+                        title="Activa el instrumento para poder aplicarlo"
+                      >
+                        Aplicar
+                      </span>
+                    )}
                     <Link
                       href={`/admin/instruments/${inst.instrumentId}`}
                       className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200 hover:bg-neutral-100 transition-colors"
