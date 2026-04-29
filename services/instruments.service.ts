@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/apiClient";
 import {
   CreateInstrumentRequest,
   InstrumentDetail,
@@ -5,53 +6,40 @@ import {
   UpdateInstrumentRequest,
 } from "@/app/(admin)/types";
 
-const base = () =>
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
-
-export async function getInstruments(): Promise<InstrumentListItem[]> {
-  const res = await fetch(`${base()}/api/instruments`, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to fetch instruments: ${res.status}`);
-  return res.json();
-}
-
-export async function getInstrumentById(id: string): Promise<InstrumentDetail> {
-  const res = await fetch(`${base()}/api/instruments/${id}`, {
+export function getInstruments(): Promise<InstrumentListItem[]> {
+  return apiClient.get<InstrumentListItem[]>("/api/instruments", {
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`Failed to fetch instrument: ${res.status}`);
-  return res.json();
 }
 
-export async function createInstrument(
-  data: CreateInstrumentRequest
-): Promise<InstrumentListItem> {
-  const res = await fetch(`${base()}/api/instruments`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+export function getInstrumentById(id: string): Promise<InstrumentDetail> {
+  return apiClient.get<InstrumentDetail>(`/api/instruments/${id}`, {
+    cache: "no-store",
   });
-  if (!res.ok) throw new Error(`Failed to create instrument: ${res.status}`);
-  return res.json();
 }
 
-export async function updateInstrument(
+export function createInstrument(
+  data: CreateInstrumentRequest,
+): Promise<InstrumentListItem> {
+  return apiClient.post<InstrumentListItem>("/api/instruments", data);
+}
+
+export function updateInstrument(
   id: string,
-  data: UpdateInstrumentRequest
+  data: UpdateInstrumentRequest,
 ): Promise<InstrumentListItem> {
-  const res = await fetch(`${base()}/api/instruments/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`Failed to update instrument: ${res.status}`);
-  return res.json();
+  return apiClient.patch<InstrumentListItem>(`/api/instruments/${id}`, data);
 }
 
-export async function deleteInstrument(id: string): Promise<void> {
-  const res = await fetch(`${base()}/api/instruments/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error(`Failed to delete instrument: ${res.status}`);
+export function deleteInstrument(id: string): Promise<void> {
+  return apiClient.delete<void>(`/api/instruments/${id}`);
+}
+
+interface RenderedSection {
+  sectionId: string;
+  name: string;
+  order: number;
+  questions: import("@/app/(admin)/types").QuestionDetail[];
 }
 
 export async function getInstrumentForEditor(id: string): Promise<{
@@ -65,12 +53,10 @@ export async function getInstrumentForEditor(id: string): Promise<{
 }> {
   const [meta, render] = await Promise.all([
     getInstrumentById(id),
-    fetch(`${base()}/api/instruments/${id}/render`, {
-      cache: "no-store",
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Failed to fetch render: ${r.status}`);
-      return r.json();
-    }),
+    apiClient.get<{ sections?: RenderedSection[] }>(
+      `/api/instruments/${id}/render`,
+      { cache: "no-store" },
+    ),
   ]);
 
   return {
@@ -80,20 +66,13 @@ export async function getInstrumentForEditor(id: string): Promise<{
     publishDate: meta.publishDate,
     isActive: meta.isActive,
     actorTypes: meta.actorTypes ?? [],
-    sections: (render.sections ?? []).map(
-      (sec: {
-        sectionId: string;
-        name: string;
-        order: number;
-        questions: unknown[];
-      }) => ({
-        sectionId: sec.sectionId,
-        name: sec.name,
-        order: sec.order,
-        createdAt: "",
-        updatedAt: "",
-        questions: sec.questions ?? [],
-      })
-    ),
+    sections: (render.sections ?? []).map((sec) => ({
+      sectionId: sec.sectionId,
+      name: sec.name,
+      order: sec.order,
+      createdAt: "",
+      updatedAt: "",
+      questions: sec.questions ?? [],
+    })),
   };
 }

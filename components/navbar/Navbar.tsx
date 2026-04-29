@@ -1,25 +1,42 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { logout } from "@/services/auth.service";
 
 const sectionLinks = [
   { href: "/#proyecto", label: "El proyecto" },
   { href: "/#cultivos", label: "Cultivos" },
   { href: "/#territorios", label: "Territorios" },
   { href: "/#ejes", label: "Ejes" },
-  { href: "/#plataforma", label: "Plataforma" },
   { href: "/#participar", label: "Participar" },
   { href: "/#aliados", label: "Aliados" },
   { href: "/#resultados", label: "Resultados" },
 ] as const;
 
 export const Navbar = () => {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverHero, setIsOverHero] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
+
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const toggleMenu = () => setIsMenuOpen((p) => !p);
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLogout = () => {
+    logout();
+    closeMenu();
+    router.replace("/");
+  };
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     const hero = document.getElementById("inicio");
@@ -58,6 +75,18 @@ export const Navbar = () => {
     ? "text-white hover:bg-white/10"
     : "text-gray-700 hover:bg-gray-100";
 
+  const sessionTextClass = isOverHero ? "text-gray-100" : "text-gray-700";
+  const logoutButtonClass = isOverHero
+    ? "bg-white/10 border border-white/30 text-white hover:bg-white/20"
+    : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200";
+
+  const showSession = hydrated && isAuthenticated && user;
+  const isAdmin = !!showSession && user.role === "admin";
+
+  const adminLinkClass = isOverHero
+    ? "border-white/40 text-white hover:bg-white/10"
+    : "border-brand/40 text-brand-dark hover:bg-brand/10";
+
   return (
     <>
       <nav
@@ -88,12 +117,38 @@ export const Navbar = () => {
           </ul>
 
           <div className="flex gap-3 items-center">
-            <Link
-              href="/login"
-              className="hidden lg:inline-flex items-center px-4 py-2 rounded-lg bg-brand text-white text-sm font-bold transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-            >
-              Iniciar sesión
-            </Link>
+            {showSession ? (
+              <div className="hidden lg:flex items-center gap-6">
+                {isAdmin && (
+                  <Link
+                    href="/admin/instruments"
+                    className={`inline-flex items-center px-4 py-2 rounded-lg border text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
+                  >
+                    Panel administrativo
+                  </Link>
+                )}
+                <span
+                  className={`text-sm font-semibold transition-colors duration-300 ${sessionTextClass}`}
+                  title={user.email}
+                >
+                  {user.name} {user.lastName}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${logoutButtonClass}`}
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden lg:inline-flex items-center px-4 py-2 rounded-lg bg-brand text-white text-sm font-bold transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+              >
+                Iniciar sesión
+              </Link>
+            )}
 
             <button
               type="button"
@@ -152,13 +207,37 @@ export const Navbar = () => {
             </li>
           ))}
           <li className="mt-2">
-            <Link
-              href="/login"
-              onClick={closeMenu}
-              className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
-            >
-              Iniciar sesión
-            </Link>
+            {showSession ? (
+              <div className="flex flex-col gap-2">
+                <span className="block py-2 text-center text-sm font-medium text-gray-700">
+                  {user.name} {user.lastName}
+                </span>
+                {isAdmin && (
+                  <Link
+                    href="/admin/instruments"
+                    onClick={closeMenu}
+                    className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
+                  >
+                    Panel administrativo
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="block w-full rounded-lg border border-brand py-3 text-center text-sm font-bold text-brand"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={closeMenu}
+                className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
+              >
+                Iniciar sesión
+              </Link>
+            )}
           </li>
         </ul>
       </div>
