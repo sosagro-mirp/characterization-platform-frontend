@@ -1,10 +1,12 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import LoginForm from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
-    title: "SosAgro 4.C ",
-    description: "SosAgro 4.C es un proyecto financiado por el ministerio de ciencia ...",
+    title: "SosAgro 4.C — Iniciar sesión",
+    description: "Inicia sesión en la plataforma de caracterización SosAgro 4.C.",
 };
 
 
@@ -22,11 +24,9 @@ export default function LoginPage() {
                 <div className="w-full mt-12 lg:mt-24 max-w-xl mx-auto lg:mx-0 lg:max-w-full">
                     <h1 className="text-4xl text-gray-200 font-bold text-center lg:text-left">Inicia sesión</h1>
                     <p className="text-gray-200 mt-2 font-light text-center lg:text-left">Por favor ingresa tus credenciales.</p>
-                    <form action="" className="w-full lg:pr-12 flex flex-col mt-8 ">
-                        <input type="email" placeholder="Correo electrónico" className="w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light" />
-                        <input type="password" placeholder="Contraseña" className="w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light" />
-                        <button type="submit" className="w-full mt-6 bg-green-200 font-semibold py-4 rounded-lg hover:bg-green-500 transition-colors ">Iniciar sesión</button>
-                    </form>
+                    <Suspense fallback={null}>
+                        <LoginForm />
+                    </Suspense>
                 </div>
             </div>
             <div className="hidden lg:block w-[50%] h-full overflow-hidden">
