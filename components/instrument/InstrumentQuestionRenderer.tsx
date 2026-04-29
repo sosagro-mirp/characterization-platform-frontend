@@ -79,7 +79,7 @@ export default function InstrumentQuestionRenderer({
         );
     }
 
-    if (question.type.name === "single-choice") {
+    if (question.type.name === "single_choice") {
         const sortedOptions = [
             ...question.options.filter((o) => !o.isOther),
             ...question.options.filter((o) => o.isOther),

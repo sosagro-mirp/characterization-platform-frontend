@@ -1,6 +1,6 @@
 export interface InstrumentType {
   typeId: string;
-  name: "open_text" | "numeric" | "single-choice" | string;
+  name: "open_text" | "numeric" | "single_choice" | string;
 }
 
 export interface InstrumentOption {
@@ -56,9 +56,9 @@ export interface SurveyResponse {
 }
 
 export type SubmitResult =
-  | { outcome: 'submitted' }
-  | { outcome: 'saved_offline' }
-  | { outcome: 'error'; message: string };
+  | { outcome: "submitted" }
+  | { outcome: "saved_offline" }
+  | { outcome: "error"; message: string };
 
 export interface InitializeSurveyPayload {
   localId: string;

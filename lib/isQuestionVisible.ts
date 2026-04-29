@@ -1,4 +1,7 @@
-import type { InstrumentDraftAnswer, InstrumentQuestion } from '@/app/(instrument)/types';
+import type {
+  InstrumentDraftAnswer,
+  InstrumentQuestion,
+} from "@/app/(instrument)/types";
 
 export function isQuestionVisible(
   question: InstrumentQuestion,
@@ -18,7 +21,7 @@ export function isQuestionVisible(
     return String(triggerAnswer.booleanValue) === expected;
   }
 
-  // single-choice: conditionValue es el optionId seleccionado
+  // single_choice: conditionValue es el optionId seleccionado
   if (triggerAnswer.optionId !== undefined) {
     return triggerAnswer.optionId === expected;
   }

@@ -97,7 +97,7 @@ export default function InstrumentQuestionFlow({
                 }
                 return true;
             }
-            case "single-choice":
+            case "single_choice":
             case "likert":
                 return Boolean(answer.optionId);
             default:
