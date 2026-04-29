@@ -40,5 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-public
+# Public assets: ignore by default but track curated subfolders that
+# accompany the codebase (maps GeoJSON, institutional logos).
+/public/*
+!/public/maps/
+!/public/logos-institucionales/
 
