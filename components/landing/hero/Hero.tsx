@@ -17,20 +17,20 @@ const roles: readonly HeroRole[] = [
     label: "Soy agricultor",
     description: "Responde la encuesta de tu finca",
     icon: Sprout,
-    href: "/instrument?role=agricultor",
+    href: "/",
     primary: true,
   },
   {
     label: "Soy extensionista",
     description: "Acompaño a productores en campo",
     icon: HeartHandshake,
-    href: "/instrument?role=extensionista",
+    href: "/",
   },
   {
     label: "Soy propietario",
     description: "Gestiono una unidad productiva",
     icon: MapPinHouse,
-    href: "/instrument?role=propietario",
+    href: "/",
   },
   {
     label: "Soy investigador",
