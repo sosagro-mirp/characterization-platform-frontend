@@ -1,5 +1,12 @@
+"use client";
+
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import {
+  ActorTypeSummary,
+  SectionDetail,
+  TypeOfQuestionSummary,
+} from "@/app/(admin)/types";
 import { getActorTypes } from "@/services/actor-types.service";
 import { getInstrumentForEditor } from "@/services/instruments.service";
 import { getTypesOfQuestions } from "@/services/types-of-questions.service";
@@ -9,16 +16,95 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function InstrumentEditorPage({ params }: PageProps) {
-  const { id } = await params;
+interface EditorData {
+  instrumentId: string;
+  name: string;
+  version: number;
+  publishDate: string;
+  isActive: boolean;
+  actorTypes: ActorTypeSummary[];
+  sections: SectionDetail[];
+}
 
-  const [editor, actorTypes, questionTypes] = await Promise.all([
-    getInstrumentForEditor(id).catch(() => null),
-    getActorTypes(),
-    getTypesOfQuestions(),
-  ]);
+export default function InstrumentEditorPage({ params }: PageProps) {
+  const { id } = use(params);
 
-  if (!editor) notFound();
+  const [editor, setEditor] = useState<EditorData | null>(null);
+  const [allActorTypes, setAllActorTypes] = useState<ActorTypeSummary[]>([]);
+  const [questionTypes, setQuestionTypes] = useState<TypeOfQuestionSummary[]>(
+    [],
+  );
+  const [status, setStatus] = useState<"loading" | "ready" | "not-found" | "error">(
+    "loading",
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("loading");
+    Promise.all([
+      getInstrumentForEditor(id).catch(() => null),
+      getActorTypes(),
+      getTypesOfQuestions(),
+    ])
+      .then(([editorData, actorTypes, qTypes]) => {
+        if (cancelled) return;
+        if (!editorData) {
+          setStatus("not-found");
+          return;
+        }
+        setEditor(editorData);
+        setAllActorTypes(actorTypes);
+        setQuestionTypes(qTypes);
+        setStatus("ready");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setErrorMessage(
+          err instanceof Error ? err.message : "Error al cargar el instrumento",
+        );
+        setStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (status === "loading") {
+    return (
+      <p className="p-4 text-sm text-neutral-500">Cargando instrumento…</p>
+    );
+  }
+
+  if (status === "not-found") {
+    return (
+      <div className="p-4">
+        <p className="text-sm text-neutral-700">Instrumento no encontrado.</p>
+        <Link
+          href="/admin/instruments"
+          className="mt-3 inline-block text-sm text-brand hover:underline"
+        >
+          Volver al listado
+        </Link>
+      </div>
+    );
+  }
+
+  if (status === "error" || !editor) {
+    return (
+      <div className="p-4">
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {errorMessage ?? "Error al cargar el instrumento."}
+        </p>
+        <Link
+          href="/admin/instruments"
+          className="mt-3 inline-block text-sm text-brand hover:underline"
+        >
+          Volver al listado
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 6rem)" }}>
@@ -42,7 +128,7 @@ export default async function InstrumentEditorPage({ params }: PageProps) {
           isActive={editor.isActive}
           actorTypes={editor.actorTypes}
           sections={editor.sections}
-          allActorTypes={actorTypes}
+          allActorTypes={allActorTypes}
           questionTypes={questionTypes}
         />
       </div>
