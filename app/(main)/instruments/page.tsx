@@ -33,12 +33,12 @@ export default async function InstrumentsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 mt-20">
       <header className="mb-8">
         <h1 className="text-2xl font-bold text-neutral-900">
           Instrumentos disponibles
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 md:mt-6 text-sm text-neutral-500">
           Selecciona el instrumento que deseas aplicar en campo.
         </p>
       </header>
