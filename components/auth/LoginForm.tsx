@@ -23,12 +23,31 @@ export default function LoginForm() {
     return from;
   })();
 
+  function validate(): string | null {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return "Ingresa tu correo electrónico.";
+    if (!password) return "Ingresa tu contraseña.";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return "El correo electrónico no tiene un formato válido.";
+    }
+    if (password.length < 8) {
+      return "La contraseña debe tener al menos 8 caracteres.";
+    }
+    return null;
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setLoading(true);
     try {
-      await login({ email, password });
+      await login({ email: email.trim(), password });
       router.replace(safeRedirect);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
