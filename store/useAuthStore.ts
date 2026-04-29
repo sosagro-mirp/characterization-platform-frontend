@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { clearSessionCookie, setSessionCookie } from "@/lib/sessionCookie";
 
 export interface AuthUser {
   userId: string;
@@ -25,10 +26,14 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       accessToken: null,
       isAuthenticated: false,
-      setSession: (user, accessToken) =>
-        set({ user, accessToken, isAuthenticated: true }),
-      clear: () =>
-        set({ user: null, accessToken: null, isAuthenticated: false }),
+      setSession: (user, accessToken) => {
+        setSessionCookie();
+        set({ user, accessToken, isAuthenticated: true });
+      },
+      clear: () => {
+        clearSessionCookie();
+        set({ user: null, accessToken: null, isAuthenticated: false });
+      },
     }),
     {
       name: STORAGE_KEY,
@@ -40,6 +45,13 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.isAuthenticated) {
+          setSessionCookie();
+        } else {
+          clearSessionCookie();
+        }
+      },
     },
   ),
 );
