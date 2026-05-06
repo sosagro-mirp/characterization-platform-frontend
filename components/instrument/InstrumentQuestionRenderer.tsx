@@ -1,7 +1,9 @@
 import OpenInput from "@/components/inputs/OpenInput";
 import CheckboxGroup from "@/components/inputs/CheckboxGroup";
 import SingleChoiceGroup from "@/components/inputs/SingleChoiceGroup";
-import type { InstrumentDraftAnswer, InstrumentQuestion } from "@/app/(instrument)/types";
+import type { InstrumentDraftAnswer, InstrumentQuestion, InstrumentOption } from "@/app/(instrument)/types";
+
+type InstrumentOptionValue = InstrumentOption["value"];
 
 interface InstrumentQuestionRendererProps {
     question: InstrumentQuestion;
@@ -80,6 +82,7 @@ export default function InstrumentQuestionRenderer({
     }
 
     if (question.type.name === "single_choice") {
+        const otherOption = question.options.find((o) => o.isOther);
         const sortedOptions = [
             ...question.options.filter((o) => !o.isOther),
             ...question.options.filter((o) => o.isOther),
@@ -92,7 +95,60 @@ export default function InstrumentQuestionRenderer({
                 options={sortedOptions.map((option) => ({
                     id: option.optionId,
                     label: option.text,
+                    isOther: option.isOther,
                 }))}
+                selectedOptionId={answer?.optionId}
+                otherText={answer?.otherText}
+                onChange={(optionId) =>
+                    onAnswerChange({
+                        questionId: question.questionId,
+                        optionId,
+                        otherText:
+                            optionId === otherOption?.optionId
+                                ? (answer?.otherText ?? "")
+                                : undefined,
+                    })
+                }
+                onOtherTextChange={(text) =>
+                    onAnswerChange({
+                        questionId: question.questionId,
+                        optionId: answer?.optionId,
+                        otherText: text,
+                    })
+                }
+            />
+        );
+    }
+
+    if (question.type.name === "compliance") {
+        const styleByValue = (value: InstrumentOptionValue): { containerClassName: string; accentClassName: string } => {
+            const numeric = value === null || value === undefined ? null : Number(value);
+            if (numeric === 2) {
+                return { containerClassName: "border-green-300 bg-green-50", accentClassName: "accent-green-700" };
+            }
+            if (numeric === 1) {
+                return { containerClassName: "border-amber-300 bg-amber-50", accentClassName: "accent-amber-600" };
+            }
+            if (numeric === 0) {
+                return { containerClassName: "border-red-300 bg-red-50", accentClassName: "accent-red-700" };
+            }
+            return { containerClassName: "border-gray-200 bg-gray-50", accentClassName: "accent-gray-500" };
+        };
+
+        return (
+            <SingleChoiceGroup
+                name={question.questionId}
+                label={question.text}
+                isRequired={question.isRequired}
+                options={question.options.map((option) => {
+                    const style = styleByValue(option.value);
+                    return {
+                        id: option.optionId,
+                        label: option.text,
+                        containerClassName: style.containerClassName,
+                        accentClassName: style.accentClassName,
+                    };
+                })}
                 selectedOptionId={answer?.optionId}
                 onChange={(optionId) =>
                     onAnswerChange({

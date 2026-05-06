@@ -19,11 +19,20 @@ export default function OptionsEditor({
     useInstrumentEditorStore();
   const [newText, setNewText] = useState("");
 
+  const hasOtherOption = options.some((o) => o.isOther);
+
   const handleAdd = async () => {
     const text = newText.trim();
     if (!text) return;
     await addOptions(questionId, sectionId, [{ text }]);
     setNewText("");
+  };
+
+  const handleAddOther = async () => {
+    if (hasOtherOption) return;
+    await addOptions(questionId, sectionId, [
+      { text: "Otros", isOther: true },
+    ]);
   };
 
   const handleTextBlur = async (option: OptionDetail, value: string) => {
@@ -85,6 +94,16 @@ export default function OptionsEditor({
           Agregar
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={handleAddOther}
+        disabled={hasOtherOption}
+        className="mt-2 w-full rounded-lg border border-dashed border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-600 hover:border-green-700 hover:text-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        title={hasOtherOption ? "Esta pregunta ya tiene una opción Otros" : undefined}
+      >
+        + Agregar opción &quot;Otros&quot;
+      </button>
     </div>
   );
 }

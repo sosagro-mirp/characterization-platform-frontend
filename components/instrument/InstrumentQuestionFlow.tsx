@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import InstrumentQuestionRenderer from "@/components/instrument/InstrumentQuestionRenderer";
 import SurveyCompletedCard from "@/components/instrument/SurveyCompletedCard";
 import type {
@@ -26,9 +27,11 @@ export default function InstrumentQuestionFlow({
     isOffline,
     apiBaseUrl,
 }: InstrumentQuestionFlowProps) {
+    const router = useRouter();
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
     const [savedOffline, setSavedOffline] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
     const {
         initializeSurvey,
         flattenedQuestions,
@@ -153,12 +156,18 @@ export default function InstrumentQuestionFlow({
         goPrevious();
     };
 
+    const handleConfirmExit = () => {
+        setShowExitConfirm(false);
+        router.push("/");
+    };
+
     if (completed) {
         return <SurveyCompletedCard savedOffline={savedOffline} />;
     }
 
     return (
-        <section className=" h-screen bg-white flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
+        <section className=" h-screen flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
+            {/* Barra de progreso y encabezado */}
             <div>
                 {isOffline && (
                     <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
@@ -166,15 +175,33 @@ export default function InstrumentQuestionFlow({
                     </div>
                 )}
                 <div className="border-b border-b-gray-200 p-4">
-                    <div className="w-full flex items-center justify-between max-w-xl mx-auto">
+                    <div className="w-full flex items-center justify-between max-w-xl mx-auto gap-4">
                         <div>
                             <h3 className="uppercase text-gray-400">{currentSectionName}</h3>
                             <h2 className="font-bold">{instrumentName}</h2>
                         </div>
-                        <div className="text-gray-400 ">
-                            <span>
-                                {totalVisible === 0 ? 0 : visibleIndex + 1} / {totalVisible}
-                            </span>
+                        <div className="flex items-center gap-0">
+                            <button
+                                type="button"
+                                onClick={() => setShowExitConfirm(true)}
+                                aria-label="Salir de la encuesta"
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="size-6"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M6 18 18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div className="bg-gray-200 h-2 rounded-xl mt-4 max-w-xl mx-auto">
@@ -182,13 +209,14 @@ export default function InstrumentQuestionFlow({
                             className="bg-green-500 h-2 rounded-xl"
                             style={{ width: `${progress}%` }}
                         />
+
                     </div>
                 </div>
             </div>
 
 
 
-            <div className="p-4 max-w-xl mx-auto ">
+            <div>
                 {currentQuestion ? (
                     <>
                         <InstrumentQuestionRenderer
@@ -196,8 +224,11 @@ export default function InstrumentQuestionFlow({
                             answer={currentAnswer}
                             onAnswerChange={handleAnswerChange}
                         />
+                        <p className="text-gray-400 text-sm max-w-xl mx-auto mt-2">
+                            Pregunta {totalVisible === 0 ? 0 : visibleIndex + 1} de {totalVisible}
+                        </p>
                         {(validationError || error) && (
-                            <p className="mt-4 rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
+                            <p className="mt-4 max-w-xl mx-auto rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
                                 {validationError || error}
                             </p>
                         )}
@@ -258,6 +289,40 @@ export default function InstrumentQuestionFlow({
                 </div>
 
             </div>
+
+            {showExitConfirm && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="exit-confirm-title"
+                >
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <h3 id="exit-confirm-title" className="text-lg font-bold text-gray-900">
+                            ¿Salir de la encuesta?
+                        </h3>
+                        <p className="mt-3 text-sm text-gray-600">
+                            La encuesta está sin terminar y es posible que los cambios no se guarden. ¿Estás seguro de que deseas salir?
+                        </p>
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowExitConfirm(false)}
+                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmExit}
+                                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                            >
+                                Salir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

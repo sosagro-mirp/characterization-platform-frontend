@@ -211,11 +211,14 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         if (!answer?.otherText?.trim()) continue;
 
         const otherOption = question.options.find((o) => o.isOther);
-        if (
-          !otherOption ||
-          !(answer.optionIds ?? []).includes(otherOption.optionId)
-        )
-          continue;
+        if (!otherOption) continue;
+
+        const isMultiple = question.type.name === "multiple_choice";
+        const otherSelected = isMultiple
+          ? (answer.optionIds ?? []).includes(otherOption.optionId)
+          : answer.optionId === otherOption.optionId;
+
+        if (!otherSelected) continue;
 
         try {
           const res = await fetch(
@@ -230,16 +233,22 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
           if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
           const newOption = await res.json();
-          updatedAnswers[question.questionId] = {
-            ...answer,
-            optionIds: [
-              ...(answer.optionIds ?? []).filter(
-                (id) => id !== otherOption.optionId,
-              ),
-              newOption.optionId,
-            ],
-            otherText: undefined,
-          };
+          updatedAnswers[question.questionId] = isMultiple
+            ? {
+                ...answer,
+                optionIds: [
+                  ...(answer.optionIds ?? []).filter(
+                    (id) => id !== otherOption.optionId,
+                  ),
+                  newOption.optionId,
+                ],
+                otherText: undefined,
+              }
+            : {
+                ...answer,
+                optionId: newOption.optionId,
+                otherText: undefined,
+              };
         } catch (e) {
           if (e instanceof TypeError) {
             // * Sin red: guardar opción "Otros" en IndexedDB para resolver en sync
