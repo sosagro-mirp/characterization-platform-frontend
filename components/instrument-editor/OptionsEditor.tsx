@@ -44,7 +44,7 @@ export default function OptionsEditor({
 
   return (
     <div className="mt-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2">
         Opciones
       </p>
       <div className="space-y-2">
@@ -54,17 +54,17 @@ export default function OptionsEditor({
               type="text"
               defaultValue={opt.text}
               onBlur={(e) => handleTextBlur(opt, e.target.value)}
-              className="flex-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+              className="flex-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
             />
             {opt.isOther && (
-              <span className="text-xs text-neutral-400 shrink-0">Otro</span>
+              <span className="text-xs text-[var(--text-muted)] shrink-0">Otro</span>
             )}
             <button
               type="button"
               onClick={() =>
                 removeOptionFromStore(questionId, sectionId, opt.optionId)
               }
-              className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 transition-colors shrink-0"
+              className="p-1.5 rounded-lg hover:bg-[var(--danger-bg)] text-[var(--danger-fg)] transition-colors shrink-0"
               title="Eliminar opción"
             >
               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
@@ -83,13 +83,13 @@ export default function OptionsEditor({
           value={newText}
           onChange={(e) => setNewText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          className="flex-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+          className="flex-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
         <button
           type="button"
           onClick={handleAdd}
           disabled={!newText.trim()}
-          className="rounded-lg bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 transition-colors disabled:opacity-40"
+          className="rounded-lg bg-[var(--brand)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-40"
         >
           Agregar
         </button>
@@ -99,7 +99,7 @@ export default function OptionsEditor({
         type="button"
         onClick={handleAddOther}
         disabled={hasOtherOption}
-        className="mt-2 w-full rounded-lg border border-dashed border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-600 hover:border-green-700 hover:text-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="mt-2 w-full rounded-lg border border-dashed border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--text-muted)] hover:border-[var(--brand)] hover:text-[var(--success-fg)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         title={hasOtherOption ? "Esta pregunta ya tiene una opción Otros" : undefined}
       >
         + Agregar opción &quot;Otros&quot;

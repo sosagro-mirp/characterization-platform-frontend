@@ -96,16 +96,16 @@ export default function QuestionForm({
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">
           Pregunta
         </p>
-        <h2 className="text-base font-semibold text-neutral-900 truncate">
+        <h2 className="text-base font-semibold text-[var(--text-primary)] truncate">
           {question.text}
         </h2>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
           Texto de la pregunta
         </label>
         <textarea
@@ -114,18 +114,18 @@ export default function QuestionForm({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onBlur={handleBlurText}
-          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
           Tipo de pregunta
         </label>
         <select
           value={typeId}
           onChange={(e) => handleTypeChange(e.target.value)}
-          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
         >
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
@@ -142,27 +142,27 @@ export default function QuestionForm({
           id="isRequired"
           checked={isRequired}
           onChange={(e) => handleRequiredChange(e.target.checked)}
-          className="h-4 w-4 rounded border-neutral-300 accent-green-700"
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
         />
-        <label htmlFor="isRequired" className="text-sm text-neutral-700">
+        <label htmlFor="isRequired" className="text-sm text-[var(--text-primary)]">
           Pregunta obligatoria
         </label>
       </div>
 
       {precedingQuestions.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-neutral-200 p-4">
-          <p className="text-sm font-medium text-neutral-700">
+        <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
+          <p className="text-sm font-medium text-[var(--text-primary)]">
             Condición de visibilidad (opcional)
           </p>
           <div>
-            <label className="block text-xs text-neutral-500 mb-1">
+            <label className="block text-xs text-[var(--text-muted)] mb-1">
               Mostrar solo si la respuesta a…
             </label>
             <select
               value={conditionQuestionId}
               onChange={(e) => setConditionQuestionId(e.target.value)}
               onBlur={handleConditionChange}
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
+              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
             >
               <option value="">Siempre visible</option>
               {precedingQuestions.map((q) => (
@@ -175,7 +175,7 @@ export default function QuestionForm({
           </div>
           {conditionQuestionId && (
             <div>
-              <label className="block text-xs text-neutral-500 mb-1">
+              <label className="block text-xs text-[var(--text-muted)] mb-1">
                 …es igual a (valor de condición)
               </label>
               <input
@@ -185,7 +185,7 @@ export default function QuestionForm({
                 onChange={(e) => setConditionValue(e.target.value)}
                 onBlur={handleConditionChange}
                 placeholder="Ej: true, false, optionId…"
-                className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
               />
             </div>
           )}

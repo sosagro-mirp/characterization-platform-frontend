@@ -125,7 +125,7 @@ export default function InstrumentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
           Nombre
         </label>
         <input
@@ -135,13 +135,13 @@ export default function InstrumentForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={handleNameBlur}
-          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
       </div>
 
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
+          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             Versión
           </label>
           <input
@@ -151,11 +151,11 @@ export default function InstrumentForm({
             value={version}
             onChange={(e) => setVersion(Number(e.target.value))}
             onBlur={handleVersionBlur}
-            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
+          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             Fecha de publicación
           </label>
           <input
@@ -164,7 +164,7 @@ export default function InstrumentForm({
             value={publishDate}
             onChange={(e) => setPublishDate(e.target.value)}
             onBlur={handlePublishDateBlur}
-            className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
       </div>
@@ -175,16 +175,16 @@ export default function InstrumentForm({
           id="isActive"
           checked={isActive}
           onChange={(e) => handleIsActiveChange(e.target.checked)}
-          className="h-4 w-4 rounded border-neutral-300 accent-green-700"
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
         />
-        <label htmlFor="isActive" className="text-sm text-neutral-700">
+        <label htmlFor="isActive" className="text-sm text-[var(--text-primary)]">
           Instrumento activo (visible para encuestadores)
         </label>
       </div>
 
       {actorTypes.length > 0 && (
         <div>
-          <p className="block text-sm font-medium text-neutral-700 mb-2">
+          <p className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Tipos de actor
           </p>
           <div className="flex flex-wrap gap-2">
@@ -195,8 +195,8 @@ export default function InstrumentForm({
                 onClick={() => toggleActorType(at.actorTypeId)}
                 className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                   selectedActorTypeIds.includes(at.actorTypeId)
-                    ? "bg-green-700 border-green-700 text-white"
-                    : "bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                    ? "bg-[var(--brand)] border-green-700 text-white"
+                    : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
                 }`}
               >
                 {at.name}
@@ -207,7 +207,7 @@ export default function InstrumentForm({
       )}
 
       {autoSave ? (
-        <p className="pt-2 text-xs text-neutral-500">
+        <p className="pt-2 text-xs text-[var(--text-muted)]">
           Los cambios se guardan automáticamente.
         </p>
       ) : (
@@ -215,7 +215,7 @@ export default function InstrumentForm({
           <button
             type="submit"
             disabled={saveStatus === "saving"}
-            className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors disabled:opacity-50"
+            className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
           >
             {submitLabel}
           </button>

@@ -44,9 +44,9 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full text-sm">
-          <thead className="border-b border-neutral-200 bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             <tr>
               <th className="px-4 py-3 text-left">Nombre</th>
               <th className="px-4 py-3 text-left">Versión</th>
@@ -56,14 +56,14 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
               <th className="px-4 py-3 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-[var(--border)]">
             {instruments.map((inst) => (
-              <tr key={inst.instrumentId} className="hover:bg-neutral-50">
-                <td className="px-4 py-3 font-medium text-neutral-900">
+              <tr key={inst.instrumentId} className="hover:bg-[var(--surface-muted)]">
+                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
                   {inst.name}
                 </td>
-                <td className="px-4 py-3 text-neutral-600">v{inst.version}</td>
-                <td className="px-4 py-3 text-neutral-600">
+                <td className="px-4 py-3 text-[var(--text-muted)]">v{inst.version}</td>
+                <td className="px-4 py-3 text-[var(--text-muted)]">
                   {new Date(inst.publishDate).toLocaleDateString("es-CO")}
                 </td>
                 <td className="px-4 py-3">
@@ -71,7 +71,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                     {inst.actorTypes.map((a) => (
                       <span
                         key={a.actorTypeId}
-                        className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600"
+                        className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-[var(--text-muted)]"
                       >
                         {a.name}
                       </span>
@@ -82,8 +82,8 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       inst.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-neutral-100 text-neutral-500"
+                        ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
+                        : "bg-[var(--surface-muted)] text-[var(--text-muted)]"
                     }`}
                   >
                     {inst.isActive ? "Activo" : "Inactivo"}
@@ -96,7 +96,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                         href={`/instrument/${inst.instrumentId}`}
                         target="_blank"
                         rel="noopener"
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-green-700 hover:bg-green-800 transition-colors"
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-[var(--brand)] hover:bg-[var(--brand-hover)] transition-colors"
                         title="Iniciar una nueva sesión de encuesta con este instrumento"
                       >
                         Aplicar
@@ -104,7 +104,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                     ) : (
                       <span
                         aria-disabled="true"
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-400 border border-neutral-200 cursor-not-allowed"
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] border border-[var(--border)] cursor-not-allowed"
                         title="Activa el instrumento para poder aplicarlo"
                       >
                         Aplicar
@@ -112,7 +112,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                     )}
                     <Link
                       href={`/admin/instruments/${inst.instrumentId}`}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200 hover:bg-neutral-100 transition-colors"
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
                     >
                       Editar
                     </Link>
@@ -120,7 +120,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                       type="button"
                       disabled={loadingId === inst.instrumentId}
                       onClick={() => handleToggleActive(inst)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200 hover:bg-neutral-100 transition-colors disabled:opacity-50"
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
                     >
                       {inst.isActive ? "Desactivar" : "Activar"}
                     </button>
@@ -128,7 +128,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                       type="button"
                       disabled={loadingId === inst.instrumentId}
                       onClick={() => setDeleteTarget(inst)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50"
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
                     >
                       Eliminar
                     </button>
@@ -140,7 +140,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-10 text-center text-sm text-neutral-500"
+                  className="px-4 py-10 text-center text-sm text-[var(--text-muted)]"
                 >
                   No hay instrumentos creados aún.
                 </td>
