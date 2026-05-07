@@ -1,0 +1,41 @@
+"use client";
+
+import Link from "next/link";
+import { useRef } from "react";
+import { useApplyAdminTheme } from "@/lib/theme/useApplyAdminTheme";
+import ThemeToggle from "@/components/admin/ThemeToggle";
+
+interface AdminShellProps {
+  children: React.ReactNode;
+}
+
+export default function AdminShell({ children }: AdminShellProps) {
+  const shellRef = useRef<HTMLDivElement>(null);
+  useApplyAdminTheme(shellRef);
+
+  return (
+    <div
+      id="admin-shell"
+      ref={shellRef}
+      className="flex min-h-screen bg-[var(--surface-muted)] text-[var(--text-primary)]"
+    >
+      <aside className="w-56 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1">
+        <p className="mb-4 px-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+          Administración
+        </p>
+        <Link
+          href="/admin/instruments"
+          className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+        >
+          Instrumentos
+        </Link>
+      </aside>
+      <main className="flex-1 overflow-auto flex flex-col">
+        <header className="flex items-center justify-end gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-8 py-3">
+          <ThemeToggle />
+        </header>
+        <div className="flex-1 p-8">{children}</div>
+      </main>
+    </div>
+  );
+}
