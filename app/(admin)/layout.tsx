@@ -38,9 +38,9 @@ export default function AdminLayout({
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: ANTI_FLASH }}
       />
-      <AdminGuard>
-        <AdminShell>{children}</AdminShell>
-      </AdminGuard>
+      <AdminShell>
+        <AdminGuard>{children}</AdminGuard>
+      </AdminShell>
     </Suspense>
   );
 }

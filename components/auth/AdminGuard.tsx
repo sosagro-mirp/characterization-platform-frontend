@@ -40,7 +40,7 @@ export default function AdminGuard({
   if (!hydrated || !isAuthenticated || !user || user.role !== ADMIN_ROLE) {
     return (
       <div
-        className="flex min-h-screen items-center justify-center bg-neutral-50 text-sm text-neutral-500"
+        className="flex h-full min-h-[60vh] items-center justify-center text-sm text-[var(--text-muted)]"
         aria-busy="true"
       >
         Verificando sesión…
