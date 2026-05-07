@@ -1,8 +1,57 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Tokens semánticos — modo claro (default). Solo se consumen
+     dentro del subárbol del panel admin. */
+  --surface: #ffffff;
+  --surface-muted: #fafafa;
+  --surface-elevated: #ffffff;
+  --text-primary: #171717;
+  --text-muted: #737373;
+  --text-inverse: #fafafa;
+  --border: #e5e5e5;
+  --border-strong: #a3a3a3;
+  --brand: #15803d;
+  --brand-hover: #166534;
+  --accent: #facc15;
+  --success-bg: #dcfce7;
+  --success-fg: #15803d;
+  --danger-bg: #fee2e2;
+  --danger-fg: #b91c1c;
+  --warning-bg: #fef3c7;
+  --warning-fg: #92400e;
+  --info-bg: #dbeafe;
+  --info-fg: #1d4ed8;
+}
+
+/* Override del modo oscuro: solo aplica cuando algún ancestro
+   lleva la clase `.dark`. La clase vive en el wrapper del layout
+   admin, nunca en <html>, para no afectar rutas públicas. */
+.dark {
+  --surface: #0f172a;
+  --surface-muted: #1e293b;
+  --surface-elevated: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
+  --border: #334155;
+  --border-strong: #64748b;
+  --brand: #22c55e;
+  --brand-hover: #16a34a;
+  --accent: #fde047;
+  --success-bg: #052e16;
+  --success-fg: #4ade80;
+  --danger-bg: #450a0a;
+  --danger-fg: #f87171;
+  --warning-bg: #451a03;
+  --warning-fg: #fbbf24;
+  --info-bg: #172554;
+  --info-fg: #60a5fa;
 }
 
 @theme inline {
@@ -12,6 +61,27 @@
   --color-brand-dark: #14532d;
   --color-brand-light: #dcfce7;
   --color-accent: #facc15;
+
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+  --color-border-token: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-brand-token: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-accent-token: var(--accent);
+  --color-success-bg: var(--success-bg);
+  --color-success-fg: var(--success-fg);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-fg: var(--danger-fg);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-fg: var(--warning-fg);
+  --color-info-bg: var(--info-bg);
+  --color-info-fg: var(--info-fg);
+
   --font-sans: var(--font-jetbrains-mono), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --font-display: var(--font-jetbrains-mono), ui-monospace, monospace;
@@ -27,4 +97,11 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dark,
+  .dark * {
+    transition-property: none !important;
+  }
 }
