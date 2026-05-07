@@ -29,13 +29,11 @@ export default function AdminShell({ children }: AdminShellProps) {
         >
           Instrumentos
         </Link>
-      </aside>
-      <main className="flex-1 overflow-auto flex flex-col">
-        <header className="flex items-center justify-end gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-8 py-3">
+        <div className="mt-auto pt-4 border-t border-[var(--border)]">
           <ThemeToggle />
-        </header>
-        <div className="flex-1 p-8">{children}</div>
-      </main>
+        </div>
+      </aside>
+      <main className="flex-1 overflow-auto p-8">{children}</main>
     </div>
   );
 }

@@ -82,7 +82,7 @@ export default function ThemeToggle() {
       onClick={next}
       aria-label={`Cambiar tema (actual: ${LABELS[mode]})`}
       title={LABELS[mode]}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+      className="inline-flex w-full items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
     >
       {mode === "light" && <SunIcon />}
       {mode === "dark" && <MoonIcon />}
