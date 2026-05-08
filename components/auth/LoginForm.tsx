@@ -15,13 +15,16 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const safeRedirect = (() => {
-    if (!from) return "/admin/instruments";
-    if (!from.startsWith("/") || from.startsWith("//")) {
-      return "/admin/instruments";
-    }
-    return from;
-  })();
+  function isSafeFrom(value: string | null): value is string {
+    if (!value) return false;
+    if (!value.startsWith("/") || value.startsWith("//")) return false;
+    if (value.startsWith("/login")) return false;
+    return true;
+  }
+
+  function fallbackForRole(role: string | null): string {
+    return role === "admin" ? "/admin/instruments" : "/instrument";
+  }
 
   function validate(): string | null {
     const trimmedEmail = email.trim();
@@ -47,8 +50,9 @@ export default function LoginForm() {
     }
     setLoading(true);
     try {
-      await login({ email: email.trim(), password });
-      router.replace(safeRedirect);
+      const { user } = await login({ email: email.trim(), password });
+      const target = isSafeFrom(from) ? from : fallbackForRole(user.role);
+      router.replace(target);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setError("Credenciales inválidas. Verifica tu correo y contraseña.");
