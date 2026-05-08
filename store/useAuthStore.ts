@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { clearSessionCookie, setSessionCookie } from "@/lib/sessionCookie";
+import {
+  clearRoleCookie,
+  clearSessionCookie,
+  setRoleCookie,
+  setSessionCookie,
+} from "@/lib/sessionCookie";
 
 export interface AuthUser {
   userId: string;
@@ -28,10 +33,12 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       setSession: (user, accessToken) => {
         setSessionCookie();
+        setRoleCookie(user.role);
         set({ user, accessToken, isAuthenticated: true });
       },
       clear: () => {
         clearSessionCookie();
+        clearRoleCookie();
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),
@@ -48,8 +55,10 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         if (state?.isAuthenticated) {
           setSessionCookie();
+          setRoleCookie(state.user?.role ?? null);
         } else {
           clearSessionCookie();
+          clearRoleCookie();
         }
       },
     },
