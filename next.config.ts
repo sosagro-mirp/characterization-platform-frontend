@@ -6,20 +6,9 @@ const nextConfig: NextConfig = {};
 // * Solo se cachea como app a las rutas del encuestador (/instrument*) y a /login.
 // * Landing y /admin quedan fuera del scope: la PWA no las precachea ni las
 // * sirve desde el SW como navegación cacheada.
-function isSurveyorNavigation(request: Request): boolean {
-  if (request.mode !== "navigate") return false;
-  try {
-    const url = new URL(request.url);
-    const path = url.pathname;
-    return (
-      path === "/instrument" ||
-      path.startsWith("/instrument/") ||
-      path === "/login"
-    );
-  } catch {
-    return false;
-  }
-}
+// * IMPORTANTE: la función urlPattern se serializa al SW con .toString(), por
+// * lo que NO puede referenciar identificadores externos. Toda la lógica vive
+// * inline dentro del callback.
 
 export default withPWA({
   dest: "public",
@@ -29,8 +18,21 @@ export default withPWA({
     runtimeCaching: [
       // Navegaciones HTML del encuestador: NetworkFirst con fallback a cache.
       {
-        urlPattern: ({ request }: { request: Request }) =>
-          isSurveyorNavigation(request),
+        urlPattern: ({
+          request,
+          url,
+        }: {
+          request: Request;
+          url: URL;
+        }) => {
+          if (request.mode !== "navigate") return false;
+          const path = url.pathname;
+          return (
+            path === "/instrument" ||
+            path.startsWith("/instrument/") ||
+            path === "/login"
+          );
+        },
         handler: "NetworkFirst",
         options: {
           cacheName: "surveyor-pages-cache",
