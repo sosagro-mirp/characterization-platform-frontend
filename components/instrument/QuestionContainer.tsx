@@ -14,8 +14,8 @@ export default function QuestionContainer({
     children,
 }: QuestionContainerProps) {
     return (
-        <div>
-            <label htmlFor={htmlFor} className="font-bold text-3xl">
+        <div className="max-w-xl mx-auto">
+            <label htmlFor={htmlFor} className="font-bold text-3xl max-w-2xl">
                 {label}
             </label>
             {isRequired && (
