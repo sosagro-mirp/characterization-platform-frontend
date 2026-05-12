@@ -24,6 +24,9 @@ export default function QuestionForm({
   const [text, setText] = useState(question.text);
   const [typeId, setTypeId] = useState(question.type?.typeId ?? "");
   const [isRequired, setIsRequired] = useState(question.isRequired);
+  const [isSelectionCriteria, setIsSelectionCriteria] = useState(
+    question.isSelectionCriteria
+  );
   const [conditionQuestionId, setConditionQuestionId] = useState<string>(
     question.conditionQuestionId ?? ""
   );
@@ -37,6 +40,7 @@ export default function QuestionForm({
     setText(question.text);
     setTypeId(question.type?.typeId ?? "");
     setIsRequired(question.isRequired);
+    setIsSelectionCriteria(question.isSelectionCriteria);
     setConditionQuestionId(question.conditionQuestionId ?? "");
     setConditionValue(question.conditionValue ?? "");
   }, [question.questionId]);
@@ -83,6 +87,13 @@ export default function QuestionForm({
     setIsRequired(checked);
     await updateQuestionInStore(sectionId, question.questionId, {
       isRequired: checked,
+    });
+  };
+
+  const handleSelectionCriteriaChange = async (checked: boolean) => {
+    setIsSelectionCriteria(checked);
+    await updateQuestionInStore(sectionId, question.questionId, {
+      isSelectionCriteria: checked,
     });
   };
 
@@ -146,6 +157,22 @@ export default function QuestionForm({
         />
         <label htmlFor="isRequired" className="text-sm text-[var(--text-primary)]">
           Pregunta obligatoria
+        </label>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="isSelectionCriteria"
+          checked={isSelectionCriteria}
+          onChange={(e) => handleSelectionCriteriaChange(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+        />
+        <label
+          htmlFor="isSelectionCriteria"
+          className="text-sm text-[var(--text-primary)]"
+        >
+          Criterio de selección de unidades productivas
         </label>
       </div>
 

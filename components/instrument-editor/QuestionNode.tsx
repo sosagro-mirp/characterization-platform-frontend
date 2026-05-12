@@ -54,6 +54,14 @@ export default function QuestionNode({
           {question.isRequired && (
             <span className="text-[10px] text-[var(--danger-fg)] font-medium">*</span>
           )}
+          {question.isSelectionCriteria && (
+            <span
+              className="text-[10px] font-medium rounded-full bg-indigo-100 px-1.5 py-0.5 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+              title="Criterio de selección de unidades productivas"
+            >
+              Criterio
+            </span>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">

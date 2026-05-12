@@ -38,6 +38,7 @@ export interface QuestionDetail {
   questionId: string;
   text: string;
   isRequired: boolean;
+  isSelectionCriteria: boolean;
   order: number;
   type: TypeOfQuestionSummary;
   options: OptionDetail[];
@@ -51,6 +52,7 @@ export interface CreateQuestionRequest {
   text: string;
   typeId: string;
   isRequired: boolean;
+  isSelectionCriteria?: boolean;
   order: number;
   conditionQuestionId?: string;
   conditionValue?: string;
@@ -60,6 +62,7 @@ export interface UpdateQuestionRequest {
   text?: string;
   typeId?: string;
   isRequired?: boolean;
+  isSelectionCriteria?: boolean;
   order?: number;
   conditionQuestionId?: string | null;
   conditionValue?: string | null;

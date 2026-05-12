@@ -15,6 +15,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
   const [text, setText] = useState("");
   const [typeId, setTypeId] = useState(questionTypes[0]?.typeId ?? "");
   const [isRequired, setIsRequired] = useState(false);
+  const [isSelectionCriteria, setIsSelectionCriteria] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -29,6 +30,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         text: text.trim(),
         typeId,
         isRequired,
+        isSelectionCriteria,
         order: nextOrder,
       });
     } catch (err) {
@@ -92,6 +94,22 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         />
         <label htmlFor="newIsRequired" className="text-sm text-[var(--text-primary)]">
           Pregunta obligatoria
+        </label>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="newIsSelectionCriteria"
+          checked={isSelectionCriteria}
+          onChange={(e) => setIsSelectionCriteria(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+        />
+        <label
+          htmlFor="newIsSelectionCriteria"
+          className="text-sm text-[var(--text-primary)]"
+        >
+          Criterio de selección de unidades productivas
         </label>
       </div>
 

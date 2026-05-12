@@ -22,6 +22,7 @@ export interface InstrumentQuestion {
   questionId: string;
   text: string;
   isRequired: boolean;
+  isSelectionCriteria?: boolean;
   order: number;
   type: InstrumentType;
   options: InstrumentOption[];
