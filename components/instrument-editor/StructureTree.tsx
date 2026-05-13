@@ -14,14 +14,14 @@ export default function StructureTree() {
 
   return (
     <nav className="flex flex-col h-full">
-      <div className="px-3 py-3 border-b border-neutral-100">
+      <div className="px-3 py-3 border-b border-[var(--border)]">
         <button
           type="button"
           onClick={() => setSelection({ kind: "instrument" })}
           className={`w-full text-left rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors ${
             selection?.kind === "instrument"
-              ? "bg-green-50 text-green-800"
-              : "text-neutral-700 hover:bg-neutral-50"
+              ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
+              : "text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
           }`}
         >
           Configuración general
@@ -40,11 +40,11 @@ export default function StructureTree() {
         ))}
       </div>
 
-      <div className="px-3 py-3 border-t border-neutral-100">
+      <div className="px-3 py-3 border-t border-[var(--border)]">
         <button
           type="button"
           onClick={handleAddSection}
-          className="w-full rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-500 hover:border-green-400 hover:text-green-700 transition-colors"
+          className="w-full rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] hover:border-green-400 hover:text-[var(--success-fg)] transition-colors"
         >
           + Agregar sección
         </button>

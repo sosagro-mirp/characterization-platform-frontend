@@ -1,6 +1,14 @@
 export interface InstrumentType {
   typeId: string;
-  name: "open_text" | "numeric" | "single_choice" | string;
+  name:
+    | "open_text"
+    | "numeric"
+    | "yes_no"
+    | "single_choice"
+    | "multiple_choice"
+    | "likert"
+    | "compliance"
+    | string;
 }
 
 export interface InstrumentOption {
@@ -14,6 +22,7 @@ export interface InstrumentQuestion {
   questionId: string;
   text: string;
   isRequired: boolean;
+  isSelectionCriteria?: boolean;
   order: number;
   type: InstrumentType;
   options: InstrumentOption[];
@@ -58,6 +67,7 @@ export interface SurveyResponse {
 export type SubmitResult =
   | { outcome: "submitted" }
   | { outcome: "saved_offline" }
+  | { outcome: "session_expired" }
   | { outcome: "error"; message: string };
 
 export interface InitializeSurveyPayload {

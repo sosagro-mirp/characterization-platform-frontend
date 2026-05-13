@@ -19,7 +19,7 @@ async function getActiveInstruments(): Promise<InstrumentSummary[]> {
   return instruments.filter((i) => i.isActive);
 }
 
-export default async function InstrumentsPage() {
+export default async function InstrumentListPage() {
   let instruments: InstrumentSummary[] = [];
   let fetchError: string | null = null;
 
@@ -33,7 +33,7 @@ export default async function InstrumentsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 mt-20">
+    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="mb-8">
         <h1 className="text-2xl font-bold text-neutral-900">
           Instrumentos disponibles

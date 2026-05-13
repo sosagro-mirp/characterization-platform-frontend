@@ -14,11 +14,11 @@ export default function SaveStatusIndicator({
   if (status === "idle") return null;
 
   const config = {
-    saving: { label: "Guardando…", className: "text-neutral-500" },
-    saved: { label: "Guardado", className: "text-green-600" },
+    saving: { label: "Guardando…", className: "text-[var(--text-muted)]" },
+    saved: { label: "Guardado", className: "text-[var(--success-fg)]" },
     error: {
       label: errorMessage ?? "Error al guardar",
-      className: "text-red-600",
+      className: "text-[var(--danger-fg)]",
     },
   } as const;
 

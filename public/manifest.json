@@ -1,8 +1,10 @@
 {
-  "name": "SOSAgro Encuestas", 
+  "id": "/instrument",
+  "name": "SOSAgro Encuestas",
   "short_name": "SOSAgro",
   "description": "Caracterización agrícola en campo",
   "start_url": "/instrument",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#14532d",

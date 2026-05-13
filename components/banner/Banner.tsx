@@ -15,7 +15,7 @@ export const Banner = () => {
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold  pr-12 lg:max-w-xl md:pr-0">Ciencia de datos y <span className="text-green-600">bioeconomia </span>
                         para el Campo Colombiano</h1>
                     <p className="mt-6 text-gray-500 font-light max-w-xl">Fortalecemos las capacidades científico-tecnológicas de los sectores de café, cacao, cannabis y cáñamo en seis departamentos del país, para impulsar una producción sostenible, competitiva e inclusiva.</p>
-                    <Link href="/instruments" className="w-full md:max-w-max mt-6 bg-green-400 py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors md:mr-4 inline-block text-center">Conocer el proyecto</Link>
+                    <Link href="/instrument" className="w-full md:max-w-max mt-6 bg-green-400 py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors md:mr-4 inline-block text-center">Conocer el proyecto</Link>
                     <button className="w-full md:max-w-max mt-4 bg-transparent py-3 px-6 rounded-lg text-sm font-bold hover:bg-green-500 transition-colors border ">Vincularse</button>
 
                 </div>

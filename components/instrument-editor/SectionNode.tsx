@@ -37,7 +37,7 @@ export default function SectionNode({
     <div>
       <div
         className={`group flex items-center gap-1.5 rounded-lg px-2 py-2 cursor-pointer transition-colors ${
-          isSelected ? "bg-green-50 text-green-800" : "hover:bg-neutral-50"
+          isSelected ? "bg-[var(--success-bg)] text-[var(--success-fg)]" : "hover:bg-[var(--surface-muted)]"
         }`}
         onClick={() =>
           setSelection({ kind: "section", sectionId: section.sectionId })
@@ -49,7 +49,7 @@ export default function SectionNode({
             e.stopPropagation();
             setExpanded((v) => !v);
           }}
-          className="p-0.5 rounded hover:bg-neutral-200 shrink-0"
+          className="p-0.5 rounded hover:bg-[var(--border)] shrink-0"
         >
           <svg
             className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`}
@@ -60,7 +60,7 @@ export default function SectionNode({
           </svg>
         </button>
         <span className="flex-1 text-sm font-medium truncate">{section.name}</span>
-        <span className="text-xs text-neutral-400 shrink-0">
+        <span className="text-xs text-[var(--text-muted)] shrink-0">
           {section.questions.length}p
         </span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -71,7 +71,7 @@ export default function SectionNode({
               e.stopPropagation();
               reorderSection(section.sectionId, "up");
             }}
-            className="p-1 rounded hover:bg-neutral-200 disabled:opacity-30"
+            className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
             title="Subir sección"
           >
             <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
@@ -85,7 +85,7 @@ export default function SectionNode({
               e.stopPropagation();
               reorderSection(section.sectionId, "down");
             }}
-            className="p-1 rounded hover:bg-neutral-200 disabled:opacity-30"
+            className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
             title="Bajar sección"
           >
             <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
@@ -98,7 +98,7 @@ export default function SectionNode({
               e.stopPropagation();
               removeSectionFromStore(section.sectionId);
             }}
-            className="p-1 rounded hover:bg-red-100 text-red-500"
+            className="p-1 rounded hover:bg-[var(--danger-bg)] text-[var(--danger-fg)]"
             title="Eliminar sección"
           >
             <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
@@ -123,7 +123,7 @@ export default function SectionNode({
           <button
             type="button"
             onClick={handleAddQuestion}
-            className="w-full text-left px-2 py-1 text-xs text-neutral-400 hover:text-green-700 hover:bg-neutral-50 rounded-lg transition-colors"
+            className="w-full text-left px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--success-fg)] hover:bg-[var(--surface-muted)] rounded-lg transition-colors"
           >
             + Agregar pregunta
           </button>

@@ -3,24 +3,53 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {};
 
+// * Solo se cachea como app a las rutas del encuestador (/instrument*) y a /login.
+// * Landing y /admin quedan fuera del scope: la PWA no las precachea ni las
+// * sirve desde el SW como navegación cacheada.
+// * IMPORTANTE: la función urlPattern se serializa al SW con .toString(), por
+// * lo que NO puede referenciar identificadores externos. Toda la lógica vive
+// * inline dentro del callback.
+
 export default withPWA({
-  dest: "public", // * El directorio donde se generará el service worker y los archivos relacionados
-  reloadOnOnline: false, // * Evita que la aplicación se recargue automáticamente cuando el dispositivo vuelva a estar en línea
-  disable: process.env.NODE_ENV === "development", // * Desactiva PWA en desarrollo para evitar problemas con el hot reloading
+  dest: "public",
+  reloadOnOnline: false,
+  disable: process.env.NODE_ENV === "development",
   workboxOptions: {
     runtimeCaching: [
-      // * Cachea las páginas HTML con NetworkFirst para que estén disponibles offline
+      // Navegaciones HTML del encuestador: NetworkFirst con fallback a cache.
       {
-        urlPattern: ({ request }: { request: Request }) =>
-          request.mode === "navigate",
+        urlPattern: ({
+          request,
+          url,
+        }: {
+          request: Request;
+          url: URL;
+        }) => {
+          if (request.mode !== "navigate") return false;
+          const path = url.pathname;
+          return (
+            path === "/instrument" ||
+            path.startsWith("/instrument/") ||
+            path === "/login"
+          );
+        },
         handler: "NetworkFirst",
         options: {
-          cacheName: "pages-cache",
+          cacheName: "surveyor-pages-cache",
           networkTimeoutSeconds: 3,
           expiration: { maxEntries: 20, maxAgeSeconds: 7 * 24 * 60 * 60 },
         },
       },
-      // * Configuración de caché para las rutas de renderizado de instrumentos
+      // Listado de instrumentos activos: SWR para tener disponibilidad offline.
+      {
+        urlPattern: /\/api\/instruments(?:\?.*)?$/,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "instrument-list-cache",
+          expiration: { maxEntries: 5, maxAgeSeconds: 24 * 60 * 60 },
+        },
+      },
+      // Renderizado del instrumento (estructura de la encuesta): SWR.
       {
         urlPattern: /\/api\/instruments\/.*\/render$/,
         handler: "StaleWhileRevalidate",

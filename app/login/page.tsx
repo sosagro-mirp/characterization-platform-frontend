@@ -7,6 +7,7 @@ import LoginForm from "@/components/auth/LoginForm";
 export const metadata: Metadata = {
     title: "SosAgro 4.C — Iniciar sesión",
     description: "Inicia sesión en la plataforma de caracterización SosAgro 4.C.",
+    manifest: "/manifest.json",
 };
 
 

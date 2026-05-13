@@ -1,23 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 
-const PANEL_ROLES = ["admin", "researcher"];
+const ADMIN_ROLE = "admin";
 
-export default function AdminGuard({
+export default function AdminOnlyGuard({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -27,29 +23,21 @@ export default function AdminGuard({
   useEffect(() => {
     if (!hydrated) return;
     if (!isAuthenticated || !user) {
-      const search = searchParams.toString();
-      const from = search ? `${pathname}?${search}` : pathname;
-      router.replace(`/login?from=${encodeURIComponent(from)}`);
+      router.replace("/login");
       return;
     }
-    if (!user.role || !PANEL_ROLES.includes(user.role)) {
-      router.replace("/instrument");
+    if (user.role !== ADMIN_ROLE) {
+      router.replace("/admin/instruments");
     }
-  }, [hydrated, isAuthenticated, user, router, pathname, searchParams]);
+  }, [hydrated, isAuthenticated, user, router]);
 
-  if (
-    !hydrated ||
-    !isAuthenticated ||
-    !user ||
-    !user.role ||
-    !PANEL_ROLES.includes(user.role)
-  ) {
+  if (!hydrated || !isAuthenticated || !user || user.role !== ADMIN_ROLE) {
     return (
       <div
         className="flex h-full min-h-[60vh] items-center justify-center text-sm text-[var(--text-muted)]"
         aria-busy="true"
       >
-        Verificando sesión…
+        Verificando permisos…
       </div>
     );
   }

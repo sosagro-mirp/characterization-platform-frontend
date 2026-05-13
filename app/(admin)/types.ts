@@ -38,6 +38,7 @@ export interface QuestionDetail {
   questionId: string;
   text: string;
   isRequired: boolean;
+  isSelectionCriteria: boolean;
   order: number;
   type: TypeOfQuestionSummary;
   options: OptionDetail[];
@@ -51,6 +52,7 @@ export interface CreateQuestionRequest {
   text: string;
   typeId: string;
   isRequired: boolean;
+  isSelectionCriteria?: boolean;
   order: number;
   conditionQuestionId?: string;
   conditionValue?: string;
@@ -60,6 +62,7 @@ export interface UpdateQuestionRequest {
   text?: string;
   typeId?: string;
   isRequired?: boolean;
+  isSelectionCriteria?: boolean;
   order?: number;
   conditionQuestionId?: string | null;
   conditionValue?: string | null;
@@ -125,4 +128,41 @@ export interface UpdateInstrumentRequest {
   publishDate?: string;
   isActive?: boolean;
   actorTypeIds?: string[];
+}
+
+// ── Role / User ──────────────────────────────────────────────────────────────
+
+export type RoleName = "admin" | "researcher" | "pollster";
+
+export interface RoleSummary {
+  roleId: string;
+  name: RoleName;
+}
+
+export interface UserListItem {
+  userId: string;
+  name: string;
+  lastName: string;
+  email: string;
+  role: RoleSummary | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserDetail extends UserListItem {}
+
+export interface CreateUserRequest {
+  name: string;
+  lastName: string;
+  email: string;
+  password: string;
+  roleId: string;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  roleId?: string;
 }

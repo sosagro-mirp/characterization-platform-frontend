@@ -71,10 +71,10 @@ export default function InstrumentEditorLayout({
       return (
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">
               Configuración general
             </p>
-            <h2 className="text-lg font-semibold text-neutral-900">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
               {instrumentName}
             </h2>
           </div>
@@ -128,15 +128,15 @@ export default function InstrumentEditorLayout({
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 bg-white">
-        <h1 className="font-semibold text-neutral-900 truncate">{instrumentName}</h1>
+      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)]">
+        <h1 className="font-semibold text-[var(--text-primary)] truncate">{instrumentName}</h1>
         <div className="flex items-center gap-4">
           <SaveStatusIndicator status={saveStatus} errorMessage={saveError} />
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 shrink-0 border-r border-neutral-200 bg-white overflow-y-auto">
+        <aside className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] overflow-y-auto">
           <StructureTree />
         </aside>
 

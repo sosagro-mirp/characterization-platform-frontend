@@ -12,6 +12,7 @@ import {
   getPendingOption,
   deletePendingOption,
 } from "@/lib/db/offlineSurveyService";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // * idle: no hay sincronización en curso
 // * syncing: se está sincronizando, con conteo de total y completados
@@ -56,13 +57,21 @@ async function syncOne(
   survey: PendingSurvey,
   apiBaseUrl: string,
 ): Promise<void> {
+  const accessToken = useAuthStore.getState().accessToken;
+  const authHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (accessToken) {
+    authHeaders["Authorization"] = `Bearer ${accessToken}`;
+  }
+
   // * 1. Marcar como en proceso de sincronización
   await markSurveyAsSyncing(survey.localId);
 
   // * 2. Crear encuesta en el servidor para obtener surveyId real
   const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders,
     body: JSON.stringify({ instrumentIds: [survey.instrumentId] }),
   });
 
@@ -115,7 +124,7 @@ async function syncOne(
 
   const batchRes = await fetch(`${apiBaseUrl}/api/responses/batch`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders,
     body: JSON.stringify(payload),
   });
 
@@ -126,6 +135,7 @@ async function syncOne(
   // * 6. Marcar survey como sincronizada en el backend
   const syncRes = await fetch(`${apiBaseUrl}/api/surveys/${surveyId}/sync`, {
     method: "PATCH",
+    headers: authHeaders,
   });
 
   if (!syncRes.ok) {

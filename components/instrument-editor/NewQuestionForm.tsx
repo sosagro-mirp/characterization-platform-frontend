@@ -15,6 +15,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
   const [text, setText] = useState("");
   const [typeId, setTypeId] = useState(questionTypes[0]?.typeId ?? "");
   const [isRequired, setIsRequired] = useState(false);
+  const [isSelectionCriteria, setIsSelectionCriteria] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -29,6 +30,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         text: text.trim(),
         typeId,
         isRequired,
+        isSelectionCriteria,
         order: nextOrder,
       });
     } catch (err) {
@@ -40,17 +42,17 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">
           Nueva pregunta
         </p>
-        <p className="text-sm text-neutral-500">
-          Sección: <span className="font-medium text-neutral-700">{section?.name}</span>
+        <p className="text-sm text-[var(--text-muted)]">
+          Sección: <span className="font-medium text-[var(--text-primary)]">{section?.name}</span>
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Texto de la pregunta <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+          Texto de la pregunta <span className="text-[var(--danger-fg)]">*</span>
         </label>
         <textarea
           rows={3}
@@ -59,19 +61,19 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Escribe la pregunta aquí…"
-          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Tipo de pregunta <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+          Tipo de pregunta <span className="text-[var(--danger-fg)]">*</span>
         </label>
         <select
           required
           value={typeId}
           onChange={(e) => setTypeId(e.target.value)}
-          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
         >
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
@@ -88,29 +90,45 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           id="newIsRequired"
           checked={isRequired}
           onChange={(e) => setIsRequired(e.target.checked)}
-          className="h-4 w-4 rounded border-neutral-300 accent-green-700"
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
         />
-        <label htmlFor="newIsRequired" className="text-sm text-neutral-700">
+        <label htmlFor="newIsRequired" className="text-sm text-[var(--text-primary)]">
           Pregunta obligatoria
         </label>
       </div>
 
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="newIsSelectionCriteria"
+          checked={isSelectionCriteria}
+          onChange={(e) => setIsSelectionCriteria(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+        />
+        <label
+          htmlFor="newIsSelectionCriteria"
+          className="text-sm text-[var(--text-primary)]"
+        >
+          Criterio de selección de unidades productivas
+        </label>
+      </div>
+
       {error && (
-        <p className="text-sm text-red-600 rounded-lg bg-red-50 px-3 py-2">{error}</p>
+        <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">{error}</p>
       )}
 
       <div className="flex gap-3">
         <button
           type="submit"
           disabled={saving || !text.trim() || !typeId}
-          className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors disabled:opacity-50"
+          className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
         >
           {saving ? "Creando…" : "Crear pregunta"}
         </button>
         <button
           type="button"
           onClick={() => setSelection({ kind: "section", sectionId })}
-          className="rounded-xl border border-neutral-200 px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+          className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
         >
           Cancelar
         </button>

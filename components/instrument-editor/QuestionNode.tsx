@@ -36,23 +36,31 @@ export default function QuestionNode({
 
   return (
     <div
-      className={`group flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors ${isSelected ? "bg-green-50 text-green-800" : "hover:bg-neutral-50"
+      className={`group flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors ${isSelected ? "bg-[var(--success-bg)] text-[var(--success-fg)]" : "hover:bg-[var(--surface-muted)]"
         }`}
       onClick={() =>
         setSelection({ kind: "question", sectionId, questionId: question.questionId })
       }
     >
-      <span className="mt-0.5 text-xs text-neutral-400 w-4 shrink-0">
+      <span className="mt-0.5 text-xs text-[var(--text-muted)] w-4 shrink-0">
         {question.order}.
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm truncate text-neutral-800">{question.text}</p>
+        <p className="text-sm truncate text-[var(--text-primary)]">{question.text}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-[10px] font-medium rounded-full bg-neutral-100 px-1.5 py-0.5 text-neutral-500">
+          <span className="text-[10px] font-medium rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[var(--text-muted)]">
             {TYPE_LABELS[question.type?.name] ?? question.type?.name}
           </span>
           {question.isRequired && (
-            <span className="text-[10px] text-red-500 font-medium">*</span>
+            <span className="text-[10px] text-[var(--danger-fg)] font-medium">*</span>
+          )}
+          {question.isSelectionCriteria && (
+            <span
+              className="text-[10px] font-medium rounded-full bg-indigo-100 px-1.5 py-0.5 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+              title="Criterio de selección de unidades productivas"
+            >
+              Criterio
+            </span>
           )}
         </div>
       </div>
@@ -64,7 +72,7 @@ export default function QuestionNode({
             e.stopPropagation();
             reorderQuestion(sectionId, question.questionId, "up");
           }}
-          className="p-1 rounded hover:bg-neutral-200 disabled:opacity-30"
+          className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
           title="Subir"
         >
           <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
@@ -78,7 +86,7 @@ export default function QuestionNode({
             e.stopPropagation();
             reorderQuestion(sectionId, question.questionId, "down");
           }}
-          className="p-1 rounded hover:bg-neutral-200 disabled:opacity-30"
+          className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
           title="Bajar"
         >
           <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
@@ -91,7 +99,7 @@ export default function QuestionNode({
             e.stopPropagation();
             removeQuestionFromStore(sectionId, question.questionId);
           }}
-          className="p-1 rounded hover:bg-red-100 text-red-500"
+          className="p-1 rounded hover:bg-[var(--danger-bg)] text-[var(--danger-fg)]"
           title="Eliminar"
         >
           <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">

@@ -11,7 +11,6 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SosAgro 4.C ",
   description: "SosAgro 4.C es un proyecto financiado por el ministerio de ciencia ...",
-  manifest: "/manifest.json",
   themeColor: "#14532d",
 };
 

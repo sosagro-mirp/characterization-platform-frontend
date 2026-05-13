@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getInstruments } from "@/services/instruments.service";
 import InstrumentsTable from "@/components/instrument-editor/InstrumentsTable";
+import AdminOnly from "@/components/admin/AdminOnly";
 
 export default async function AdminInstrumentsPage() {
   const instruments = await getInstruments();
@@ -9,7 +10,7 @@ export default async function AdminInstrumentsPage() {
     <div>
       <Link
         href="/"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-800 transition-colors"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -30,17 +31,19 @@ export default async function AdminInstrumentsPage() {
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Instrumentos</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Instrumentos</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
             {instruments.length} instrumento{instruments.length !== 1 ? "s" : ""} en total
           </p>
         </div>
-        <Link
-          href="/admin/instruments/new"
-          className="rounded-xl bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors"
-        >
-          Nuevo instrumento
-        </Link>
+        <AdminOnly>
+          <Link
+            href="/admin/instruments/new"
+            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors"
+          >
+            Nuevo instrumento
+          </Link>
+        </AdminOnly>
       </div>
 
       <InstrumentsTable instruments={instruments} />
