@@ -22,7 +22,7 @@ export const Banner = () => {
                 <div className="lg:w-[50%] 2xl:w-[40%] mt-12 md:mt-6 lg:mt-0">
                     <div className='bg-white w-full lg:h-full overflow-hidden'>
                         <Image src="/campesino.jpg" alt="campesino" width={1000} height={1000} className="w-full h-full object-cover" />
-                        <Image src="/campesino2.jpg" alt="campesino2" width={1000} height={1000} className="w-full h-full object-cover lg:hidden" />
+                        <Image src="/campesino.jpg" alt="campesino2" width={1000} height={1000} className="w-full h-full object-cover lg:hidden" />
                     </div>
                 </div >
             </div>

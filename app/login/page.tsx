@@ -32,7 +32,7 @@ export default function LoginPage() {
             </div>
             <div className="hidden lg:block w-[50%] h-full overflow-hidden">
                 <Image
-                    src="/cacao.jpg"
+                    src="/crops/cacao.jpg"
                     alt="campesino"
                     width={1000}
                     height={1000}

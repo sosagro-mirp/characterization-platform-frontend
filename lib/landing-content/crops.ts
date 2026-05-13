@@ -4,7 +4,7 @@ export const crops: readonly Crop[] = [
   {
     slug: "cafe",
     name: "Café",
-    image: "/cafe.jpg",
+    image: "/crops/cafe.jpg",
     productiveUnits: 18,
     description:
       "Monitoreo agroclimático y de calidad en finca cafetera para optimizar cultivo, cosecha y postcosecha.",
@@ -12,7 +12,7 @@ export const crops: readonly Crop[] = [
   {
     slug: "cacao",
     name: "Cacao",
-    image: "/cacao.jpg",
+    image: "/crops/cacao.jpg",
     productiveUnits: 12,
     description:
       "Captura de variables agroclimáticas y trazabilidad de procesos de fermentación y secado.",
@@ -20,7 +20,7 @@ export const crops: readonly Crop[] = [
   {
     slug: "cannabis",
     name: "Cannabis",
-    image: "/cannabis.jpg",
+    image: "/crops/cannabis.jpg",
     productiveUnits: 5,
     description:
       "Sensores y visión multiespectral para control de calidad y caracterización de variedades.",
@@ -28,7 +28,7 @@ export const crops: readonly Crop[] = [
   {
     slug: "canamo",
     name: "Cáñamo",
-    image: "/cannabis.jpg",
+    image: "/crops/cannabis.jpg",
     productiveUnits: 5,
     description:
       "Caracterización de cultivo y residuos para alternativas de aprovechamiento bioeconómico.",

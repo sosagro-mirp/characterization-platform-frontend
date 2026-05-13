@@ -106,7 +106,7 @@ export function Platform() {
         <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
           <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-light/60 to-transparent rounded-3xl blur-2xl" />
           <Image
-            src="/celular4.png"
+            src="/logo.jpg"
             alt="Aplicación móvil de la plataforma SOS Agro 4C mostrando el flujo de encuesta"
             width={800}
             height={1000}
