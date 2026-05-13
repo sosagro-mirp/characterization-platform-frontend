@@ -1,0 +1,110 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import {
+  CampaignDetail,
+  CreateCampaignRequest,
+  InstrumentListItem,
+  UpdateCampaignRequest,
+} from "@/app/(admin)/types";
+import {
+  getCampaign,
+  updateCampaign,
+} from "@/services/campaigns.service";
+import { getInstruments } from "@/services/instruments.service";
+import { useAuthStore } from "@/store/useAuthStore";
+import CampaignForm from "@/components/admin/campaigns/CampaignForm";
+import StepEditor from "@/components/admin/campaigns/StepEditor";
+
+export default function EditCampaignPage() {
+  const params = useParams<{ id: string }>();
+  const campaignId = params.id;
+  const isAdmin = useAuthStore((s) => s.user?.role === "admin");
+
+  const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
+  const [instruments, setInstruments] = useState<InstrumentListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const [c, i] = await Promise.all([
+        getCampaign(campaignId),
+        getInstruments(),
+      ]);
+      setCampaign(c);
+      setInstruments(i);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar campaña.");
+    }
+  }, [campaignId]);
+
+  useEffect(() => {
+    (async () => {
+      await refresh();
+      setLoading(false);
+    })();
+  }, [refresh]);
+
+  async function handleSave(
+    data: CreateCampaignRequest | UpdateCampaignRequest,
+  ) {
+    const updated = await updateCampaign(campaignId, data as UpdateCampaignRequest);
+    setCampaign(updated);
+  }
+
+  if (loading) {
+    return <p className="text-sm text-[var(--text-muted)]">Cargando…</p>;
+  }
+
+  if (!campaign) {
+    return (
+      <p className="text-sm text-[var(--danger-fg)]">
+        {error ?? "Campaña no encontrada."}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+          {campaign.name}
+        </h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          {campaign.steps.length} paso{campaign.steps.length === 1 ? "" : "s"} configurado
+          {campaign.steps.length === 1 ? "" : "s"}.
+        </p>
+      </div>
+
+      {error && (
+        <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
+          {error}
+        </p>
+      )}
+
+      <section>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-3">
+          Datos generales
+        </h2>
+        <CampaignForm
+          mode="edit"
+          initial={campaign}
+          onSubmit={handleSave}
+          submitLabel="Guardar cambios"
+          canToggleActive={isAdmin}
+        />
+      </section>
+
+      <section>
+        <StepEditor
+          campaignId={campaignId}
+          steps={campaign.steps}
+          instruments={instruments}
+          onChanged={refresh}
+        />
+      </section>
+    </div>
+  );
+}

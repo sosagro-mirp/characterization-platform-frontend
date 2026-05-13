@@ -29,6 +29,12 @@ export default function AdminShell({ children }: AdminShellProps) {
         >
           Instrumentos
         </Link>
+        <Link
+          href="/admin/campaigns"
+          className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+        >
+          Campañas
+        </Link>
         {role === "admin" && (
           <Link
             href="/admin/users"
