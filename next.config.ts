@@ -30,6 +30,8 @@ export default withPWA({
           return (
             path === "/instrument" ||
             path.startsWith("/instrument/") ||
+            path === "/campaign" ||
+            path.startsWith("/campaign/") ||
             path === "/login"
           );
         },
@@ -55,6 +57,24 @@ export default withPWA({
         handler: "StaleWhileRevalidate",
         options: {
           cacheName: "instrument-render-cache",
+          expiration: { maxEntries: 10, maxAgeSeconds: 7 * 24 * 60 * 60 },
+        },
+      },
+      // Listado de campañas activas (público): SWR.
+      {
+        urlPattern: /\/api\/campaigns\/active(?:\?.*)?$/,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "campaign-list-cache",
+          expiration: { maxEntries: 5, maxAgeSeconds: 24 * 60 * 60 },
+        },
+      },
+      // Render de campaña (pasos y condiciones): SWR.
+      {
+        urlPattern: /\/api\/campaigns\/.*\/render$/,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "campaign-render-cache",
           expiration: { maxEntries: 10, maxAgeSeconds: 7 * 24 * 60 * 60 },
         },
       },

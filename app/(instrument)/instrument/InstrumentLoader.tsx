@@ -96,6 +96,8 @@ export default function InstrumentLoader({
           instrumentId: instrument.instrumentId,
           instrumentName: instrument.name,
           instrumentVersion: instrument.version,
+          campaignSessionId,
+          stepOrder,
         });
         setState({ phase: 'ready', instrument, localId, isOffline });
       }

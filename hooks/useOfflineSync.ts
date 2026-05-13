@@ -12,6 +12,7 @@ import {
   getPendingOption,
   deletePendingOption,
 } from "@/lib/db/offlineSurveyService";
+import { offlineDb, type PendingCampaignSession } from "@/lib/db/offlineDb";
 import { useAuthStore } from "@/store/useAuthStore";
 
 // * idle: no hay sincronización en curso
@@ -53,6 +54,41 @@ function buildPayload(
   return payload;
 }
 
+async function syncPendingCampaignSession(
+  session: PendingCampaignSession,
+  apiBaseUrl: string,
+  authHeaders: Record<string, string>,
+): Promise<string> {
+  if (session.sessionId) return session.sessionId;
+  await offlineDb.pendingCampaignSessions.update(session.localSessionId, {
+    syncStatus: "syncing",
+  });
+
+  const res = await fetch(`${apiBaseUrl}/api/campaign-sessions`, {
+    method: "POST",
+    headers: authHeaders,
+    body: JSON.stringify({
+      campaignId: session.campaignId,
+      ...session.context,
+    }),
+  });
+
+  if (!res.ok) {
+    await offlineDb.pendingCampaignSessions.update(session.localSessionId, {
+      syncStatus: "error",
+      syncError: `POST /campaign-sessions falló: ${res.status}`,
+    });
+    throw new Error(`POST /campaign-sessions falló: ${res.status}`);
+  }
+
+  const data = (await res.json()) as { sessionId: string };
+  await offlineDb.pendingCampaignSessions.update(session.localSessionId, {
+    sessionId: data.sessionId,
+    syncStatus: "done",
+  });
+  return data.sessionId;
+}
+
 async function syncOne(
   survey: PendingSurvey,
   apiBaseUrl: string,
@@ -68,11 +104,36 @@ async function syncOne(
   // * 1. Marcar como en proceso de sincronización
   await markSurveyAsSyncing(survey.localId);
 
+  // * 1b. Si el survey apunta a una localSessionId pendiente, sincronizar
+  //       primero la sesión y obtener el sessionId real.
+  let resolvedCampaignSessionId = survey.campaignSessionId;
+  if (!resolvedCampaignSessionId && survey.campaignLocalSessionId) {
+    const pendingSession = await offlineDb.pendingCampaignSessions.get(
+      survey.campaignLocalSessionId,
+    );
+    if (pendingSession) {
+      resolvedCampaignSessionId = await syncPendingCampaignSession(
+        pendingSession,
+        apiBaseUrl,
+        authHeaders,
+      );
+    }
+  }
+
   // * 2. Crear encuesta en el servidor para obtener surveyId real
+  const surveyBody: Record<string, unknown> = {
+    instrumentIds: [survey.instrumentId],
+  };
+  if (resolvedCampaignSessionId) {
+    surveyBody.campaignSessionId = resolvedCampaignSessionId;
+  }
+  if (typeof survey.stepOrder === "number") {
+    surveyBody.stepOrder = survey.stepOrder;
+  }
   const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
     method: "POST",
     headers: authHeaders,
-    body: JSON.stringify({ instrumentIds: [survey.instrumentId] }),
+    body: JSON.stringify(surveyBody),
   });
 
   if (!surveyRes.ok) {

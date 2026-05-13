@@ -18,6 +18,9 @@ interface CreatePendingSurveyParams {
   instrumentId: string;
   instrumentName: string;
   instrumentVersion: number;
+  campaignSessionId?: string;
+  campaignLocalSessionId?: string;
+  stepOrder?: number;
 }
 
 export async function createPendingSurvey(
@@ -34,6 +37,9 @@ export async function createPendingSurvey(
     answers: {},
     currentIndex: 0,
     syncStatus: 'pending',
+    campaignSessionId: params.campaignSessionId,
+    campaignLocalSessionId: params.campaignLocalSessionId,
+    stepOrder: params.stepOrder,
   };
 
   await offlineDb.pendingSurveys.add(record);
