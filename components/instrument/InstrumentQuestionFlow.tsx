@@ -32,6 +32,7 @@ export default function InstrumentQuestionFlow({
     const [completed, setCompleted] = useState(false);
     const [savedOffline, setSavedOffline] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [sessionExpired, setSessionExpired] = useState(false);
     const {
         initializeSurvey,
         flattenedQuestions,
@@ -144,6 +145,8 @@ export default function InstrumentQuestionFlow({
                 // * Si se guardó offline, marcar como completado y guardado offline
                 setCompleted(true);
                 setSavedOffline(true);
+            } else if (result.outcome === "session_expired") {
+                setSessionExpired(true);
             }
             return;
         }
@@ -169,6 +172,18 @@ export default function InstrumentQuestionFlow({
         <section className=" h-screen flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
             {/* Barra de progreso y encabezado */}
             <div>
+                {sessionExpired && (
+                    <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-800 text-center flex items-center justify-center gap-3">
+                        <span>Tu sesión expiró. Tus respuestas están guardadas localmente.</span>
+                        <button
+                            type="button"
+                            onClick={() => router.push("/login")}
+                            className="rounded-md bg-red-700 px-3 py-1 text-xs font-medium text-white hover:bg-red-800 transition-colors"
+                        >
+                            Iniciar sesión
+                        </button>
+                    </div>
+                )}
                 {isOffline && (
                     <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
                         Sin conexion. Las respuestas se guardaran localmente y se enviaran cuando haya red.

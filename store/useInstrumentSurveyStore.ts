@@ -13,6 +13,7 @@ import {
 } from "@/lib/db/offlineSurveyService";
 import { offlineDb } from "@/lib/db/offlineDb";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface FlattenedQuestionItem {
   sectionId: string;
@@ -278,14 +279,26 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
           throw new Error("No se encontró la encuesta local");
         }
 
+        const accessToken = useAuthStore.getState().accessToken;
+        const surveyHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (accessToken) {
+          surveyHeaders["Authorization"] = `Bearer ${accessToken}`;
+        }
+
         const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: surveyHeaders,
           body: JSON.stringify({
             instrumentIds: [pendingSurvey.instrumentId],
           }),
         });
 
+        if (surveyRes.status === 401) {
+          set({ submitting: false });
+          return { outcome: "session_expired" };
+        }
         if (!surveyRes.ok) throw new Error(`Server error: ${surveyRes.status}`);
 
         const surveyData = await surveyRes.json();
@@ -314,12 +327,24 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       // *5. Enviar respuestas al servidor
       try {
+        const accessToken = useAuthStore.getState().accessToken;
+        const batchHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (accessToken) {
+          batchHeaders["Authorization"] = `Bearer ${accessToken}`;
+        }
+
         const res = await fetch(`${apiBaseUrl}/api/responses/batch`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: batchHeaders,
           body: JSON.stringify(payload),
         });
 
+        if (res.status === 401) {
+          set({ submitting: false });
+          return { outcome: "session_expired" };
+        }
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
         await markSurveyAsDone(localId, surveyId);
