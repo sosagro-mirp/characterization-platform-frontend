@@ -23,7 +23,8 @@ export default function LoginForm() {
   }
 
   function fallbackForRole(role: string | null): string {
-    return role === "admin" ? "/admin/instruments" : "/instrument";
+    if (role === "admin" || role === "researcher") return "/admin/instruments";
+    return "/instrument";
   }
 
   function validate(): string | null {
