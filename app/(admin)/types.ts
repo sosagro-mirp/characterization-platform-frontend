@@ -166,3 +166,63 @@ export interface UpdateUserRequest {
   password?: string;
   roleId?: string;
 }
+
+// ── Campaign / CampaignStep ──────────────────────────────────────────────────
+
+export interface InstrumentRef {
+  instrumentId: string;
+  name: string;
+  isActive: boolean;
+}
+
+export interface QuestionRef {
+  questionId: string;
+  text: string;
+}
+
+export interface CampaignStepDetail {
+  stepId: string;
+  order: number;
+  instrument: InstrumentRef;
+  conditionQuestion: QuestionRef | null;
+  conditionValue: string | null;
+}
+
+export interface CampaignSummary {
+  campaignId: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CampaignDetail extends CampaignSummary {
+  steps: CampaignStepDetail[];
+}
+
+export interface CreateCampaignRequest {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateCampaignRequest {
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface CreateCampaignStepRequest {
+  instrumentId: string;
+  order: number;
+  conditionQuestionId?: string;
+  conditionValue?: string;
+}
+
+export interface UpdateCampaignStepRequest {
+  instrumentId?: string;
+  order?: number;
+  conditionQuestionId?: string | null;
+  conditionValue?: string | null;
+}
