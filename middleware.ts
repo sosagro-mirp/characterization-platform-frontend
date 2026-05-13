@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCookie";
 
 const PROTECTED_PREFIXES = ["/admin", "/instrument"];
+const PANEL_ROLES = new Set(["admin", "researcher"]);
 
 function isSafeFromPath(from: string | null): from is string {
   if (!from) return false;
@@ -12,7 +13,8 @@ function isSafeFromPath(from: string | null): from is string {
 }
 
 function destinationForRole(role: string | null): string {
-  return role === "admin" ? "/admin/instruments" : "/instrument";
+  if (role && PANEL_ROLES.has(role)) return "/admin/instruments";
+  return "/instrument";
 }
 
 export function middleware(request: NextRequest) {
@@ -27,10 +29,27 @@ export function middleware(request: NextRequest) {
   );
 
   if (isProtected) {
-    if (hasSession) return NextResponse.next();
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname + search);
-    return NextResponse.redirect(loginUrl);
+    if (!hasSession) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("from", pathname + search);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (pathname.startsWith("/admin")) {
+      if (!role || !PANEL_ROLES.has(role)) {
+        return NextResponse.redirect(new URL("/instrument", request.url));
+      }
+      if (
+        role === "researcher" &&
+        (pathname === "/admin/users" || pathname.startsWith("/admin/users/"))
+      ) {
+        return NextResponse.redirect(
+          new URL("/admin/instruments", request.url),
+        );
+      }
+    }
+
+    return NextResponse.next();
   }
 
   if (pathname === "/login" && hasSession) {
