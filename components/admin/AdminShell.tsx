@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useIsAdminDark } from "@/lib/theme/useApplyAdminTheme";
 import ThemeToggle from "@/components/admin/ThemeToggle";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface AdminShellProps {
 
 export default function AdminShell({ children }: AdminShellProps) {
   const isDark = useIsAdminDark();
+  const role = useAuthStore((s) => s.user?.role ?? null);
 
   return (
     <div
@@ -27,6 +29,14 @@ export default function AdminShell({ children }: AdminShellProps) {
         >
           Instrumentos
         </Link>
+        {role === "admin" && (
+          <Link
+            href="/admin/users"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+          >
+            Usuarios
+          </Link>
+        )}
         <div className="mt-auto pt-4 border-t border-[var(--border)]">
           <ThemeToggle />
         </div>
