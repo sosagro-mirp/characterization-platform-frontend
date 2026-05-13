@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { InstrumentCard } from "@/components/instrument/InstrumentCard";
 import { InstrumentSummary } from "@/app/(instrument)/types";
 
@@ -42,6 +43,14 @@ export default async function InstrumentListPage() {
           Selecciona el instrumento que deseas aplicar en campo.
         </p>
       </header>
+
+      <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        ¿Vas a aplicar varias encuestas a un mismo agricultor?{" "}
+        <Link href="/campaign" className="font-semibold underline">
+          Aplica una campaña encadenada
+        </Link>{" "}
+        para capturar el contexto una sola vez.
+      </div>
 
       {fetchError && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">

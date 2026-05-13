@@ -18,6 +18,8 @@ interface InstrumentQuestionFlowProps {
     sections: InstrumentSection[];
     isOffline: boolean;
     apiBaseUrl: string;
+    campaignSessionId?: string;
+    stepOrder?: number;
 }
 
 export default function InstrumentQuestionFlow({
@@ -26,6 +28,8 @@ export default function InstrumentQuestionFlow({
     sections,
     isOffline,
     apiBaseUrl,
+    campaignSessionId,
+    stepOrder,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
     const [validationError, setValidationError] = useState<string>();
@@ -136,7 +140,10 @@ export default function InstrumentQuestionFlow({
 
         // * Si es la última pregunta, enviar respuestas al servidor
         if (isLastQuestion) {
-            const result = await submitResponses(apiBaseUrl);
+            const result = await submitResponses(apiBaseUrl, {
+                campaignSessionId,
+                stepOrder,
+            });
 
             if (result.outcome === "submitted") {
                 // * Si se envió correctamente, marcar como completado
@@ -165,7 +172,12 @@ export default function InstrumentQuestionFlow({
     };
 
     if (completed) {
-        return <SurveyCompletedCard savedOffline={savedOffline} />;
+        return (
+            <SurveyCompletedCard
+                savedOffline={savedOffline}
+                campaignSessionId={campaignSessionId}
+            />
+        );
     }
 
     return (

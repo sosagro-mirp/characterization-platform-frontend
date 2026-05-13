@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 
 interface SurveyCompletedCardProps {
     title?: string;
@@ -6,6 +9,7 @@ interface SurveyCompletedCardProps {
     ctaText?: string;
     ctaHref?: string;
     savedOffline?: boolean;
+    campaignSessionId?: string;
 }
 
 export default function SurveyCompletedCard({
@@ -14,7 +18,17 @@ export default function SurveyCompletedCard({
     ctaText = "Volver al inicio",
     ctaHref = "/",
     savedOffline = false,
+    campaignSessionId,
 }: SurveyCompletedCardProps) {
+    const campaignFromStore = useCampaignSessionStore((s) => ({
+        sessionId: s.sessionId,
+        campaignId: s.campaignId,
+    }));
+
+    const activeSessionId = campaignSessionId ?? campaignFromStore.sessionId ?? null;
+    const activeCampaignId = campaignFromStore.campaignId ?? null;
+    const inCampaign = Boolean(activeSessionId && activeCampaignId);
+
     const displayMessage = savedOffline
         ? "Sus respuestas han sido guardadas localmente y se enviaran al servidor cuando haya conexion."
         : message;
@@ -39,12 +53,30 @@ export default function SurveyCompletedCard({
             </div>
             <h2 className="font-bold text-3xl mt-6">{title}</h2>
             <p className="text-gray-500 mt-2 px-4 text-center">{displayMessage}</p>
-            <Link
-                href={ctaHref}
-                className="bg-green-900 px-4 py-3 rounded-xl text-gray-200 flex items-center gap-2 mt-12"
-            >
-                {ctaText}
-            </Link>
+
+            {inCampaign ? (
+                <div className="flex flex-col items-center gap-3 mt-12">
+                    <Link
+                        href={`/campaign/${activeCampaignId}/session/${activeSessionId}`}
+                        className="bg-green-900 px-4 py-3 rounded-xl text-gray-200 flex items-center gap-2"
+                    >
+                        Continuar con la siguiente encuesta
+                    </Link>
+                    <Link
+                        href="/campaign"
+                        className="text-sm text-gray-500 underline"
+                    >
+                        Salir
+                    </Link>
+                </div>
+            ) : (
+                <Link
+                    href={ctaHref}
+                    className="bg-green-900 px-4 py-3 rounded-xl text-gray-200 flex items-center gap-2 mt-12"
+                >
+                    {ctaText}
+                </Link>
+            )}
         </section>
     );
 }

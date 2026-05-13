@@ -39,7 +39,10 @@ interface InstrumentSurveyState {
   clearError: () => void;
   resetSurvey: () => void;
   buildResponsesPayload: () => CreateResponsePayload[];
-  submitResponses: (apiBaseUrl: string) => Promise<SubmitResult>;
+  submitResponses: (
+    apiBaseUrl: string,
+    campaignContext?: { campaignSessionId?: string; stepOrder?: number },
+  ) => Promise<SubmitResult>;
 }
 
 const initialState = {
@@ -193,7 +196,10 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     // * Enviar respuestas al servidor
-    submitResponses: async (apiBaseUrl: string): Promise<SubmitResult> => {
+    submitResponses: async (
+      apiBaseUrl: string,
+      campaignContext?: { campaignSessionId?: string; stepOrder?: number },
+    ): Promise<SubmitResult> => {
       // * 1. Validaciones iniciales
       const { localId, flattenedQuestions, answers, buildResponsesPayload } =
         get();
@@ -287,12 +293,20 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
           surveyHeaders["Authorization"] = `Bearer ${accessToken}`;
         }
 
+        const surveyBody: Record<string, unknown> = {
+          instrumentIds: [pendingSurvey.instrumentId],
+        };
+        if (campaignContext?.campaignSessionId) {
+          surveyBody.campaignSessionId = campaignContext.campaignSessionId;
+        }
+        if (typeof campaignContext?.stepOrder === "number") {
+          surveyBody.stepOrder = campaignContext.stepOrder;
+        }
+
         const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
           method: "POST",
           headers: surveyHeaders,
-          body: JSON.stringify({
-            instrumentIds: [pendingSurvey.instrumentId],
-          }),
+          body: JSON.stringify(surveyBody),
         });
 
         if (surveyRes.status === 401) {

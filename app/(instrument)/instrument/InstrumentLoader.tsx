@@ -31,9 +31,16 @@ type LoaderState =
 interface InstrumentLoaderProps {
   instrumentId: string;
   apiBaseUrl: string;
+  campaignSessionId?: string;
+  stepOrder?: number;
 }
 
-export default function InstrumentLoader({ instrumentId, apiBaseUrl }: InstrumentLoaderProps) {
+export default function InstrumentLoader({
+  instrumentId,
+  apiBaseUrl,
+  campaignSessionId,
+  stepOrder,
+}: InstrumentLoaderProps) {
   const [state, setState] = useState<LoaderState>({ phase: 'loading' });
 
   useEffect(() => {
@@ -199,6 +206,8 @@ export default function InstrumentLoader({ instrumentId, apiBaseUrl }: Instrumen
       sections={instrument.sections}
       isOffline={isOffline}
       apiBaseUrl={apiBaseUrl}
+      campaignSessionId={campaignSessionId}
+      stepOrder={stepOrder}
     />
   );
 }

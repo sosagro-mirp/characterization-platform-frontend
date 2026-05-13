@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCookie";
 
-const PROTECTED_PREFIXES = ["/admin", "/instrument"];
+const PROTECTED_PREFIXES = ["/admin", "/instrument", "/campaign"];
 const PANEL_ROLES = new Set(["admin", "researcher"]);
 
 function isSafeFromPath(from: string | null): from is string {
@@ -62,5 +62,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/instrument/:path*", "/login"],
+  matcher: [
+    "/admin/:path*",
+    "/instrument/:path*",
+    "/campaign/:path*",
+    "/login",
+  ],
 };
