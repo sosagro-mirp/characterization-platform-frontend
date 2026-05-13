@@ -6,6 +6,7 @@ import {
   CreateInstrumentRequest,
   UpdateInstrumentRequest,
 } from "@/app/(admin)/types";
+import { useAuthStore } from "@/store/useAuthStore";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 
 interface InstrumentFormProps {
@@ -48,6 +49,7 @@ export default function InstrumentForm({
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
+  const isAdmin = useAuthStore((s) => s.user?.role === "admin");
 
   const lastPersisted = useRef({
     name: initialValues?.name ?? "",
@@ -169,18 +171,20 @@ export default function InstrumentForm({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="isActive"
-          checked={isActive}
-          onChange={(e) => handleIsActiveChange(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label htmlFor="isActive" className="text-sm text-[var(--text-primary)]">
-          Instrumento activo (visible para encuestadores)
-        </label>
-      </div>
+      {isAdmin && (
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="isActive"
+            checked={isActive}
+            onChange={(e) => handleIsActiveChange(e.target.checked)}
+            className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+          />
+          <label htmlFor="isActive" className="text-sm text-[var(--text-primary)]">
+            Instrumento activo (visible para encuestadores)
+          </label>
+        </div>
+      )}
 
       {actorTypes.length > 0 && (
         <div>

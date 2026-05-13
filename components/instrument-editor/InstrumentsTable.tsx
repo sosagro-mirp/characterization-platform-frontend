@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { InstrumentListItem } from "@/app/(admin)/types";
 import { deleteInstrument, updateInstrument } from "@/services/instruments.service";
+import { useAuthStore } from "@/store/useAuthStore";
 import ConfirmDialog from "./ConfirmDialog";
 
 interface InstrumentsTableProps {
@@ -13,6 +14,7 @@ interface InstrumentsTableProps {
 
 export default function InstrumentsTable({ instruments }: InstrumentsTableProps) {
   const router = useRouter();
+  const isAdmin = useAuthStore((s) => s.user?.role === "admin");
   const [deleteTarget, setDeleteTarget] = useState<InstrumentListItem | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -116,22 +118,26 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                     >
                       Editar
                     </Link>
-                    <button
-                      type="button"
-                      disabled={loadingId === inst.instrumentId}
-                      onClick={() => handleToggleActive(inst)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
-                    >
-                      {inst.isActive ? "Desactivar" : "Activar"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={loadingId === inst.instrumentId}
-                      onClick={() => setDeleteTarget(inst)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
-                    >
-                      Eliminar
-                    </button>
+                    {isAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={loadingId === inst.instrumentId}
+                          onClick={() => handleToggleActive(inst)}
+                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
+                        >
+                          {inst.isActive ? "Desactivar" : "Activar"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={loadingId === inst.instrumentId}
+                          onClick={() => setDeleteTarget(inst)}
+                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
+                        >
+                          Eliminar
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
