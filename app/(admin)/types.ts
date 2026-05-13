@@ -129,3 +129,40 @@ export interface UpdateInstrumentRequest {
   isActive?: boolean;
   actorTypeIds?: string[];
 }
+
+// ── Role / User ──────────────────────────────────────────────────────────────
+
+export type RoleName = "admin" | "researcher" | "pollster";
+
+export interface RoleSummary {
+  roleId: string;
+  name: RoleName;
+}
+
+export interface UserListItem {
+  userId: string;
+  name: string;
+  lastName: string;
+  email: string;
+  role: RoleSummary | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserDetail extends UserListItem {}
+
+export interface CreateUserRequest {
+  name: string;
+  lastName: string;
+  email: string;
+  password: string;
+  roleId: string;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  roleId?: string;
+}
