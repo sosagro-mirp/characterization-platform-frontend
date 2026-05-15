@@ -181,7 +181,7 @@ export default function InstrumentQuestionFlow({
     }
 
     return (
-        <section className=" h-screen flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
+        <section className="h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-3.5rem)] flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
             {/* Barra de progreso y encabezado */}
             <div>
                 {sessionExpired && (
@@ -251,11 +251,11 @@ export default function InstrumentQuestionFlow({
                             answer={currentAnswer}
                             onAnswerChange={handleAnswerChange}
                         />
-                        <p className="text-gray-400 text-sm max-w-xl mx-auto mt-2">
+                        <p className="text-gray-400 text-sm max-w-xl mx-auto mt-2 px-6">
                             Pregunta {totalVisible === 0 ? 0 : visibleIndex + 1} de {totalVisible}
                         </p>
                         {(validationError || error) && (
-                            <p className="mt-4 max-w-xl mx-auto rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
+                            <p className="mt-4 max-w-xl mx-auto rounded-md bg-red-50 px-6 py-2 text-sm text-red-700">
                                 {validationError || error}
                             </p>
                         )}
@@ -265,7 +265,7 @@ export default function InstrumentQuestionFlow({
                 )}
             </div>
 
-            <div className="px-4 py-6 border-t border-t-gray-200 items-center">
+            <div className="px-6 py-6 border-t border-t-gray-200 items-center">
                 <div className="flex w-full max-w-xl mx-auto justify-between">
                     <button
                         type="button"
