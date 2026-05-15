@@ -156,7 +156,17 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
               </tr>
             ))}
-            {filteredInstruments.length === 0 && (
+            {filteredInstruments.length === 0 && searchTerm && (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-10 text-center text-sm text-[var(--text-muted)]"
+                >
+                  No se encontraron instrumentos para &ldquo;{searchTerm}&rdquo;.
+                </td>
+              </tr>
+            )}
+            {filteredInstruments.length === 0 && !searchTerm && (
               <tr>
                 <td
                   colSpan={6}
