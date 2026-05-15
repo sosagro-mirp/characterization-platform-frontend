@@ -51,6 +51,15 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
 
   return (
     <>
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar instrumento por nombre…"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+        />
+      </div>
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
