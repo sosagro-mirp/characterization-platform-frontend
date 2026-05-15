@@ -11,6 +11,7 @@
  */
 export const SESSION_COOKIE = "sosagro.session";
 export const ROLE_COOKIE = "sosagro.role";
+export const MUST_CHANGE_COOKIE = "sosagro.must_change";
 const MAX_AGE_DAYS = 7;
 
 function buildCookie(name: string, value: string, maxAge: number): string {
@@ -45,4 +46,15 @@ export function setRoleCookie(role: string | null): void {
 export function clearRoleCookie(): void {
   if (typeof document === "undefined") return;
   document.cookie = buildCookie(ROLE_COOKIE, "", 0);
+}
+
+export function setMustChangeCookie(): void {
+  if (typeof document === "undefined") return;
+  const maxAge = MAX_AGE_DAYS * 24 * 60 * 60;
+  document.cookie = buildCookie(MUST_CHANGE_COOKIE, "1", maxAge);
+}
+
+export function clearMustChangeCookie(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = buildCookie(MUST_CHANGE_COOKIE, "", 0);
 }
