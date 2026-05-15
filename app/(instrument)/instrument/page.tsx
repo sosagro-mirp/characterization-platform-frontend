@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InstrumentCard } from "@/components/instrument/InstrumentCard";
+import InstrumentList from "@/components/instrument/InstrumentList";
 import { InstrumentSummary } from "@/app/(instrument)/types";
 
 async function getActiveInstruments(): Promise<InstrumentSummary[]> {
@@ -58,22 +58,7 @@ export default async function InstrumentListPage() {
         </div>
       )}
 
-      {!fetchError && instruments.length === 0 && (
-        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
-          No hay instrumentos activos disponibles en este momento.
-        </div>
-      )}
-
-      {!fetchError && instruments.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {instruments.map((instrument) => (
-            <InstrumentCard
-              key={instrument.instrumentId}
-              instrument={instrument}
-            />
-          ))}
-        </div>
-      )}
+      {!fetchError && <InstrumentList instruments={instruments} />}
     </main>
   );
 }
