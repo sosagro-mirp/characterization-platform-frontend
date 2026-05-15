@@ -156,6 +156,11 @@ export default function UserForm({
           }
           className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
+        {mode === "edit" && (
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Si estableces una nueva contraseña, el usuario deberá cambiarla en su próximo inicio de sesión.
+          </p>
+        )}
       </div>
 
       <div>

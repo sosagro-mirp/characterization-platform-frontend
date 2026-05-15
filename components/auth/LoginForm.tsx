@@ -52,6 +52,10 @@ export default function LoginForm() {
     setLoading(true);
     try {
       const { user } = await login({ email: email.trim(), password });
+      if (user.mustChangePassword) {
+        router.replace("/change-password");
+        return;
+      }
       const target = isSafeFrom(from) ? from : fallbackForRole(user.role);
       router.replace(target);
     } catch (err) {
