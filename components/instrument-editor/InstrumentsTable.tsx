@@ -17,6 +17,11 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
   const isAdmin = useAuthStore((s) => s.user?.role === "admin");
   const [deleteTarget, setDeleteTarget] = useState<InstrumentListItem | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredInstruments = instruments.filter((inst) =>
+    inst.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleToggleActive = async (instrument: InstrumentListItem) => {
     setLoadingId(instrument.instrumentId);
@@ -59,7 +64,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
-            {instruments.map((inst) => (
+            {filteredInstruments.map((inst) => (
               <tr key={inst.instrumentId} className="hover:bg-[var(--surface-muted)]">
                 <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
                   {inst.name}
@@ -142,7 +147,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
               </tr>
             ))}
-            {instruments.length === 0 && (
+            {filteredInstruments.length === 0 && (
               <tr>
                 <td
                   colSpan={6}
