@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Script from "next/script";
 import { Suspense } from "react";
 import AdminGuard from "@/components/auth/AdminGuard";
@@ -66,6 +67,12 @@ export default function AdminLayout({
             desde un computador de escritorio o portátil.
           </p>
         </div>
+        <Link
+          href="/"
+          className="rounded-xl bg-green-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-800 transition-colors"
+        >
+          Volver al inicio
+        </Link>
       </div>
 
       {/* Desktop: panel completo */}
