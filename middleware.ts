@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCookie";
+import { MUST_CHANGE_COOKIE, ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCookie";
 
-const PROTECTED_PREFIXES = ["/admin", "/instrument", "/campaign"];
+const PROTECTED_PREFIXES = ["/admin", "/instrument", "/campaign", "/change-password"];
 const PANEL_ROLES = new Set(["admin", "researcher"]);
 
 function isSafeFromPath(from: string | null): from is string {
@@ -33,6 +33,11 @@ export function middleware(request: NextRequest) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", pathname + search);
       return NextResponse.redirect(loginUrl);
+    }
+
+    const mustChange = request.cookies.get(MUST_CHANGE_COOKIE)?.value === "1";
+    if (mustChange && pathname !== "/change-password") {
+      return NextResponse.redirect(new URL("/change-password", request.url));
     }
 
     if (pathname.startsWith("/admin")) {
@@ -66,6 +71,7 @@ export const config = {
     "/admin/:path*",
     "/instrument/:path*",
     "/campaign/:path*",
+    "/change-password",
     "/login",
   ],
 };
