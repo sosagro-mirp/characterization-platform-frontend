@@ -124,21 +124,17 @@ export default function InstrumentQuestionFlow({
         setAnswer(answer);
     };
 
-    // * Validar respuesta antes de avanzar o enviar
     const handleNext = async () => {
-        // * Salvaguarda: si la pregunta actual no es visible, saltar sin validar
         if (currentQuestion && !isQuestionVisible(currentQuestion, answers)) {
             goNext();
             return;
         }
 
-        // * Validar que la respuesta actual esté completa antes de avanzar
         if (currentQuestion && !isAnswerComplete(currentQuestion, currentAnswer)) {
             setValidationError("Debes responder esta pregunta antes de continuar.");
             return;
         }
 
-        // * Si es la última pregunta, enviar respuestas al servidor
         if (isLastQuestion) {
             const result = await submitResponses(apiBaseUrl, {
                 campaignSessionId,
@@ -146,10 +142,8 @@ export default function InstrumentQuestionFlow({
             });
 
             if (result.outcome === "submitted") {
-                // * Si se envió correctamente, marcar como completado
                 setCompleted(true);
             } else if (result.outcome === "saved_offline") {
-                // * Si se guardó offline, marcar como completado y guardado offline
                 setCompleted(true);
                 setSavedOffline(true);
             } else if (result.outcome === "session_expired") {
@@ -181,38 +175,50 @@ export default function InstrumentQuestionFlow({
     }
 
     return (
-        <section className="h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-3.5rem)] flex flex-col justify-between" data-answers-count={Object.keys(answers).length}>
-            {/* Barra de progreso y encabezado */}
-            <div>
-                {sessionExpired && (
-                    <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-800 text-center flex items-center justify-center gap-3">
-                        <span>Tu sesión expiró. Tus respuestas están guardadas localmente.</span>
-                        <button
-                            type="button"
-                            onClick={() => router.push("/login")}
-                            className="rounded-md bg-red-700 px-3 py-1 text-xs font-medium text-white hover:bg-red-800 transition-colors"
-                        >
-                            Iniciar sesión
-                        </button>
-                    </div>
-                )}
-                {isOffline && (
-                    <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
-                        Sin conexion. Las respuestas se guardaran localmente y se enviaran cuando haya red.
-                    </div>
-                )}
-                <div className="border-b border-b-gray-200 p-4">
-                    <div className="w-full flex items-center justify-between max-w-xl mx-auto gap-4">
-                        <div>
-                            <h3 className="uppercase text-gray-400">{currentSectionName}</h3>
-                            <h2 className="font-bold">{instrumentName}</h2>
-                        </div>
-                        <div className="flex items-center gap-0">
+        <div
+            className="min-h-[calc(100dvh-4rem)] sm:min-h-[calc(100dvh-3.5rem)] bg-gray-100 flex flex-col"
+            data-answers-count={Object.keys(answers).length}
+        >
+            {/* Banners de estado */}
+            {sessionExpired && (
+                <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-800 text-center flex items-center justify-center gap-3">
+                    <span>Tu sesión expiró. Tus respuestas están guardadas localmente.</span>
+                    <button
+                        type="button"
+                        onClick={() => router.push("/login")}
+                        className="rounded-md bg-red-700 px-3 py-1 text-xs font-medium text-white hover:bg-red-800 transition-colors"
+                    >
+                        Iniciar sesión
+                    </button>
+                </div>
+            )}
+            {isOffline && (
+                <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
+                    Sin conexión. Las respuestas se guardarán localmente y se enviarán cuando haya red.
+                </div>
+            )}
+
+            {/* Contenido scrollable */}
+            <div className="flex-1">
+                <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+
+                    {/* Tarjeta de encabezado */}
+                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div className="h-2 bg-green-700" />
+                        <div className="px-6 py-5 flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900">{instrumentName}</h2>
+                                {currentSectionName && (
+                                    <p className="mt-1 text-sm text-gray-500 uppercase tracking-wide">
+                                        {currentSectionName}
+                                    </p>
+                                )}
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setShowExitConfirm(true)}
                                 aria-label="Salir de la encuesta"
-                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -220,103 +226,72 @@ export default function InstrumentQuestionFlow({
                                     viewBox="0 0 24 24"
                                     strokeWidth="1.5"
                                     stroke="currentColor"
-                                    className="size-6"
+                                    className="size-5"
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M6 18 18 6M6 6l12 12"
-                                    />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
                     </div>
-                    <div className="bg-gray-200 h-2 rounded-xl mt-4 max-w-xl mx-auto">
-                        <div
-                            className="bg-green-500 h-2 rounded-xl"
-                            style={{ width: `${progress}%` }}
-                        />
 
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div>
-                {currentQuestion ? (
-                    <>
+                    {/* Tarjeta de la pregunta */}
+                    {currentQuestion ? (
                         <InstrumentQuestionRenderer
                             question={currentQuestion}
                             answer={currentAnswer}
                             onAnswerChange={handleAnswerChange}
                         />
-                        <p className="text-gray-400 text-sm max-w-xl mx-auto mt-2 px-6">
-                            Pregunta {totalVisible === 0 ? 0 : visibleIndex + 1} de {totalVisible}
-                        </p>
-                        {(validationError || error) && (
-                            <p className="mt-4 max-w-xl mx-auto rounded-md bg-red-50 px-6 py-2 text-sm text-red-700">
-                                {validationError || error}
-                            </p>
-                        )}
-                    </>
-                ) : (
-                    <p className="text-gray-500">No hay preguntas disponibles en esta seccion.</p>
-                )}
-            </div>
+                    ) : (
+                        <div className="bg-white rounded-lg shadow-sm px-6 py-8 text-center text-gray-500">
+                            No hay preguntas disponibles en esta sección.
+                        </div>
+                    )}
 
-            <div className="px-6 py-6 border-t border-t-gray-200 items-center">
-                <div className="flex w-full max-w-xl mx-auto justify-between">
-                    <button
-                        type="button"
-                        onClick={handlePrevious}
-                        disabled={currentIndex === 0}
-                        aria-label="Pregunta anterior"
-                        className="disabled:opacity-40"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="size-6 text-gray-500"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-                            />
-                        </svg>
-                    </button>
+                    {/* Error de validación */}
+                    {(validationError || error) && (
+                        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                            {validationError || error}
+                        </div>
+                    )}
 
-                    <button
-                        type="button"
-                        onClick={handleNext}
-                        disabled={submitting}
-                        className="bg-green-900 px-4 py-3 rounded-xl text-gray-200 flex items-center gap-2 disabled:opacity-50"
-                    >
-                        {submitting ? "Enviando..." : isLastQuestion ? "Finalizar" : "Siguiente"}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="size-6"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                            />
-                        </svg>
-                    </button>
+                    {/* Barra de progreso y navegación */}
+                    <div className="bg-white rounded-lg shadow-sm px-6 py-4">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex-1 bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                    className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                            <span className="text-sm text-gray-500 shrink-0 tabular-nums">
+                                {totalVisible === 0 ? 0 : visibleIndex + 1} / {totalVisible}
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <button
+                                type="button"
+                                onClick={handlePrevious}
+                                disabled={currentIndex === 0}
+                                className="px-5 py-2 rounded-md text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Atrás
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleNext}
+                                disabled={submitting}
+                                className="px-5 py-2 rounded-md text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {submitting ? "Enviando..." : isLastQuestion ? "Finalizar" : "Siguiente"}
+                            </button>
+                        </div>
+                    </div>
 
                 </div>
-
             </div>
 
+            {/* Modal de salida */}
             {showExitConfirm && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
@@ -350,6 +325,6 @@ export default function InstrumentQuestionFlow({
                     </div>
                 </div>
             )}
-        </section>
+        </div>
     );
 }

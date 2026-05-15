@@ -14,14 +14,12 @@ export default function QuestionContainer({
     children,
 }: QuestionContainerProps) {
     return (
-        <div className="max-w-xl mx-auto">
-            <label htmlFor={htmlFor} className="font-bold text-3xl max-w-2xl">
+        <div className="bg-white rounded-lg shadow-sm px-6 py-6">
+            <label htmlFor={htmlFor} className="block text-base font-semibold text-gray-900 leading-snug">
                 {label}
+                {isRequired && <span className="ml-1 text-red-500">*</span>}
             </label>
-            {isRequired && (
-                <p className="mt-2 text-sm text-gray-500">* Pregunta obligatoria</p>
-            )}
-            <div className="mt-6">{children}</div>
+            <div className="mt-5">{children}</div>
         </div>
     );
 }
