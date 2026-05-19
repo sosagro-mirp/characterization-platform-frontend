@@ -175,7 +175,7 @@ export default function InstrumentQuestionFlow({
 
     const handleConfirmExit = () => {
         setShowExitConfirm(false);
-        router.push("/");
+        router.push("/instrument");
     };
 
     if (completed) {
