@@ -46,7 +46,7 @@ export function Hero() {
       className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-brand-dark scroll-mt-24"
     >
       <video
-        src="/videos/cafe.mp4"
+        src={process.env.NEXT_PUBLIC_HERO_VIDEO_URL ?? ""}
         autoPlay
         muted
         loop

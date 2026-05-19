@@ -47,4 +47,7 @@ next-env.d.ts
 /public/sw.js.map
 /public/workbox-*.js.map
 
+# Large media assets (hosted on Cloudinary)
+/public/videos/
+
 
