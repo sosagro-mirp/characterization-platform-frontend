@@ -1,5 +1,4 @@
 import { GraduationCap, HeartHandshake, MapPinHouse, Sprout, type LucideIcon } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { project } from "../../../lib/landing-content";
 import { HeroBadge } from "./HeroBadge";
@@ -46,13 +45,13 @@ export function Hero() {
       id="inicio"
       className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-brand-dark scroll-mt-24"
     >
-      <Image
-        src="/campesino.jpg"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-center -z-10"
+      <video
+        src="/videos/cafe.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover object-center -z-10"
       />
       <div
         className="absolute inset-0 -z-10 bg-linear-to-br from-brand-dark/85 via-brand-dark/75 to-black/70"

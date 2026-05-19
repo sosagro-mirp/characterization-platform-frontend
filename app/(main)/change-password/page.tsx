@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function ChangePasswordPage() {
   return (
-    <div className="flex min-h-[calc(100vh-10rem)] items-start justify-center pt-16 px-4">
+    <div className="flex min-h-[calc(100vh-10rem)] items-start justify-center py-24 px-4">
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
           Cambiar contraseña

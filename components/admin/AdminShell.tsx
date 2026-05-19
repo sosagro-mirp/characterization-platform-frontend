@@ -17,9 +17,9 @@ export default function AdminShell({ children }: AdminShellProps) {
     <div
       id="admin-shell"
       suppressHydrationWarning
-      className={`flex min-h-screen bg-[var(--surface-muted)] text-[var(--text-primary)] ${isDark ? "dark" : ""}`}
+      className={`flex h-screen bg-surface-muted text-text-primary ${isDark ? "dark" : ""}`}
     >
-      <aside className="w-56 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1">
+      <aside className="w-56 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1 h-full">
         <p className="mb-4 px-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
           Administración
         </p>
@@ -43,7 +43,13 @@ export default function AdminShell({ children }: AdminShellProps) {
             Usuarios
           </Link>
         )}
-        <div className="mt-auto pt-4 border-t border-[var(--border)]">
+        <div className="mt-auto pt-4 border-t border-[var(--border)] flex flex-col gap-1">
+          <Link
+            href="/"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-text-muted hover:bg-surface-muted hover:text-text-primary transition-colors"
+          >
+            ← Volver al inicio
+          </Link>
           <ThemeToggle />
         </div>
       </aside>
