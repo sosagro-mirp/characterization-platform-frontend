@@ -20,13 +20,10 @@ export default function SurveyCompletedCard({
     savedOffline = false,
     campaignSessionId,
 }: SurveyCompletedCardProps) {
-    const campaignFromStore = useCampaignSessionStore((s) => ({
-        sessionId: s.sessionId,
-        campaignId: s.campaignId,
-    }));
+    const sessionIdFromStore = useCampaignSessionStore((s) => s.sessionId);
+    const activeCampaignId = useCampaignSessionStore((s) => s.campaignId) ?? null;
 
-    const activeSessionId = campaignSessionId ?? campaignFromStore.sessionId ?? null;
-    const activeCampaignId = campaignFromStore.campaignId ?? null;
+    const activeSessionId = campaignSessionId ?? sessionIdFromStore ?? null;
     const inCampaign = Boolean(activeSessionId && activeCampaignId);
 
     const displayMessage = savedOffline

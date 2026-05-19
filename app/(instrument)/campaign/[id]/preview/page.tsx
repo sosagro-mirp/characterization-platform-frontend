@@ -30,6 +30,22 @@ export default function CampaignPreviewPage() {
   const campaignId = params.id;
 
   const [state, setState] = useState<PreviewPhase>({ phase: "loading" });
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    if (state.phase !== "completed") return;
+    const interval = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(interval);
+          router.replace("/admin/campaigns");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state.phase, router]);
 
   // Load campaign on mount
   useEffect(() => {
@@ -272,11 +288,14 @@ export default function CampaignPreviewPage() {
           Ningún dato fue enviado al servidor.
         </p>
       </div>
+      <p className="text-xs text-neutral-400">
+        Redirigiendo en {countdown}…
+      </p>
       <Link
         href="/admin/campaigns"
         className="rounded-xl bg-green-700 px-5 py-3 text-sm font-medium text-white hover:bg-green-800 transition-colors"
       >
-        Volver al panel
+        Volver al panel ahora
       </Link>
     </div>
   );

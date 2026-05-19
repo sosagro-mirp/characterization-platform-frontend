@@ -16,7 +16,6 @@ export default function CampaignIntroPage() {
   const [campaign, setCampaign] = useState<CampaignRender | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [vereda, setVereda] = useState("");
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -38,10 +37,7 @@ export default function CampaignIntroPage() {
     setCreating(true);
     setError(null);
     try {
-      const session = await createSession({
-        campaignId,
-        vereda: vereda.trim() || undefined,
-      });
+      const session = await createSession({ campaignId });
       startSession({
         sessionId: session.sessionId,
         campaignId,
@@ -80,19 +76,6 @@ export default function CampaignIntroPage() {
           </header>
 
           <section className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Vereda (opcional)
-              </label>
-              <input
-                type="text"
-                value={vereda}
-                onChange={(e) => setVereda(e.target.value)}
-                placeholder="Ej: El Manzanillo"
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-
             <button
               type="button"
               onClick={handleStart}

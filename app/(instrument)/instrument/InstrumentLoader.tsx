@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import InstrumentQuestionFlow from '@/components/instrument/InstrumentQuestionFlow';
 import {
   cacheInstrument,
@@ -43,6 +44,7 @@ export default function InstrumentLoader({
   stepOrder,
   previewMode = false,
 }: InstrumentLoaderProps) {
+  const router = useRouter();
   const [state, setState] = useState<LoaderState>({ phase: 'loading' });
 
   useEffect(() => {
@@ -219,6 +221,7 @@ export default function InstrumentLoader({
       campaignSessionId={campaignSessionId}
       stepOrder={stepOrder}
       previewMode={previewMode}
+      onPreviewComplete={previewMode ? () => router.replace('/admin/instruments') : undefined}
     />
   );
 }

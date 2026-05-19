@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface NavItem {
   label: string;
@@ -47,13 +48,37 @@ function CampaignIcon({ active }: { active: boolean }) {
   );
 }
 
+function DashboardIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={active ? 2 : 1.5}
+      stroke="currentColor"
+      className="size-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+      />
+    </svg>
+  );
+}
+
+const PANEL_ROLES = ["admin", "researcher"];
+
 export default function PollsterNav() {
   const pathname = usePathname();
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
+  const canAccessPanel = userRole !== null && PANEL_ROLES.includes(userRole);
 
   const isInstrumentActive =
     pathname === "/instrument" || pathname.startsWith("/instrument/");
   const isCampaignActive =
     pathname === "/campaign" || pathname.startsWith("/campaign/");
+  const isDashboardActive = pathname.startsWith("/admin");
 
   const items: NavItem[] = [
     {
@@ -66,10 +91,22 @@ export default function PollsterNav() {
       href: "/campaign",
       icon: <CampaignIcon active={isCampaignActive} />,
     },
+    ...(canAccessPanel
+      ? [
+        {
+          label: "Panel",
+          href: "/admin/instruments",
+          icon: <DashboardIcon active={isDashboardActive} />,
+        },
+      ]
+      : []),
   ];
 
-  const isActive = (href: string) =>
-    href === "/instrument" ? isInstrumentActive : isCampaignActive;
+  const isActive = (href: string) => {
+    if (href === "/instrument") return isInstrumentActive;
+    if (href === "/campaign") return isCampaignActive;
+    return isDashboardActive;
+  };
 
   return (
     <>
@@ -85,11 +122,10 @@ export default function PollsterNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  active
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${active
                     ? "bg-green-50 text-green-700"
                     : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
-                }`}
+                  }`}
               >
                 {item.icon}
                 {item.label}
@@ -107,17 +143,15 @@ export default function PollsterNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
-                active
+              className={`flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${active
                   ? "text-green-700"
                   : "text-neutral-400 hover:text-neutral-600"
-              }`}
+                }`}
             >
               {/* active indicator line at the top */}
               <span
-                className={`absolute top-0 h-0.5 w-12 rounded-full transition-colors ${
-                  active ? "bg-green-600" : "bg-transparent"
-                }`}
+                className={`absolute top-0 h-0.5 w-12 rounded-full transition-colors ${active ? "bg-green-600" : "bg-transparent"
+                  }`}
               />
               {item.icon}
               {item.label}
