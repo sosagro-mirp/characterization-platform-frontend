@@ -5,6 +5,7 @@ interface InstrumentPageProps {
   searchParams: Promise<{
     campaignSessionId?: string;
     stepOrder?: string;
+    preview?: string;
   }>;
 }
 
@@ -16,8 +17,9 @@ export default async function InstrumentPage({
   searchParams,
 }: InstrumentPageProps) {
   const { id } = await params;
-  const { campaignSessionId, stepOrder } = await searchParams;
+  const { campaignSessionId, stepOrder, preview } = await searchParams;
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
+  const isPreview = preview === 'true';
 
   if (!uuidRegex.test(id)) {
     return (
@@ -34,6 +36,7 @@ export default async function InstrumentPage({
       apiBaseUrl={apiBaseUrl}
       campaignSessionId={campaignSessionId}
       stepOrder={Number.isFinite(parsedStepOrder) ? parsedStepOrder : undefined}
+      previewMode={isPreview}
     />
   );
 }

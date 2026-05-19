@@ -17,6 +17,11 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
   const isAdmin = useAuthStore((s) => s.user?.role === "admin");
   const [deleteTarget, setDeleteTarget] = useState<InstrumentListItem | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredInstruments = instruments.filter((inst) =>
+    inst.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleToggleActive = async (instrument: InstrumentListItem) => {
     setLoadingId(instrument.instrumentId);
@@ -46,6 +51,15 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
 
   return (
     <>
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar instrumento por nombre…"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+        />
+      </div>
       <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
@@ -59,7 +73,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
-            {instruments.map((inst) => (
+            {filteredInstruments.map((inst) => (
               <tr key={inst.instrumentId} className="hover:bg-[var(--surface-muted)]">
                 <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
                   {inst.name}
@@ -93,6 +107,15 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex items-center gap-2">
+                    <Link
+                      href={`/instrument/${inst.instrumentId}?preview=true`}
+                      target="_blank"
+                      rel="noopener"
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                      title="Previsualizar el instrumento sin enviar datos"
+                    >
+                      Vista previa
+                    </Link>
                     {inst.isActive ? (
                       <Link
                         href={`/instrument/${inst.instrumentId}`}
@@ -142,7 +165,17 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
               </tr>
             ))}
-            {instruments.length === 0 && (
+            {filteredInstruments.length === 0 && searchTerm && (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-10 text-center text-sm text-[var(--text-muted)]"
+                >
+                  No se encontraron instrumentos para &ldquo;{searchTerm}&rdquo;.
+                </td>
+              </tr>
+            )}
+            {filteredInstruments.length === 0 && !searchTerm && (
               <tr>
                 <td
                   colSpan={6}

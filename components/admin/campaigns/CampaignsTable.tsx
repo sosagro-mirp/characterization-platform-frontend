@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CampaignSummary } from "@/app/(admin)/types";
 
 interface CampaignsTableProps {
@@ -59,6 +60,15 @@ export default function CampaignsTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="inline-flex gap-2">
+                  <Link
+                    href={`/campaign/${c.campaignId}/preview`}
+                    target="_blank"
+                    rel="noopener"
+                    className="rounded-lg border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+                    title="Previsualizar la campaña sin enviar datos"
+                  >
+                    Vista previa
+                  </Link>
                   <button
                     type="button"
                     onClick={() => onEdit(c.campaignId)}

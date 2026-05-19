@@ -33,6 +33,7 @@ interface InstrumentLoaderProps {
   apiBaseUrl: string;
   campaignSessionId?: string;
   stepOrder?: number;
+  previewMode?: boolean;
 }
 
 export default function InstrumentLoader({
@@ -40,6 +41,7 @@ export default function InstrumentLoader({
   apiBaseUrl,
   campaignSessionId,
   stepOrder,
+  previewMode = false,
 }: InstrumentLoaderProps) {
   const [state, setState] = useState<LoaderState>({ phase: 'loading' });
 
@@ -76,6 +78,12 @@ export default function InstrumentLoader({
               'Sin conexión y sin datos en caché. Conéctate a internet e intenta de nuevo.',
           });
         }
+        return;
+      }
+
+      // In preview mode: skip IndexedDB entirely — no pending survey created
+      if (previewMode) {
+        if (!cancelled) setState({ phase: 'ready', instrument, localId: 'preview', isOffline });
         return;
       }
 
@@ -210,6 +218,7 @@ export default function InstrumentLoader({
       apiBaseUrl={apiBaseUrl}
       campaignSessionId={campaignSessionId}
       stepOrder={stepOrder}
+      previewMode={previewMode}
     />
   );
 }

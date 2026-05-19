@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import {
+  clearMustChangeCookie,
   clearRoleCookie,
   clearSessionCookie,
+  setMustChangeCookie,
   setRoleCookie,
   setSessionCookie,
 } from "@/lib/sessionCookie";
@@ -13,6 +15,7 @@ export interface AuthUser {
   lastName: string;
   email: string;
   role: string | null;
+  mustChangePassword: boolean;
 }
 
 interface AuthState {
@@ -34,11 +37,17 @@ export const useAuthStore = create<AuthState>()(
       setSession: (user, accessToken) => {
         setSessionCookie();
         setRoleCookie(user.role);
+        if (user.mustChangePassword) {
+          setMustChangeCookie();
+        } else {
+          clearMustChangeCookie();
+        }
         set({ user, accessToken, isAuthenticated: true });
       },
       clear: () => {
         clearSessionCookie();
         clearRoleCookie();
+        clearMustChangeCookie();
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),
@@ -56,9 +65,15 @@ export const useAuthStore = create<AuthState>()(
         if (state?.isAuthenticated) {
           setSessionCookie();
           setRoleCookie(state.user?.role ?? null);
+          if (state.user?.mustChangePassword) {
+            setMustChangeCookie();
+          } else {
+            clearMustChangeCookie();
+          }
         } else {
           clearSessionCookie();
           clearRoleCookie();
+          clearMustChangeCookie();
         }
       },
     },

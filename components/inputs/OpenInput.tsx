@@ -30,7 +30,7 @@ export default function OpenInput({
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
-                className="w-full border border-gray-200 px-4 py-2"
+                className="w-full border-b border-gray-300 bg-transparent px-0 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-600 transition-colors"
             />
         </QuestionContainer>
     );

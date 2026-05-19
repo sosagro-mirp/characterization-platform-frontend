@@ -31,11 +31,12 @@ export default function SingleChoiceGroup({
 }: SingleChoiceGroupProps) {
     return (
         <QuestionContainer label={label} isRequired={isRequired}>
-            <div className="space-y-3">
+            <div className="space-y-1">
                 {options.map((option) => (
                     <div key={option.id}>
-                        <div
-                            className={`flex items-center px-4 py-6 rounded-xl border ${option.containerClassName ?? "border-gray-200"}`}
+                        <label
+                            htmlFor={option.id}
+                            className="flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                         >
                             <input
                                 type="radio"
@@ -44,19 +45,17 @@ export default function SingleChoiceGroup({
                                 value={option.id}
                                 checked={selectedOptionId === option.id}
                                 onChange={() => onChange?.(option.id)}
-                                className={`w-4 h-4 border border-gray-300 rounded cursor-pointer ${option.accentClassName ?? "accent-green-900"}`}
+                                className={`w-4 h-4 shrink-0 cursor-pointer ${option.accentClassName ?? "accent-green-700"}`}
                             />
-                            <label htmlFor={option.id} className="ml-3 text-base cursor-pointer">
-                                {option.label}
-                            </label>
-                        </div>
+                            <span className="text-sm text-gray-800">{option.label}</span>
+                        </label>
                         {option.isOther && selectedOptionId === option.id && (
                             <input
                                 type="text"
                                 placeholder="Escribe el nombre..."
                                 value={otherText ?? ""}
                                 onChange={(e) => onOtherTextChange?.(e.target.value)}
-                                className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                className="mt-1 ml-10 w-[calc(100%-2.5rem)] border-b border-gray-300 bg-transparent px-0 py-1 text-sm focus:outline-none focus:border-green-600 transition-colors"
                                 maxLength={50}
                             />
                         )}
