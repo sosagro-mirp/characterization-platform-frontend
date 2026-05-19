@@ -20,6 +20,8 @@ interface InstrumentQuestionFlowProps {
     apiBaseUrl: string;
     campaignSessionId?: string;
     stepOrder?: number;
+    previewMode?: boolean;
+    onPreviewComplete?: () => void;
 }
 
 export default function InstrumentQuestionFlow({
@@ -30,6 +32,8 @@ export default function InstrumentQuestionFlow({
     apiBaseUrl,
     campaignSessionId,
     stepOrder,
+    previewMode = false,
+    onPreviewComplete,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
     const [validationError, setValidationError] = useState<string>();
@@ -130,12 +134,21 @@ export default function InstrumentQuestionFlow({
             return;
         }
 
-        if (currentQuestion && !isAnswerComplete(currentQuestion, currentAnswer)) {
+        if (!previewMode && currentQuestion && !isAnswerComplete(currentQuestion, currentAnswer)) {
             setValidationError("Debes responder esta pregunta antes de continuar.");
             return;
         }
 
         if (isLastQuestion) {
+            if (previewMode) {
+                if (onPreviewComplete) {
+                    onPreviewComplete();
+                } else {
+                    setCompleted(true);
+                }
+                return;
+            }
+
             const result = await submitResponses(apiBaseUrl, {
                 campaignSessionId,
                 stepOrder,
@@ -166,6 +179,16 @@ export default function InstrumentQuestionFlow({
     };
 
     if (completed) {
+        if (previewMode) {
+            return (
+                <SurveyCompletedCard
+                    title="Vista previa completada"
+                    message="Ningún dato fue enviado al servidor. Esta es una vista de revisión del instrumento."
+                    ctaText="Volver a instrumentos"
+                    ctaHref="/admin/instruments"
+                />
+            );
+        }
         return (
             <SurveyCompletedCard
                 savedOffline={savedOffline}
@@ -195,6 +218,15 @@ export default function InstrumentQuestionFlow({
             {isOffline && (
                 <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
                     Sin conexión. Las respuestas se guardarán localmente y se enviarán cuando haya red.
+                </div>
+            )}
+            {previewMode && (
+                <div className="bg-amber-50 border-b border-amber-300 px-4 py-2 text-sm text-amber-800 text-center flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 shrink-0">
+                        <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                        <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clipRule="evenodd" />
+                    </svg>
+                    Modo vista previa — sin datos enviados
                 </div>
             )}
 
@@ -234,8 +266,8 @@ export default function InstrumentQuestionFlow({
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setShowExitConfirm(true)}
-                                aria-label="Salir de la encuesta"
+                                onClick={() => previewMode ? router.push("/admin/instruments") : setShowExitConfirm(true)}
+                                aria-label={previewMode ? "Salir de la vista previa" : "Salir de la encuesta"}
                                 className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                             >
                                 <svg
@@ -301,7 +333,11 @@ export default function InstrumentQuestionFlow({
                                 disabled={submitting}
                                 className="px-5 py-2 rounded-md text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                {submitting ? "Enviando..." : isLastQuestion ? "Finalizar" : "Siguiente"}
+                                {submitting
+                                    ? "Enviando..."
+                                    : isLastQuestion
+                                        ? previewMode ? "Finalizar vista previa" : "Finalizar"
+                                        : "Siguiente"}
                             </button>
                         </div>
                     </div>
