@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CampaignStepDetail,
+  InstrumentListItem,
+  QuestionDetail,
 } from "@/app/(admin)/types";
-import { InstrumentListItem } from "@/app/(admin)/types";
 import {
   createStep,
   deleteStep,
   updateStep,
 } from "@/services/campaigns.service";
+import { apiClient } from "@/lib/apiClient";
 import StepConditionEditor from "./StepConditionEditor";
 
 interface StepEditorProps {
@@ -29,6 +31,46 @@ export default function StepEditor({
   const [error, setError] = useState<string | null>(null);
   const [pendingStepId, setPendingStepId] = useState<string | null>(null);
   const [editingConditionStepId, setEditingConditionStepId] = useState<string | null>(null);
+  const [questionsCache, setQuestionsCache] = useState<Record<string, QuestionDetail[]>>({});
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+  useEffect(() => {
+    if (!editingConditionStepId) return;
+    const editingStep = steps.find((s) => s.stepId === editingConditionStepId);
+    if (!editingStep) return;
+
+    const prevInstrumentIds = steps
+      .filter((s) => s.order < editingStep.order)
+      .map((s) => s.instrument.instrumentId)
+      .filter((id, i, arr) => arr.indexOf(id) === i); // dedup
+
+    const uncached = prevInstrumentIds.filter((id) => !(id in questionsCache));
+    if (uncached.length === 0) return;
+
+    setLoadingQuestions(true);
+    Promise.all(
+      uncached.map((id) =>
+        apiClient
+          .get<{ sections?: { questions: QuestionDetail[] }[] }>(
+            `/api/instruments/${id}/render`,
+            { cache: "no-store" },
+          )
+          .then((render) => ({
+            id,
+            questions: (render.sections ?? []).flatMap((s) => s.questions ?? []),
+          })),
+      ),
+    )
+      .then((results) => {
+        setQuestionsCache((prev) => {
+          const next = { ...prev };
+          for (const { id, questions } of results) next[id] = questions;
+          return next;
+        });
+      })
+      .catch(() => {/* cache stays empty; user sees empty list */})
+      .finally(() => setLoadingQuestions(false));
+  }, [editingConditionStepId, steps, questionsCache]);
 
   async function handleAdd() {
     if (!newInstrumentId) return;
@@ -100,12 +142,6 @@ export default function StepEditor({
 
       <ul className="space-y-3">
         {steps.map((step, idx) => {
-          const previousQuestions = steps
-            .filter((s) => s.order < step.order)
-            .flatMap(() => []); // El render no trae las questions detalladas; se rellena vacío.
-          // (Mejora futura: cargar render de cada instrumento previo para listar sus preguntas.)
-          void previousQuestions;
-
           return (
             <li
               key={step.stepId}
@@ -189,7 +225,20 @@ export default function StepEditor({
                 <StepConditionEditor
                   initialQuestionId={step.conditionQuestion?.questionId ?? null}
                   initialValue={step.conditionValue}
-                  availableQuestions={[]}
+                  availableQuestions={steps
+                    .filter((s) => s.order < step.order)
+                    .flatMap((s) =>
+                      (questionsCache[s.instrument.instrumentId] ?? []).map((q) => ({
+                        questionId: q.questionId,
+                        text: q.text,
+                        typeName: q.type?.name ?? "",
+                        options: (q.options ?? []).map((o) => ({
+                          optionId: o.optionId,
+                          text: o.text,
+                        })),
+                      })),
+                    )}
+                  loadingQuestions={loadingQuestions}
                   onSave={async ({ conditionQuestionId, conditionValue }) => {
                     await updateStep(campaignId, step.stepId, {
                       conditionQuestionId,
@@ -231,12 +280,6 @@ export default function StepEditor({
             Agregar
           </button>
         </div>
-        <p className="text-xs text-[var(--text-muted)]">
-          Nota: el selector de pregunta para condicionar un paso muestra el
-          listado de preguntas de pasos previos. En esta versión se ingresa el
-          UUID/valor de condición directamente; la integración del catálogo
-          completo de preguntas por paso queda como mejora menor.
-        </p>
       </div>
     </div>
   );
