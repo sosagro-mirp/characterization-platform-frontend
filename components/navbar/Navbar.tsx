@@ -119,6 +119,12 @@ export const Navbar = () => {
           <div className="flex gap-3 items-center">
             {showSession ? (
               <div className="hidden lg:flex items-center gap-6">
+                <Link
+                  href="/instrument"
+                  className={`inline-flex items-center px-4 py-2 rounded-lg border text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
+                >
+                  Aplicar instrumento
+                </Link>
                 {isAdmin && (
                   <Link
                     href="/admin/instruments"
@@ -212,11 +218,18 @@ export const Navbar = () => {
                 <span className="block py-2 text-center text-sm font-medium text-gray-700">
                   {user.name} {user.lastName}
                 </span>
+                <Link
+                  href="/instrument"
+                  onClick={closeMenu}
+                  className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
+                >
+                  Aplicar instrumento
+                </Link>
                 {isAdmin && (
                   <Link
                     href="/admin/instruments"
                     onClick={closeMenu}
-                    className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
+                    className="block w-full rounded-lg border border-brand py-3 text-center text-sm font-bold text-brand"
                   >
                     Panel administrativo
                   </Link>
