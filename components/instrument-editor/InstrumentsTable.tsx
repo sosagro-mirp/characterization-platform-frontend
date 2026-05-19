@@ -107,6 +107,15 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex items-center gap-2">
+                    <Link
+                      href={`/instrument/${inst.instrumentId}?preview=true`}
+                      target="_blank"
+                      rel="noopener"
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                      title="Previsualizar el instrumento sin enviar datos"
+                    >
+                      Vista previa
+                    </Link>
                     {inst.isActive ? (
                       <Link
                         href={`/instrument/${inst.instrumentId}`}
