@@ -19,8 +19,15 @@ export default function AdminShell({ children }: AdminShellProps) {
       suppressHydrationWarning
       className={`flex h-screen bg-surface-muted text-text-primary ${isDark ? "dark" : ""}`}
     >
+
       <aside className="w-56 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1 h-full">
-        <p className="mb-4 px-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+        <Link
+          href="/"
+          className="rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition-colors bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+        >
+          ← Volver al inicio
+        </Link>
+        <p className="my-4 px-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
           Administración
         </p>
         <Link
@@ -35,12 +42,6 @@ export default function AdminShell({ children }: AdminShellProps) {
         >
           Campañas
         </Link>
-        <Link
-          href="/instrument"
-          className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
-        >
-          Aplicar instrumento
-        </Link>
         {role === "admin" && (
           <Link
             href="/admin/users"
@@ -48,14 +49,17 @@ export default function AdminShell({ children }: AdminShellProps) {
           >
             Usuarios
           </Link>
+
         )}
-        <div className="mt-auto pt-4 border-t border-[var(--border)] flex flex-col gap-1">
-          <Link
-            href="/"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-text-muted hover:bg-surface-muted hover:text-text-primary transition-colors"
-          >
-            ← Volver al inicio
-          </Link>
+        <Link
+          href="/instrument"
+          className="rounded-lg mt-4 px-3 py-2 text-sm font-medium  bg-green-700 hover:scale-105 transition-transform uppercase text-center text-white"
+        >
+          Aplicar instrumento
+        </Link>
+
+        <div className="mt-auto pt-4 flex flex-col gap-3">
+
           <ThemeToggle />
         </div>
       </aside>
