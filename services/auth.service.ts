@@ -7,6 +7,18 @@ interface LoginPayload {
   password: string;
 }
 
+interface RegisterPayload {
+  name: string;
+  lastName: string;
+  email: string;
+  password: string;
+  validationCode: string;
+}
+
+export async function register(payload: RegisterPayload): Promise<void> {
+  await apiClient.post<void>("/api/auth/register", payload, { withAuth: false });
+}
+
 interface LoginResponse {
   accessToken: string;
   user: AuthUser;
