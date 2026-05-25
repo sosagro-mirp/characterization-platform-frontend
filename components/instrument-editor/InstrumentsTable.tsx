@@ -65,7 +65,6 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             <tr>
               <th className="px-4 py-3 text-left">Nombre</th>
-              <th className="px-4 py-3 text-left">Versión</th>
               <th className="px-4 py-3 text-left">Fecha</th>
               <th className="px-4 py-3 text-left">Actores</th>
               <th className="px-4 py-3 text-left">Estado</th>
@@ -78,7 +77,6 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
                   {inst.name}
                 </td>
-                <td className="px-4 py-3 text-[var(--text-muted)]">v{inst.version}</td>
                 <td className="px-4 py-3 text-[var(--text-muted)]">
                   {new Date(inst.publishDate).toLocaleDateString("es-CO")}
                 </td>
@@ -96,11 +94,10 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      inst.isActive
-                        ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
-                        : "bg-[var(--surface-muted)] text-[var(--text-muted)]"
-                    }`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${inst.isActive
+                      ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
+                      : "bg-[var(--surface-muted)] text-[var(--text-muted)]"
+                      }`}
                   >
                     {inst.isActive ? "Activo" : "Inactivo"}
                   </span>
@@ -116,25 +113,6 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                     >
                       Vista previa
                     </Link>
-                    {inst.isActive ? (
-                      <Link
-                        href={`/instrument/${inst.instrumentId}`}
-                        target="_blank"
-                        rel="noopener"
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-white bg-[var(--brand)] hover:bg-[var(--brand-hover)] transition-colors"
-                        title="Iniciar una nueva sesión de encuesta con este instrumento"
-                      >
-                        Aplicar
-                      </Link>
-                    ) : (
-                      <span
-                        aria-disabled="true"
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] border border-[var(--border)] cursor-not-allowed"
-                        title="Activa el instrumento para poder aplicarlo"
-                      >
-                        Aplicar
-                      </span>
-                    )}
                     <Link
                       href={`/admin/instruments/${inst.instrumentId}`}
                       className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
