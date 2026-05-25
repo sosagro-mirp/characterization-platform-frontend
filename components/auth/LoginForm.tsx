@@ -10,6 +10,8 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
 
+  const registered = searchParams.get("registered") === "true";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +78,14 @@ export default function LoginForm() {
       className="w-full lg:pr-12 flex flex-col mt-8"
       noValidate
     >
+      {registered && (
+        <p
+          role="status"
+          className="text-sm text-green-200 bg-green-900/60 border border-green-400/40 rounded-md px-3 py-2"
+        >
+          Cuenta creada exitosamente. Ya puedes iniciar sesión.
+        </p>
+      )}
       <input
         type="email"
         required

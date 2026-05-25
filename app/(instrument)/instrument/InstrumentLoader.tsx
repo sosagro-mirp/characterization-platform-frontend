@@ -9,6 +9,7 @@ import {
   createPendingSurvey,
 } from '@/lib/db/offlineSurveyService';
 import { offlineDb } from '@/lib/db/offlineDb';
+import { useCampaignSessionStore } from '@/store/useCampaignSessionStore';
 import type { InstrumentResponse } from '@/app/(instrument)/types';
 import type { PendingSurvey } from '@/lib/db/offlineDb';
 
@@ -45,7 +46,12 @@ export default function InstrumentLoader({
   previewMode = false,
 }: InstrumentLoaderProps) {
   const router = useRouter();
+  const clearSession = useCampaignSessionStore((s) => s.clearSession);
   const [state, setState] = useState<LoaderState>({ phase: 'loading' });
+
+  useEffect(() => {
+    if (!campaignSessionId) clearSession();
+  }, [campaignSessionId, clearSession]);
 
   useEffect(() => {
     let cancelled = false;

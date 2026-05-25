@@ -28,6 +28,12 @@ export default function LoginPage() {
                     <Suspense fallback={null}>
                         <LoginForm />
                     </Suspense>
+                    <p className="mt-6 text-sm text-gray-300 text-center lg:text-left">
+                        ¿Primera vez?{" "}
+                        <Link href="/register" className="text-green-300 hover:underline font-medium">
+                            Crea tu cuenta
+                        </Link>
+                    </p>
                 </div>
             </div>
             <div className="hidden lg:block w-[50%] h-full overflow-hidden">

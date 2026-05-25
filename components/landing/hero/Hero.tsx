@@ -74,17 +74,10 @@ export function Hero() {
                 {project.shortName}
               </h1>
               <p className="text-base md:text-lg text-white/80 max-w-2xl text-pretty">
-                Ciencia de datos, IoT y bioeconomía para fortalecer la
-                productividad sostenible del café, cacao, cannabis y cáñamo en
-                seis departamentos de Colombia.
+                Fortalecemos las capacidades científico-tecnológicas que afectan la productividad agrícola sostenible de los sectores del Café, Cacao,
+                Cannabis y Cáñamo en los departamentos de Antioquia, Caquetá, Chocó, Guajira, Meta, Norte de Santander.
               </p>
             </div>
-
-            <p className="text-sm md:text-base text-white/70 max-w-2xl leading-relaxed">
-              Caracterizamos las unidades productivas, desplegamos tecnologías
-              de captura de datos en finca y construimos una plataforma abierta
-              para todos los actores de la cadena.
-            </p>
           </div>
 
           <div className="mt-4 max-w-7xl">

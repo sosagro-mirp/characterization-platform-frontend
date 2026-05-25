@@ -99,13 +99,14 @@ export const Navbar = () => {
             aria-label="Inicio — SOS Agro 4C"
             onClick={closeMenu}
           >
-            <span className="text-lg lg:text-xl font-bold tracking-tight">
+
+            <span className="text-lg 2xl:text-xl font-bold tracking-tight">
               Sos Agro 4.C
             </span>
           </Link>
 
           <ul
-            className={`hidden lg:flex gap-7 text-sm tracking-tight font-semibold transition-colors duration-300 ${linkColorClass}`}
+            className={`hidden lg:flex gap-7 2xl:text-sm lg:text-xs  tracking-tight font-semibold transition-colors duration-300 ${linkColorClass}`}
           >
             {sectionLinks.map((l) => (
               <li key={l.href}>
@@ -118,23 +119,23 @@ export const Navbar = () => {
 
           <div className="flex gap-3 items-center">
             {showSession ? (
-              <div className="hidden lg:flex items-center gap-6">
+              <div className="hidden lg:flex items-center gap-2">
                 <Link
                   href="/instrument"
-                  className={`inline-flex items-center px-4 py-2 rounded-lg border text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
+                  className={`inline-flex items-center px-4 py-2 rounded-lg border 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
                 >
                   Aplicar instrumento
                 </Link>
                 {isAdmin && (
                   <Link
                     href="/admin/instruments"
-                    className={`inline-flex items-center px-4 py-2 rounded-lg border text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
+                    className={`inline-flex items-center px-4 py-2 rounded-lg border 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
                   >
                     Panel administrativo
                   </Link>
                 )}
                 <span
-                  className={`text-sm font-semibold transition-colors duration-300 ${sessionTextClass}`}
+                  className={`2xl:text-sm lg:text-xs font-semibold transition-colors duration-300 ${sessionTextClass}`}
                   title={user.email}
                 >
                   {user.name} {user.lastName}
@@ -142,7 +143,7 @@ export const Navbar = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${logoutButtonClass}`}
+                  className={`inline-flex items-center px-4 py-2 rounded-lg 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${logoutButtonClass}`}
                 >
                   Cerrar sesión
                 </button>
