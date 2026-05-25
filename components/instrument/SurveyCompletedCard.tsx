@@ -16,7 +16,7 @@ export default function SurveyCompletedCard({
     title = "Encuesta completada",
     message = "Gracias por completar la encuesta. Sus respuestas han sido registradas correctamente.",
     ctaText = "Volver al inicio",
-    ctaHref = "/",
+    ctaHref = "/instrument",
     savedOffline = false,
     campaignSessionId,
 }: SurveyCompletedCardProps) {

@@ -2,12 +2,6 @@ import type { Stat } from "./types";
 
 export const heroStats: readonly Stat[] = [
   {
-    key: "duration",
-    value: "60",
-    label: "meses de ejecución",
-    description: "Cinco períodos anuales, del Período 0 al Período 4.",
-  },
-  {
     key: "departments",
     value: "6",
     label: "departamentos impactados",
@@ -19,6 +13,12 @@ export const heroStats: readonly Stat[] = [
     value: "40",
     label: "unidades productivas con IoT",
     description: "18 café, 12 cacao, 5 cannabis y 5 cáñamo.",
+  },
+  {
+    key: "duration",
+    value: "60",
+    label: "meses de ejecución",
+    description: "Cinco períodos anuales, del Período 0 al Período 4.",
   },
 ] as const;
 
