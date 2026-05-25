@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { logout } from "@/services/auth.service";
 
 interface NavItem {
   label: string;
@@ -71,8 +72,15 @@ const PANEL_ROLES = ["admin", "researcher"];
 
 export default function PollsterNav() {
   const pathname = usePathname();
-  const userRole = useAuthStore((s) => s.user?.role ?? null);
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const userRole = user?.role ?? null;
   const canAccessPanel = userRole !== null && PANEL_ROLES.includes(userRole);
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   const isInstrumentActive =
     pathname === "/instrument" || pathname.startsWith("/instrument/");
@@ -113,9 +121,9 @@ export default function PollsterNav() {
       {/* ── Desktop: top navbar ───────────────────────────────────────────── */}
       <header className="hidden sm:flex fixed top-0 left-0 right-0 z-40 h-14 items-center border-b border-neutral-200 bg-white px-6 shadow-sm">
         <span className="mr-8 text-base font-bold text-green-700 tracking-tight select-none">
-          SOSAgro
+          SosAgro4.C
         </span>
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 flex-1">
           {items.map((item) => {
             const active = isActive(item.href);
             return (
@@ -123,8 +131,8 @@ export default function PollsterNav() {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${active
-                    ? "bg-green-50 text-green-700"
-                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
+                  ? "bg-green-50 text-green-700"
+                  : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
                   }`}
               >
                 {item.icon}
@@ -133,6 +141,20 @@ export default function PollsterNav() {
             );
           })}
         </nav>
+        {user && (
+          <div className="flex items-center gap-4 ml-auto">
+            <span className="text-sm font-medium text-neutral-600">
+              {user.name} {user.lastName}
+            </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="text-sm font-medium text-neutral-500 hover:text-red-600 transition-colors"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        )}
       </header>
 
       {/* ── Mobile: bottom navigation bar ────────────────────────────────── */}
@@ -144,8 +166,8 @@ export default function PollsterNav() {
               key={item.href}
               href={item.href}
               className={`flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${active
-                  ? "text-green-700"
-                  : "text-neutral-400 hover:text-neutral-600"
+                ? "text-green-700"
+                : "text-neutral-400 hover:text-neutral-600"
                 }`}
             >
               {/* active indicator line at the top */}
@@ -158,6 +180,16 @@ export default function PollsterNav() {
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-neutral-400 hover:text-red-600 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+          </svg>
+          Salir
+        </button>
       </nav>
     </>
   );
