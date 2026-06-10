@@ -43,7 +43,12 @@ export default function QuestionForm({
     setIsSelectionCriteria(question.isSelectionCriteria);
     setConditionQuestionId(question.conditionQuestionId ?? "");
     setConditionValue(question.conditionValue ?? "");
-  }, [question.questionId, question.conditionQuestionId, question.conditionValue]);
+  }, [question.questionId]);
+
+  useEffect(() => {
+    setConditionQuestionId(question.conditionQuestionId ?? "");
+    setConditionValue(question.conditionValue ?? "");
+  }, [question.conditionQuestionId, question.conditionValue]);
 
   const orderedQuestions = [...sections]
     .sort((a, b) => a.order - b.order)
