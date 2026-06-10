@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import { CopyPlus } from "lucide-react";
@@ -30,6 +31,19 @@ export default function QuestionNode({
 }: QuestionNodeProps) {
   const { setSelection, reorderQuestion, removeQuestionFromStore, duplicateQuestion } =
     useInstrumentEditorStore();
+
+  const [duplicating, setDuplicating] = useState(false);
+
+  const handleDuplicate = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (duplicating) return;
+    setDuplicating(true);
+    try {
+      await duplicateQuestion(sectionId, question.questionId);
+    } finally {
+      setDuplicating(false);
+    }
+  };
 
   const isSelected =
     selection?.kind === "question" &&
@@ -96,11 +110,9 @@ export default function QuestionNode({
         </button>
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            duplicateQuestion(sectionId, question.questionId);
-          }}
-          className="p-1 rounded hover:bg-[var(--border)]"
+          disabled={duplicating}
+          onClick={handleDuplicate}
+          className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
           title="Duplicar"
         >
           <CopyPlus className="w-3 h-3" />
