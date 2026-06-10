@@ -75,6 +75,7 @@ interface InstrumentEditorState {
 
   // Questions
   addQuestion: (sectionId: string, data: CreateQuestionRequest) => Promise<void>;
+  duplicateQuestion: (sectionId: string, questionId: string) => Promise<void>;
   updateQuestionInStore: (
     sectionId: string,
     questionId: string,
@@ -238,6 +239,50 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
             sections: s.sections.map((sec) =>
               sec.sectionId === sectionId
                 ? { ...sec, questions: [...sec.questions, question] }
+                : sec
+            ),
+            selection: { kind: "question", sectionId, questionId: created.questionId },
+          }));
+        });
+      },
+
+      duplicateQuestion: async (sectionId, questionId) => {
+        const section = get().sections.find((s) => s.sectionId === sectionId);
+        const original = section?.questions.find((q) => q.questionId === questionId);
+        if (!section || !original) return;
+
+        await withSave(async () => {
+          const created = await createQuestion(sectionId, {
+            text: original.text,
+            typeId: original.type.typeId,
+            isRequired: original.isRequired,
+            isSelectionCriteria: original.isSelectionCriteria,
+            order: section.questions.length + 1,
+          });
+
+          let options = created.options ?? [];
+          if (original.options.length > 0) {
+            options = await batchCreateOptions(
+              created.questionId,
+              original.options.map(({ text, value, isOther }) => ({
+                text,
+                ...(value !== null && { value }),
+                isOther,
+              }))
+            );
+          }
+
+          const duplicate: QuestionDetail = {
+            ...created,
+            options,
+            conditionQuestionId: null,
+            conditionValue: null,
+          };
+
+          set((s) => ({
+            sections: s.sections.map((sec) =>
+              sec.sectionId === sectionId
+                ? { ...sec, questions: [...sec.questions, duplicate] }
                 : sec
             ),
             selection: { kind: "question", sectionId, questionId: created.questionId },
