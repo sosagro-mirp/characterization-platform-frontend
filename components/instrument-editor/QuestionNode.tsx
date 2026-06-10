@@ -2,6 +2,7 @@
 
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
+import { CopyPlus } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto",
@@ -102,10 +103,7 @@ export default function QuestionNode({
           className="p-1 rounded hover:bg-[var(--border)]"
           title="Duplicar"
         >
-          <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V8l-4-4H4zm4 1v3h3L8 3zM2 4a1 1 0 0 1 1-1h4l3 3v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/>
-            <path d="M9 1H5a1 1 0 0 0-1 1v1h1V2h4v1h1V2a1 1 0 0 0-1-1z" opacity=".5"/>
-          </svg>
+          <CopyPlus className="w-3 h-3" />
         </button>
         <button
           type="button"
