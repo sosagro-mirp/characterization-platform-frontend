@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
-import { CopyPlus } from "lucide-react";
+import { CopyPlus, GitBranch } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto",
@@ -12,6 +12,7 @@ const TYPE_LABELS: Record<string, string> = {
   single_choice: "Única",
   likert: "Likert",
   multiple_choice: "Múltiple",
+  compliance: "Cumplimiento",
 };
 
 interface QuestionNodeProps {
@@ -76,6 +77,12 @@ export default function QuestionNode({
             >
               Criterio
             </span>
+          )}
+          {question.conditionQuestionId && (
+            <GitBranch
+              className="w-2.5 h-2.5 text-[var(--text-muted)]"
+              title="Pregunta condicional"
+            />
           )}
         </div>
       </div>
