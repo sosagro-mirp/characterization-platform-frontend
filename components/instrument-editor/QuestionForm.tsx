@@ -52,6 +52,11 @@ export default function QuestionForm({
       q.order < question.order
   );
 
+  const conditionQuestion = precedingQuestions.find(
+    (q) => q.questionId === conditionQuestionId
+  );
+  const conditionTypeName = conditionQuestion?.type?.name ?? "";
+
   const currentTypeName =
     questionTypes.find((t) => t.typeId === typeId)?.name ?? "";
   const showOptions = TYPES_WITH_OPTIONS.includes(currentTypeName);
@@ -187,7 +192,10 @@ export default function QuestionForm({
             </label>
             <select
               value={conditionQuestionId}
-              onChange={(e) => setConditionQuestionId(e.target.value)}
+              onChange={(e) => {
+                setConditionQuestionId(e.target.value);
+                setConditionValue("");
+              }}
               onBlur={handleConditionChange}
               className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
             >
@@ -205,15 +213,66 @@ export default function QuestionForm({
               <label className="block text-xs text-[var(--text-muted)] mb-1">
                 …es igual a (valor de condición)
               </label>
-              <input
-                type="text"
-                maxLength={50}
-                value={conditionValue}
-                onChange={(e) => setConditionValue(e.target.value)}
-                onBlur={handleConditionChange}
-                placeholder="Ej: true, false, optionId…"
-                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
-              />
+
+              {conditionTypeName === "yes_no" && (
+                <div className="flex gap-3">
+                  {[
+                    { label: "Sí", value: "true" },
+                    { label: "No", value: "false" },
+                  ].map((opt) => (
+                    <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name={`condition-yesno-${question.questionId}`}
+                        value={opt.value}
+                        checked={conditionValue === opt.value}
+                        onChange={() => setConditionValue(opt.value)}
+                        onBlur={handleConditionChange}
+                        className="accent-green-700"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {["single_choice", "likert", "compliance"].includes(conditionTypeName) && (
+                <select
+                  value={conditionValue}
+                  onChange={(e) => setConditionValue(e.target.value)}
+                  onBlur={handleConditionChange}
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+                >
+                  <option value="">Seleccionar opción…</option>
+                  {conditionQuestion?.options.map((opt) => (
+                    <option key={opt.optionId} value={opt.optionId}>
+                      {opt.text}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {conditionTypeName === "numeric" && (
+                <input
+                  type="number"
+                  value={conditionValue}
+                  onChange={(e) => setConditionValue(e.target.value)}
+                  onBlur={handleConditionChange}
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                />
+              )}
+
+              {(conditionTypeName === "open_text" || conditionTypeName === "") && (
+                <input
+                  type="text"
+                  maxLength={50}
+                  value={conditionValue}
+                  onChange={(e) => setConditionValue(e.target.value)}
+                  onBlur={handleConditionChange}
+                  placeholder="Valor esperado…"
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                />
+              )}
             </div>
           )}
         </div>
