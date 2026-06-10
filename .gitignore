@@ -50,4 +50,10 @@ next-env.d.ts
 # Large media assets (hosted on Cloudinary)
 /public/videos/
 
+# Claude Code
+.claude/
+.agents/
+skills-lock.json
+CLAUDE.md
+
 
