@@ -102,10 +102,10 @@ export default function QuestionForm({
     });
   };
 
-  const handleConditionChange = async () => {
+  const saveCondition = async (newQuestionId: string, newValue: string) => {
     await updateQuestionInStore(sectionId, question.questionId, {
-      conditionQuestionId: conditionQuestionId || null,
-      conditionValue: conditionQuestionId ? conditionValue || null : null,
+      conditionQuestionId: newQuestionId || null,
+      conditionValue: newQuestionId ? newValue || null : null,
     });
   };
 
@@ -193,10 +193,11 @@ export default function QuestionForm({
             <select
               value={conditionQuestionId}
               onChange={(e) => {
-                setConditionQuestionId(e.target.value);
+                const newId = e.target.value;
+                setConditionQuestionId(newId);
                 setConditionValue("");
+                saveCondition(newId, "");
               }}
-              onBlur={handleConditionChange}
               className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
             >
               <option value="">Siempre visible</option>
@@ -226,8 +227,10 @@ export default function QuestionForm({
                         name={`condition-yesno-${question.questionId}`}
                         value={opt.value}
                         checked={conditionValue === opt.value}
-                        onChange={() => setConditionValue(opt.value)}
-                        onBlur={handleConditionChange}
+                        onChange={() => {
+                          setConditionValue(opt.value);
+                          saveCondition(conditionQuestionId, opt.value);
+                        }}
                         className="accent-green-700"
                       />
                       {opt.label}
@@ -239,8 +242,11 @@ export default function QuestionForm({
               {["single_choice", "likert", "compliance"].includes(conditionTypeName) && (
                 <select
                   value={conditionValue}
-                  onChange={(e) => setConditionValue(e.target.value)}
-                  onBlur={handleConditionChange}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    setConditionValue(newVal);
+                    saveCondition(conditionQuestionId, newVal);
+                  }}
                   className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
                 >
                   <option value="">Seleccionar opción…</option>
@@ -257,7 +263,7 @@ export default function QuestionForm({
                   type="number"
                   value={conditionValue}
                   onChange={(e) => setConditionValue(e.target.value)}
-                  onBlur={handleConditionChange}
+                  onBlur={(e) => saveCondition(conditionQuestionId, e.target.value)}
                   className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                 />
               )}
@@ -268,7 +274,7 @@ export default function QuestionForm({
                   maxLength={50}
                   value={conditionValue}
                   onChange={(e) => setConditionValue(e.target.value)}
-                  onBlur={handleConditionChange}
+                  onBlur={(e) => saveCondition(conditionQuestionId, e.target.value)}
                   placeholder="Valor esperado…"
                   className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                 />
