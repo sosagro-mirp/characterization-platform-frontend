@@ -324,18 +324,44 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
 
       removeQuestionFromStore: async (sectionId, questionId) => {
         await withSave(async () => {
+          // Clear conditions on any question that references the one being deleted
+          const allQuestions = get().sections.flatMap((s) => s.questions);
+          const dependents = allQuestions.filter(
+            (q) => q.conditionQuestionId === questionId
+          );
+          await Promise.all(
+            dependents.map((q) => {
+              const depSection = get().sections.find((s) =>
+                s.questions.some((sq) => sq.questionId === q.questionId)
+              );
+              if (!depSection) return Promise.resolve();
+              return updateQuestion(depSection.sectionId, q.questionId, {
+                conditionQuestionId: null,
+                conditionValue: null,
+              });
+            })
+          );
+
           await deleteQuestion(sectionId, questionId);
+
           set((s) => ({
-            sections: s.sections.map((sec) =>
-              sec.sectionId === sectionId
-                ? {
-                    ...sec,
-                    questions: sec.questions
-                      .filter((q) => q.questionId !== questionId)
-                      .map((q, i) => ({ ...q, order: i + 1 })),
-                  }
-                : sec
-            ),
+            sections: s.sections.map((sec) => ({
+              ...sec,
+              questions: sec.questions
+                .filter((q) => q.questionId !== questionId)
+                .map((q, i) => ({
+                  ...q,
+                  order: i + 1,
+                  conditionQuestionId:
+                    q.conditionQuestionId === questionId
+                      ? null
+                      : q.conditionQuestionId,
+                  conditionValue:
+                    q.conditionQuestionId === questionId
+                      ? null
+                      : q.conditionValue,
+                })),
+            })),
             selection: { kind: "section", sectionId },
           }));
         });

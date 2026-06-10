@@ -4,6 +4,7 @@ import { useState } from "react";
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import { CopyPlus, GitBranch } from "lucide-react";
+import ConfirmDialog from "./ConfirmDialog";
 
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto",
@@ -30,10 +31,25 @@ export default function QuestionNode({
   isLast,
   selection,
 }: QuestionNodeProps) {
-  const { setSelection, reorderQuestion, removeQuestionFromStore, duplicateQuestion } =
+  const { sections, setSelection, reorderQuestion, removeQuestionFromStore, duplicateQuestion } =
     useInstrumentEditorStore();
 
   const [duplicating, setDuplicating] = useState(false);
+  const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+  const [affectedQuestions, setAffectedQuestions] = useState<QuestionDetail[]>([]);
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const dependents = sections
+      .flatMap((s) => s.questions)
+      .filter((q) => q.conditionQuestionId === question.questionId);
+    if (dependents.length > 0) {
+      setAffectedQuestions(dependents);
+      setShowDeleteWarning(true);
+    } else {
+      removeQuestionFromStore(sectionId, question.questionId);
+    }
+  };
 
   const handleDuplicate = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -125,10 +141,7 @@ export default function QuestionNode({
         </button>
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            removeQuestionFromStore(sectionId, question.questionId);
-          }}
+          onClick={handleDeleteClick}
           className="p-1 rounded hover:bg-[var(--danger-bg)] text-[var(--danger-fg)]"
           title="Eliminar"
         >
@@ -137,6 +150,28 @@ export default function QuestionNode({
           </svg>
         </button>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteWarning}
+        title="Eliminar pregunta referenciada"
+        description="Las siguientes preguntas usan esta pregunta como condición de visibilidad. Al eliminarla, perderán su condición y siempre serán visibles:"
+        confirmLabel="Eliminar de todas formas"
+        destructive
+        onConfirm={() => {
+          setShowDeleteWarning(false);
+          removeQuestionFromStore(sectionId, question.questionId);
+        }}
+        onCancel={() => setShowDeleteWarning(false)}
+      >
+        <ul className="space-y-1 text-sm text-[var(--text-primary)]">
+          {affectedQuestions.map((q) => (
+            <li key={q.questionId} className="flex items-start gap-1.5">
+              <span className="text-[var(--text-muted)] shrink-0">{q.order}.</span>
+              <span className="truncate">{q.text}</span>
+            </li>
+          ))}
+        </ul>
+      </ConfirmDialog>
     </div>
   );
 }
