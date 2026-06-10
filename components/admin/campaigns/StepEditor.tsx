@@ -12,7 +12,7 @@ import {
   updateStep,
 } from "@/services/campaigns.service";
 import { apiClient } from "@/lib/apiClient";
-import StepConditionEditor from "./StepConditionEditor";
+import StepConditionEditor, { QuestionGroup } from "./StepConditionEditor";
 
 interface StepEditorProps {
   campaignId: string;
@@ -34,17 +34,13 @@ export default function StepEditor({
   const [questionsCache, setQuestionsCache] = useState<Record<string, QuestionDetail[]>>({});
   const [loadingQuestions, setLoadingQuestions] = useState(false);
 
+  // Load questions for all instruments in the campaign (needed for summaries + condition editor)
   useEffect(() => {
-    if (!editingConditionStepId) return;
-    const editingStep = steps.find((s) => s.stepId === editingConditionStepId);
-    if (!editingStep) return;
-
-    const prevInstrumentIds = steps
-      .filter((s) => s.order < editingStep.order)
+    const allIds = steps
       .map((s) => s.instrument.instrumentId)
-      .filter((id, i, arr) => arr.indexOf(id) === i); // dedup
+      .filter((id, i, arr) => arr.indexOf(id) === i);
 
-    const uncached = prevInstrumentIds.filter((id) => !(id in questionsCache));
+    const uncached = allIds.filter((id) => !(id in questionsCache));
     if (uncached.length === 0) return;
 
     setLoadingQuestions(true);
@@ -68,9 +64,59 @@ export default function StepEditor({
           return next;
         });
       })
-      .catch(() => {/* cache stays empty; user sees empty list */})
+      .catch(() => {})
       .finally(() => setLoadingQuestions(false));
-  }, [editingConditionStepId, steps, questionsCache]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [steps]);
+
+  function getConditionSummary(step: CampaignStepDetail) {
+    if (!step.conditionQuestion) return null;
+
+    const refStep = steps.find(
+      (s) =>
+        s.order < step.order &&
+        (questionsCache[s.instrument.instrumentId] ?? []).some(
+          (q) => q.questionId === step.conditionQuestion!.questionId,
+        ),
+    );
+
+    const cachedQuestion = refStep
+      ? (questionsCache[refStep.instrument.instrumentId] ?? []).find(
+          (q) => q.questionId === step.conditionQuestion!.questionId,
+        )
+      : null;
+
+    const valueLabel =
+      cachedQuestion?.options?.find((o) => o.optionId === step.conditionValue)?.text ??
+      (step.conditionValue === "true"
+        ? "Sí"
+        : step.conditionValue === "false"
+          ? "No"
+          : (step.conditionValue ?? "—"));
+
+    const stepLabel = refStep ? `Paso ${refStep.order} · ` : "";
+    const questionText = step.conditionQuestion.text;
+
+    return { stepLabel, questionText, valueLabel };
+  }
+
+  function buildQuestionGroups(step: CampaignStepDetail): QuestionGroup[] {
+    return steps
+      .filter((s) => s.order < step.order)
+      .map((s) => ({
+        stepOrder: s.order,
+        instrumentName: s.instrument.name,
+        questions: (questionsCache[s.instrument.instrumentId] ?? []).map((q) => ({
+          questionId: q.questionId,
+          text: q.text,
+          typeName: q.type?.name ?? "",
+          options: (q.options ?? []).map((o) => ({
+            optionId: o.optionId,
+            text: o.text,
+          })),
+        })),
+      }));
+  }
 
   async function handleAdd() {
     if (!newInstrumentId) return;
@@ -128,6 +174,21 @@ export default function StepEditor({
     }
   }
 
+  async function handleClearCondition(stepId: string) {
+    setPendingStepId(stepId);
+    try {
+      await updateStep(campaignId, stepId, {
+        conditionQuestionId: null,
+        conditionValue: null,
+      });
+      await onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al quitar condición.");
+    } finally {
+      setPendingStepId(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-[var(--text-primary)]">
@@ -142,6 +203,8 @@ export default function StepEditor({
 
       <ul className="space-y-3">
         {steps.map((step, idx) => {
+          const summary = getConditionSummary(step);
+
           return (
             <li
               key={step.stepId}
@@ -197,17 +260,23 @@ export default function StepEditor({
                 </div>
               </div>
 
-              <div className="text-xs text-[var(--text-muted)]">
-                {step.conditionQuestion ? (
+              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">
+                {summary ? (
                   <span>
-                    Condición: respuesta a “{step.conditionQuestion.text.slice(0, 60)}
-                    {step.conditionQuestion.text.length > 60 ? "…" : ""}” ={" "}
-                    <code>{step.conditionValue ?? "—"}</code>
+                    <span className="font-medium text-[var(--text-primary)]">
+                      {summary.stepLabel}
+                    </span>
+                    {summary.questionText.slice(0, 60)}
+                    {summary.questionText.length > 60 ? "…" : ""}
+                    {" = "}
+                    <span className="font-medium text-[var(--text-primary)]">
+                      {summary.valueLabel}
+                    </span>
                   </span>
                 ) : (
                   <span>Sin condición (siempre se aplica)</span>
                 )}
-                {" · "}
+                <span className="text-[var(--border)]">·</span>
                 <button
                   type="button"
                   onClick={() =>
@@ -219,25 +288,26 @@ export default function StepEditor({
                 >
                   {editingConditionStepId === step.stepId ? "Cerrar" : "Configurar"}
                 </button>
+                {summary && (
+                  <>
+                    <span className="text-[var(--border)]">·</span>
+                    <button
+                      type="button"
+                      disabled={pendingStepId === step.stepId}
+                      onClick={() => handleClearCondition(step.stepId)}
+                      className="text-[var(--danger-fg)] underline disabled:opacity-50"
+                    >
+                      Quitar condición
+                    </button>
+                  </>
+                )}
               </div>
 
               {editingConditionStepId === step.stepId && (
                 <StepConditionEditor
                   initialQuestionId={step.conditionQuestion?.questionId ?? null}
                   initialValue={step.conditionValue}
-                  availableQuestions={steps
-                    .filter((s) => s.order < step.order)
-                    .flatMap((s) =>
-                      (questionsCache[s.instrument.instrumentId] ?? []).map((q) => ({
-                        questionId: q.questionId,
-                        text: q.text,
-                        typeName: q.type?.name ?? "",
-                        options: (q.options ?? []).map((o) => ({
-                          optionId: o.optionId,
-                          text: o.text,
-                        })),
-                      })),
-                    )}
+                  questionGroups={buildQuestionGroups(step)}
                   loadingQuestions={loadingQuestions}
                   onSave={async ({ conditionQuestionId, conditionValue }) => {
                     await updateStep(campaignId, step.stepId, {

@@ -9,10 +9,16 @@ interface AvailableQuestion {
   options: { optionId: string; text: string }[];
 }
 
+export interface QuestionGroup {
+  stepOrder: number;
+  instrumentName: string;
+  questions: AvailableQuestion[];
+}
+
 interface StepConditionEditorProps {
   initialQuestionId: string | null;
   initialValue: string | null;
-  availableQuestions: AvailableQuestion[];
+  questionGroups: QuestionGroup[];
   loadingQuestions?: boolean;
   onSave: (data: {
     conditionQuestionId: string | null;
@@ -24,7 +30,7 @@ interface StepConditionEditorProps {
 export default function StepConditionEditor({
   initialQuestionId,
   initialValue,
-  availableQuestions,
+  questionGroups,
   loadingQuestions = false,
   onSave,
   onCancel,
@@ -33,13 +39,15 @@ export default function StepConditionEditor({
   const [val, setVal] = useState(initialValue ?? "");
   const [saving, setSaving] = useState(false);
 
-  // Reset value when question changes
+  const allQuestions = questionGroups.flatMap((g) => g.questions);
+
   useEffect(() => {
     if (qid !== initialQuestionId) setVal("");
   }, [qid, initialQuestionId]);
 
-  const selectedQuestion = availableQuestions.find((q) => q.questionId === qid);
+  const selectedQuestion = allQuestions.find((q) => q.questionId === qid);
   const typeName = selectedQuestion?.typeName ?? "";
+  const hasOptions = ["single_choice", "likert", "compliance"].includes(typeName);
 
   async function handleSave() {
     setSaving(true);
@@ -75,14 +83,23 @@ export default function StepConditionEditor({
             className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm bg-[var(--surface)]"
           >
             <option value="">Sin condición (siempre se aplica)</option>
-            {availableQuestions.map((q) => (
-              <option key={q.questionId} value={q.questionId}>
-                {q.text.slice(0, 80)}{q.text.length > 80 ? "…" : ""}
-              </option>
-            ))}
+            {questionGroups.map((group) =>
+              group.questions.length > 0 ? (
+                <optgroup
+                  key={`${group.stepOrder}-${group.instrumentName}`}
+                  label={`Paso ${group.stepOrder} · ${group.instrumentName}`}
+                >
+                  {group.questions.map((q) => (
+                    <option key={q.questionId} value={q.questionId}>
+                      {q.text.slice(0, 80)}{q.text.length > 80 ? "…" : ""}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null
+            )}
           </select>
         )}
-        {!loadingQuestions && availableQuestions.length === 0 && !qid && (
+        {!loadingQuestions && allQuestions.length === 0 && (
           <p className="mt-1 text-xs text-[var(--text-muted)] italic">
             No hay pasos anteriores con preguntas disponibles.
           </p>
@@ -105,7 +122,7 @@ export default function StepConditionEditor({
               <option value="true">Sí</option>
               <option value="false">No</option>
             </select>
-          ) : typeName === "single_choice" || typeName === "likert" ? (
+          ) : hasOptions ? (
             <select
               value={val}
               onChange={(e) => setVal(e.target.value)}
