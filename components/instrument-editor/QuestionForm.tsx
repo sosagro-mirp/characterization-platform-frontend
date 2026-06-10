@@ -45,12 +45,23 @@ export default function QuestionForm({
     setConditionValue(question.conditionValue ?? "");
   }, [question.questionId]);
 
-  const allQuestions = sections.flatMap((s) => s.questions);
-  const precedingQuestions = allQuestions.filter(
-    (q) =>
-      q.questionId !== question.questionId &&
-      q.order < question.order
+  useEffect(() => {
+    setConditionQuestionId(question.conditionQuestionId ?? "");
+    setConditionValue(question.conditionValue ?? "");
+  }, [question.conditionQuestionId, question.conditionValue]);
+
+  const orderedQuestions = [...sections]
+    .sort((a, b) => a.order - b.order)
+    .flatMap((s) => [...s.questions].sort((a, b) => a.order - b.order));
+  const currentIdx = orderedQuestions.findIndex(
+    (q) => q.questionId === question.questionId
   );
+  const precedingQuestions = currentIdx > 0 ? orderedQuestions.slice(0, currentIdx) : [];
+
+  const conditionQuestion = precedingQuestions.find(
+    (q) => q.questionId === conditionQuestionId
+  );
+  const conditionTypeName = conditionQuestion?.type?.name ?? "";
 
   const currentTypeName =
     questionTypes.find((t) => t.typeId === typeId)?.name ?? "";
@@ -97,10 +108,10 @@ export default function QuestionForm({
     });
   };
 
-  const handleConditionChange = async () => {
+  const saveCondition = async (newQuestionId: string, newValue: string) => {
     await updateQuestionInStore(sectionId, question.questionId, {
-      conditionQuestionId: conditionQuestionId || null,
-      conditionValue: conditionQuestionId ? conditionValue || null : null,
+      conditionQuestionId: newQuestionId || null,
+      conditionValue: newQuestionId ? newValue || null : null,
     });
   };
 
@@ -187,8 +198,12 @@ export default function QuestionForm({
             </label>
             <select
               value={conditionQuestionId}
-              onChange={(e) => setConditionQuestionId(e.target.value)}
-              onBlur={handleConditionChange}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setConditionQuestionId(newId);
+                setConditionValue("");
+                saveCondition(newId, "");
+              }}
               className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
             >
               <option value="">Siempre visible</option>
@@ -205,15 +220,71 @@ export default function QuestionForm({
               <label className="block text-xs text-[var(--text-muted)] mb-1">
                 …es igual a (valor de condición)
               </label>
-              <input
-                type="text"
-                maxLength={50}
-                value={conditionValue}
-                onChange={(e) => setConditionValue(e.target.value)}
-                onBlur={handleConditionChange}
-                placeholder="Ej: true, false, optionId…"
-                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
-              />
+
+              {conditionTypeName === "yes_no" && (
+                <div className="flex gap-3">
+                  {[
+                    { label: "Sí", value: "true" },
+                    { label: "No", value: "false" },
+                  ].map((opt) => (
+                    <label key={opt.value} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name={`condition-yesno-${question.questionId}`}
+                        value={opt.value}
+                        checked={conditionValue === opt.value}
+                        onChange={() => {
+                          setConditionValue(opt.value);
+                          saveCondition(conditionQuestionId, opt.value);
+                        }}
+                        className="accent-green-700"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {["single_choice", "likert", "compliance"].includes(conditionTypeName) && (
+                <select
+                  value={conditionValue}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    setConditionValue(newVal);
+                    saveCondition(conditionQuestionId, newVal);
+                  }}
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+                >
+                  <option value="">Seleccionar opción…</option>
+                  {conditionQuestion?.options.map((opt) => (
+                    <option key={opt.optionId} value={opt.optionId}>
+                      {opt.text}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {conditionTypeName === "numeric" && (
+                <input
+                  type="number"
+                  value={conditionValue}
+                  onChange={(e) => setConditionValue(e.target.value)}
+                  onBlur={(e) => saveCondition(conditionQuestionId, e.target.value)}
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                />
+              )}
+
+              {(conditionTypeName === "open_text" || conditionTypeName === "") && (
+                <input
+                  type="text"
+                  maxLength={50}
+                  value={conditionValue}
+                  onChange={(e) => setConditionValue(e.target.value)}
+                  onBlur={(e) => saveCondition(conditionQuestionId, e.target.value)}
+                  placeholder="Valor esperado…"
+                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                />
+              )}
             </div>
           )}
         </div>

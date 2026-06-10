@@ -64,10 +64,6 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     initializeSurvey: ({ localId, instrumentName, sections }) => {
       const state = get();
 
-      if (state.initialized && state.localId === localId) {
-        return;
-      }
-
       const flattenedQuestions = [...sections]
         .sort((a, b) => a.order - b.order)
         .flatMap((section) =>
@@ -80,6 +76,13 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
               question,
             })),
         );
+
+      if (state.initialized && state.localId === localId) {
+        // Sesión ya activa — solo refrescar los metadatos de preguntas
+        // (condiciones, textos, tipos) sin resetear respuestas ni posición
+        set({ flattenedQuestions });
+        return;
+      }
 
       set({
         localId,

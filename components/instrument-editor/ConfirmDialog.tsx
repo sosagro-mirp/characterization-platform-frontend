@@ -4,6 +4,7 @@ interface ConfirmDialogProps {
   open: boolean;
   title: string;
   description: string;
+  children?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
   confirmLabel?: string;
@@ -14,6 +15,7 @@ export default function ConfirmDialog({
   open,
   title,
   description,
+  children,
   onConfirm,
   onCancel,
   confirmLabel = "Confirmar",
@@ -31,6 +33,7 @@ export default function ConfirmDialog({
       <div className="relative z-10 w-full max-w-sm rounded-2xl bg-[var(--surface)] p-6 shadow-xl">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
         <p className="mt-2 text-sm text-[var(--text-muted)]">{description}</p>
+        {children && <div className="mt-3">{children}</div>}
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
