@@ -45,12 +45,13 @@ export default function QuestionForm({
     setConditionValue(question.conditionValue ?? "");
   }, [question.questionId, question.conditionQuestionId, question.conditionValue]);
 
-  const allQuestions = sections.flatMap((s) => s.questions);
-  const precedingQuestions = allQuestions.filter(
-    (q) =>
-      q.questionId !== question.questionId &&
-      q.order < question.order
+  const orderedQuestions = [...sections]
+    .sort((a, b) => a.order - b.order)
+    .flatMap((s) => [...s.questions].sort((a, b) => a.order - b.order));
+  const currentIdx = orderedQuestions.findIndex(
+    (q) => q.questionId === question.questionId
   );
+  const precedingQuestions = currentIdx > 0 ? orderedQuestions.slice(0, currentIdx) : [];
 
   const conditionQuestion = precedingQuestions.find(
     (q) => q.questionId === conditionQuestionId
