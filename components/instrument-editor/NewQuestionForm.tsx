@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 
+const TYPE_LABELS: Record<string, string> = {
+  open_text: "Texto abierto",
+  numeric: "Número",
+  yes_no: "Sí / No",
+  single_choice: "Selección única",
+  likert: "Likert",
+  multiple_choice: "Selección múltiple",
+  compliance: "Cumplimiento",
+};
+
 interface NewQuestionFormProps {
   sectionId: string;
 }
@@ -78,7 +88,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
             <option key={t.typeId} value={t.typeId}>
-              {t.name}
+              {TYPE_LABELS[t.name] ?? t.name}
             </option>
           ))}
         </select>
