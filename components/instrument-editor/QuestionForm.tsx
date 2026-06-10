@@ -43,7 +43,7 @@ export default function QuestionForm({
     setIsSelectionCriteria(question.isSelectionCriteria);
     setConditionQuestionId(question.conditionQuestionId ?? "");
     setConditionValue(question.conditionValue ?? "");
-  }, [question.questionId]);
+  }, [question.questionId, question.conditionQuestionId, question.conditionValue]);
 
   const allQuestions = sections.flatMap((s) => s.questions);
   const precedingQuestions = allQuestions.filter(

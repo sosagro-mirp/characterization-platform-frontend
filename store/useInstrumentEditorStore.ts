@@ -304,6 +304,14 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
                             ...q,
                             ...updated,
                             options: updated.options ?? q.options,
+                            // Preserve explicitly sent values in case the
+                            // backend response omits or nullifies them
+                            ...(data.conditionQuestionId !== undefined && {
+                              conditionQuestionId: data.conditionQuestionId,
+                            }),
+                            ...(data.conditionValue !== undefined && {
+                              conditionValue: data.conditionValue,
+                            }),
                           }
                         : q
                     ),
