@@ -79,10 +79,9 @@ export default function QuestionNode({
             </span>
           )}
           {question.conditionQuestionId && (
-            <GitBranch
-              className="w-2.5 h-2.5 text-[var(--text-muted)]"
-              title="Pregunta condicional"
-            />
+            <span title="Pregunta condicional">
+              <GitBranch className="w-2.5 h-2.5 text-[var(--text-muted)]" />
+            </span>
           )}
         </div>
       </div>
