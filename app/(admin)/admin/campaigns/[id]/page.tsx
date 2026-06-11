@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import {
   CampaignDetail,
   CreateCampaignRequest,
+  CropRef,
   InstrumentListItem,
   UpdateCampaignRequest,
 } from "@/app/(admin)/types";
@@ -13,6 +14,7 @@ import {
   updateCampaign,
 } from "@/services/campaigns.service";
 import { getInstruments } from "@/services/instruments.service";
+import { listCrops } from "@/services/types-of-crops.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import CampaignForm from "@/components/admin/campaigns/CampaignForm";
 import StepEditor from "@/components/admin/campaigns/StepEditor";
@@ -24,17 +26,20 @@ export default function EditCampaignPage() {
 
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
   const [instruments, setInstruments] = useState<InstrumentListItem[]>([]);
+  const [crops, setCrops] = useState<CropRef[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const [c, i] = await Promise.all([
+      const [c, i, cr] = await Promise.all([
         getCampaign(campaignId),
         getInstruments(),
+        listCrops(),
       ]);
       setCampaign(c);
       setInstruments(i);
+      setCrops(cr.map((x) => ({ cropId: x.cropId, name: x.name })));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar campaña.");
     }
@@ -102,6 +107,7 @@ export default function EditCampaignPage() {
           campaignId={campaignId}
           steps={campaign.steps}
           instruments={instruments}
+          availableCrops={crops}
           onChanged={refresh}
         />
       </section>
