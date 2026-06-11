@@ -24,6 +24,7 @@ export interface InstrumentQuestion {
   isRequired: boolean;
   isSelectionCriteria?: boolean;
   order: number;
+  systemField?: string | null;
   type: InstrumentType;
   options: InstrumentOption[];
   conditionQuestionId?: string | null;
@@ -57,6 +58,7 @@ export interface InstrumentResponse {
   version: number;
   publishDate: string;
   isActive: boolean;
+  code?: string | null;
   sections: InstrumentSection[];
 }
 
@@ -157,6 +159,22 @@ export interface FarmerSearchResult {
     town?: { townId: string; name: string } | null;
   } | null;
 }
+
+export interface ExtractFarmerResult {
+  farmer: FarmerSearchResult;
+  existed: boolean;
+}
+
+export interface ExtractCropsResult {
+  crops: CropSummary[];
+}
+
+export type LastFarmerResult = {
+  farmerId: string;
+  name: string;
+  lastName: string | null;
+  farm?: { name: string };
+} | null;
 
 export interface CreateFarmerPayload {
   name: string;

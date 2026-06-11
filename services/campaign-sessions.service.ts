@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import {
   CampaignSessionResponse,
   CreateCampaignSessionPayload,
+  LastFarmerResult,
   NextStepResponse,
 } from "@/app/(instrument)/types";
 
@@ -36,5 +37,12 @@ export function syncSession(
   return apiClient.patch<CampaignSessionResponse>(
     `/api/campaign-sessions/${sessionId}/sync`,
     {},
+  );
+}
+
+export function getLastFarmer(): Promise<LastFarmerResult> {
+  return apiClient.get<LastFarmerResult>(
+    "/api/campaign-sessions/last-farmer",
+    { cache: "no-store" },
   );
 }
