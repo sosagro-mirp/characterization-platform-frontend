@@ -13,7 +13,6 @@ interface CampaignSessionState {
   totalSteps: number;
   completedCount: number;
   preSurveyPhase: PreSurveyPhase;
-  preSurveySurveyId: string | null;
   startSession: (params: {
     sessionId: string;
     campaignId: string;
@@ -27,7 +26,7 @@ interface CampaignSessionState {
     totalSteps: number;
     completedCount: number;
   }) => void;
-  setPreSurveyPhase: (phase: PreSurveyPhase, surveyId?: string | null) => void;
+  setPreSurveyPhase: (phase: PreSurveyPhase) => void;
   setFarmer: (farmerId: string, farmerName: string | null) => void;
   clearSession: () => void;
 }
@@ -42,7 +41,6 @@ const initial = {
   totalSteps: 0,
   completedCount: 0,
   preSurveyPhase: 'idle' as PreSurveyPhase,
-  preSurveySurveyId: null,
 };
 
 export const useCampaignSessionStore = create<CampaignSessionState>()(
@@ -61,8 +59,8 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
         }),
       setProgress: ({ currentStepOrder, totalSteps, completedCount }) =>
         set({ currentStepOrder, totalSteps, completedCount }),
-      setPreSurveyPhase: (phase, surveyId) =>
-        set({ preSurveyPhase: phase, preSurveySurveyId: surveyId ?? null }),
+      setPreSurveyPhase: (phase) =>
+        set({ preSurveyPhase: phase }),
       setFarmer: (farmerId, farmerName) =>
         set({ farmerId, farmerName }),
       clearSession: () => set(initial),
