@@ -135,4 +135,64 @@ export interface CreateCampaignSessionPayload {
   townId?: string;
   vereda?: string;
   cropId?: string;
+  cropIds?: string[];
+}
+
+// ── Pre-survey form S1/S2 ────────────────────────────────────────────────────
+
+export interface CropSummary {
+  cropId: string;
+  name: string;
+}
+
+export interface FarmerSearchResult {
+  id: string;
+  name: string;
+  lastName: string;
+  documentId: string;
+  phone?: string | null;
+  farm?: {
+    farmId: string;
+    name: string;
+    town?: { townId: string; name: string } | null;
+  } | null;
+}
+
+export interface CreateFarmerPayload {
+  name: string;
+  lastName: string;
+  documentId: string;
+  phone?: string;
+  email?: string;
+  age?: number;
+  gender?: string;
+  educationLevel?: string;
+  experienceYears?: number;
+  familySize?: number;
+  isMainIncome?: boolean;
+  participationInTraining?: boolean;
+  farmName?: string;
+  townId?: string;
+  latitude?: number;
+  longitude?: number;
+  altitude?: number;
+}
+
+export interface PreSurveyFormData {
+  mode: 'search' | 'create';
+  searchQuery: string;
+  name: string;
+  lastName: string;
+  documentId: string;
+  phone: string;
+  email: string;
+  farmName: string;
+  departmentId: string;
+  townId: string;
+  vereda: string;
+  latitude: string;
+  longitude: string;
+  altitude: string;
+  cropIds: string[];
+  selectedFarmerId: string | null;
 }
