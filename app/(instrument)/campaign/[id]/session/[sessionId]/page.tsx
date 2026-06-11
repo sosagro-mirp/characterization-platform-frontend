@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { NextStepResponse } from "@/app/(instrument)/types";
 import { getNextStep } from "@/services/campaign-sessions.service";
 import { getInstrumentByCode } from "@/services/instruments.service";
-import { createSurvey } from "@/services/surveys.service";
 import { extractFarmer, extractCrops } from "@/services/surveys.service";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import CampaignProgress from "@/components/campaign/CampaignProgress";
@@ -13,17 +12,16 @@ import CampaignProgress from "@/components/campaign/CampaignProgress";
 export default function CampaignSessionPage() {
   const params = useParams<{ id: string; sessionId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const campaignId = params.id;
   const sessionId = params.sessionId;
 
   const {
     farmerId,
     preSurveyPhase,
-    preSurveySurveyId,
     setPreSurveyPhase,
     setFarmer,
     setProgress,
-    clearSession,
   } = useCampaignSessionStore();
 
   const [next, setNext] = useState<NextStepResponse | null>(null);
@@ -42,14 +40,10 @@ export default function CampaignSessionPage() {
             setPreSurveyPhase("done");
             return;
           }
-          // No farmer → inject S1
+          // No farmer → send user to fill S1; survey created on submit by InstrumentQuestionFlow
           const s1 = await getInstrumentByCode("S1");
-          const survey = await createSurvey({
-            instrumentIds: [s1.instrumentId],
-            campaignSessionId: sessionId,
-          });
           if (cancelled) return;
-          setPreSurveyPhase("s1_pending", survey.surveyId);
+          setPreSurveyPhase("s1_pending");
           router.replace(
             `/instrument/${s1.instrumentId}?campaignSessionId=${sessionId}`,
           );
@@ -57,18 +51,27 @@ export default function CampaignSessionPage() {
         }
 
         // ── Phase: s1_pending — S1 submitted, extract farmer then launch S2 ─
-        if (preSurveyPhase === "s1_pending" && preSurveySurveyId) {
-          const result = await extractFarmer(preSurveySurveyId);
+        // completedSurveyId is the real surveyId created during S1 submission,
+        // passed back via URL query param from SurveyCompletedCard.
+        if (preSurveyPhase === "s1_pending") {
+          const completedSurveyId = searchParams.get("completedSurveyId");
+          if (!completedSurveyId) {
+            // No completedSurveyId — user navigated here without finishing S1
+            // (e.g., after a transient error). Re-launch S1 for recovery.
+            const s1 = await getInstrumentByCode("S1");
+            if (cancelled) return;
+            router.replace(
+              `/instrument/${s1.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+            return;
+          }
+          const result = await extractFarmer(completedSurveyId);
           if (cancelled) return;
           setFarmer(result.farmer.id, result.farmer.name);
 
           const s2 = await getInstrumentByCode("S2");
-          const survey = await createSurvey({
-            instrumentIds: [s2.instrumentId],
-            campaignSessionId: sessionId,
-          });
           if (cancelled) return;
-          setPreSurveyPhase("s2_pending", survey.surveyId);
+          setPreSurveyPhase("s2_pending");
           router.replace(
             `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
           );
@@ -76,8 +79,18 @@ export default function CampaignSessionPage() {
         }
 
         // ── Phase: s2_pending — S2 submitted, extract crops then proceed ─────
-        if (preSurveyPhase === "s2_pending" && preSurveySurveyId) {
-          await extractCrops(preSurveySurveyId);
+        if (preSurveyPhase === "s2_pending") {
+          const completedSurveyId = searchParams.get("completedSurveyId");
+          if (!completedSurveyId) {
+            // No completedSurveyId — re-launch S2 for recovery.
+            const s2 = await getInstrumentByCode("S2");
+            if (cancelled) return;
+            router.replace(
+              `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+            return;
+          }
+          await extractCrops(completedSurveyId);
           if (cancelled) return;
           setPreSurveyPhase("done");
         }
@@ -111,7 +124,7 @@ export default function CampaignSessionPage() {
       cancelled = true;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, preSurveyPhase]);
+  }, [sessionId, preSurveyPhase, searchParams]);
 
   const finished = !loading && (!next || !next.instrument);
 
@@ -155,10 +168,7 @@ export default function CampaignSessionPage() {
           />
           <button
             type="button"
-            onClick={() => {
-              clearSession();
-              router.replace("/campaign");
-            }}
+            onClick={() => router.replace("/campaign")}
             className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors"
           >
             Volver al listado
