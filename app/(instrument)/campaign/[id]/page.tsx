@@ -30,7 +30,7 @@ export default function CampaignIntroPage() {
       .finally(() => setLoadingCampaign(false));
   }, [campaignId]);
 
-  async function launchSession(farmerId: string | null) {
+  async function launchSession(farmerId: string | null, skipPreSurvey = false) {
     if (!campaign) return;
     setStep("starting");
     setError(null);
@@ -45,6 +45,7 @@ export default function CampaignIntroPage() {
         campaignName: campaign.name,
         farmerId,
         farmerName: null,
+        skipPreSurvey,
       });
       router.replace(`/campaign/${campaignId}/session/${session.sessionId}`);
     } catch (err) {
@@ -66,7 +67,7 @@ export default function CampaignIntroPage() {
   }
 
   function handleSkip() {
-    launchSession(null);
+    launchSession(null, true);
   }
 
   if (loadingCampaign) {
