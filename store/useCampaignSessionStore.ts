@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+type PreSurveyPhase = 'idle' | 's1_pending' | 's2_pending' | 'done';
+
 interface CampaignSessionState {
   sessionId: string | null;
   campaignId: string | null;
@@ -10,6 +12,8 @@ interface CampaignSessionState {
   currentStepOrder: number | null;
   totalSteps: number;
   completedCount: number;
+  preSurveyPhase: PreSurveyPhase;
+  preSurveySurveyId: string | null;
   startSession: (params: {
     sessionId: string;
     campaignId: string;
@@ -22,6 +26,8 @@ interface CampaignSessionState {
     totalSteps: number;
     completedCount: number;
   }) => void;
+  setPreSurveyPhase: (phase: PreSurveyPhase, surveyId?: string | null) => void;
+  setFarmer: (farmerId: string, farmerName: string | null) => void;
   clearSession: () => void;
 }
 
@@ -34,6 +40,8 @@ const initial = {
   currentStepOrder: null,
   totalSteps: 0,
   completedCount: 0,
+  preSurveyPhase: 'idle' as PreSurveyPhase,
+  preSurveySurveyId: null,
 };
 
 export const useCampaignSessionStore = create<CampaignSessionState>()(
@@ -48,9 +56,14 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
           campaignName,
           farmerId: farmerId ?? null,
           farmerName: farmerName ?? null,
+          preSurveyPhase: farmerId ? 'done' : 'idle',
         }),
       setProgress: ({ currentStepOrder, totalSteps, completedCount }) =>
         set({ currentStepOrder, totalSteps, completedCount }),
+      setPreSurveyPhase: (phase, surveyId) =>
+        set({ preSurveyPhase: phase, preSurveySurveyId: surveyId ?? null }),
+      setFarmer: (farmerId, farmerName) =>
+        set({ farmerId, farmerName }),
       clearSession: () => set(initial),
     }),
     {
