@@ -30,7 +30,7 @@ export default function CampaignIntroPage() {
       .finally(() => setLoadingCampaign(false));
   }, [campaignId]);
 
-  async function launchSession(farmerId: string | null, cropIds: string[], farmerName: string | null) {
+  async function launchSession(farmerId: string | null) {
     if (!campaign) return;
     setStep("starting");
     setError(null);
@@ -38,14 +38,13 @@ export default function CampaignIntroPage() {
       const session = await createSession({
         campaignId,
         farmerId: farmerId ?? undefined,
-        cropIds: cropIds.length ? cropIds : undefined,
       });
       startSession({
         sessionId: session.sessionId,
         campaignId,
         campaignName: campaign.name,
         farmerId,
-        farmerName,
+        farmerName: null,
       });
       router.replace(`/campaign/${campaignId}/session/${session.sessionId}`);
     } catch (err) {
@@ -54,13 +53,20 @@ export default function CampaignIntroPage() {
     }
   }
 
-  function handlePreSurveyComplete(farmerId: string | null, cropIds: string[]) {
-    // farmerId may come from a search result or a newly created farmer
-    launchSession(farmerId, cropIds, null);
+  function handleSearchSelect(farmerId: string) {
+    launchSession(farmerId);
+  }
+
+  function handleNewFarmer() {
+    launchSession(null);
+  }
+
+  function handleContinueLast(farmerId: string) {
+    launchSession(farmerId);
   }
 
   function handleSkip() {
-    launchSession(null, [], null);
+    launchSession(null);
   }
 
   if (loadingCampaign) {
@@ -112,7 +118,9 @@ export default function CampaignIntroPage() {
             Identificación del encuestado
           </h2>
           <PreSurveyForm
-            onComplete={handlePreSurveyComplete}
+            onSearchSelect={handleSearchSelect}
+            onNewFarmer={handleNewFarmer}
+            onContinueLast={handleContinueLast}
             onSkip={handleSkip}
           />
         </section>
