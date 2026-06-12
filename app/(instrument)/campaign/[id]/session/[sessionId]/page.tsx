@@ -1,29 +1,103 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { NextStepResponse } from "@/app/(instrument)/types";
 import { getNextStep } from "@/services/campaign-sessions.service";
+import { getInstrumentByCode } from "@/services/instruments.service";
+import { extractFarmer, extractCrops } from "@/services/surveys.service";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import CampaignProgress from "@/components/campaign/CampaignProgress";
 
 export default function CampaignSessionPage() {
   const params = useParams<{ id: string; sessionId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const campaignId = params.id;
   const sessionId = params.sessionId;
 
-  const setProgress = useCampaignSessionStore((s) => s.setProgress);
-  const clearSession = useCampaignSessionStore((s) => s.clearSession);
+  const {
+    farmerId,
+    preSurveyPhase,
+    setPreSurveyPhase,
+    setFarmer,
+    setProgress,
+  } = useCampaignSessionStore();
 
   const [next, setNext] = useState<NextStepResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    async function run() {
       try {
+        // ── Phase: idle — check if farmer is needed ──────────────────────────
+        if (preSurveyPhase === "idle") {
+          if (farmerId) {
+            // Farmer already assigned (via search or continue-last): skip pre-survey
+            setPreSurveyPhase("done");
+            return;
+          }
+          // No farmer → send user to fill S1; survey created on submit by InstrumentQuestionFlow
+          const s1 = await getInstrumentByCode("S1");
+          if (cancelled) return;
+          setPreSurveyPhase("s1_pending");
+          router.replace(
+            `/instrument/${s1.instrumentId}?campaignSessionId=${sessionId}`,
+          );
+          return;
+        }
+
+        // ── Phase: s1_pending — S1 submitted, extract farmer then launch S2 ─
+        // completedSurveyId is the real surveyId created during S1 submission,
+        // passed back via URL query param from SurveyCompletedCard.
+        if (preSurveyPhase === "s1_pending") {
+          const completedSurveyId = searchParams.get("completedSurveyId");
+          if (!completedSurveyId) {
+            // No completedSurveyId — user navigated here without finishing S1
+            // (e.g., after a transient error). Re-launch S1 for recovery.
+            const s1 = await getInstrumentByCode("S1");
+            if (cancelled) return;
+            router.replace(
+              `/instrument/${s1.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+            return;
+          }
+          const result = await extractFarmer(completedSurveyId);
+          if (cancelled) return;
+          setFarmer(result.farmer.id, result.farmer.name);
+
+          const s2 = await getInstrumentByCode("S2");
+          if (cancelled) return;
+          setPreSurveyPhase("s2_pending");
+          router.replace(
+            `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
+          );
+          return;
+        }
+
+        // ── Phase: s2_pending — S2 submitted, extract crops then proceed ─────
+        if (preSurveyPhase === "s2_pending") {
+          const completedSurveyId = searchParams.get("completedSurveyId");
+          if (!completedSurveyId) {
+            // No completedSurveyId — re-launch S2 for recovery.
+            const s2 = await getInstrumentByCode("S2");
+            if (cancelled) return;
+            router.replace(
+              `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+            return;
+          }
+          await extractCrops(completedSurveyId);
+          if (cancelled) return;
+          setPreSurveyPhase("done");
+        }
+
+        // ── Phase: done — normal getNextStep flow ────────────────────────────
         const result = await getNextStep(sessionId);
+        if (cancelled) return;
         setNext(result);
         if (result.instrument && typeof result.order === "number") {
           setProgress({
@@ -31,21 +105,26 @@ export default function CampaignSessionPage() {
             totalSteps: result.totalSteps ?? 0,
             completedCount: result.completedCount ?? 0,
           });
-          // Redirigir al loader del instrumento con el contexto de la campaña.
-          const url = `/instrument/${result.instrument.instrumentId}?campaignSessionId=${sessionId}&stepOrder=${result.order}`;
-          router.replace(url);
+          router.replace(
+            `/instrument/${result.instrument.instrumentId}?campaignSessionId=${sessionId}&stepOrder=${result.order}`,
+          );
         }
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Error al calcular el siguiente paso.",
-        );
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Error al calcular el siguiente paso.",
+          );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
-  }, [sessionId, router, setProgress]);
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, preSurveyPhase, searchParams]);
 
   const finished = !loading && (!next || !next.instrument);
 
@@ -89,10 +168,7 @@ export default function CampaignSessionPage() {
           />
           <button
             type="button"
-            onClick={() => {
-              clearSession();
-              router.replace("/campaign");
-            }}
+            onClick={() => router.replace("/campaign")}
             className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors"
           >
             Volver al listado
@@ -100,7 +176,6 @@ export default function CampaignSessionPage() {
         </section>
       )}
 
-      {/* campaignId conservado para futuras navegaciones internas (link "volver al intro") */}
       <input type="hidden" value={campaignId} readOnly />
     </main>
   );

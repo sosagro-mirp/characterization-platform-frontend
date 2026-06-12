@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +11,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SosAgro 4.C ",
   description: "SosAgro 4.C es un proyecto financiado por el ministerio de ciencia ...",
+};
+
+export const viewport: Viewport = {
   themeColor: "#14532d",
 };
 
