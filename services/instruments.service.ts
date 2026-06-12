@@ -6,6 +6,15 @@ import {
   UpdateInstrumentRequest,
 } from "@/app/(admin)/types";
 
+export function getInstrumentByCode(
+  code: string,
+): Promise<{ instrumentId: string; name: string }> {
+  return apiClient.get<{ instrumentId: string; name: string }>(
+    `/api/instruments/by-code/${encodeURIComponent(code)}`,
+    { cache: "no-store" },
+  );
+}
+
 export function getInstruments(): Promise<InstrumentListItem[]> {
   return apiClient.get<InstrumentListItem[]>("/api/instruments", {
     cache: "no-store",

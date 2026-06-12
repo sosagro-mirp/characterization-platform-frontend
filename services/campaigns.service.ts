@@ -5,8 +5,11 @@ import {
   CampaignSummary,
   CreateCampaignRequest,
   CreateCampaignStepRequest,
+  CreateStepConditionRequest,
+  StepConditionDetail,
   UpdateCampaignRequest,
   UpdateCampaignStepRequest,
+  UpdateStepConditionRequest,
 } from "@/app/(admin)/types";
 import {
   CampaignActiveSummary,
@@ -76,6 +79,49 @@ export function updateStep(
 export function deleteStep(campaignId: string, stepId: string): Promise<void> {
   return apiClient.delete<void>(
     `/api/campaigns/${campaignId}/steps/${stepId}`,
+  );
+}
+
+export function listStepConditions(
+  campaignId: string,
+  stepId: string,
+): Promise<StepConditionDetail[]> {
+  return apiClient.get<StepConditionDetail[]>(
+    `/api/campaigns/${campaignId}/steps/${stepId}/conditions`,
+    { cache: "no-store" },
+  );
+}
+
+export function createStepCondition(
+  campaignId: string,
+  stepId: string,
+  data: CreateStepConditionRequest,
+): Promise<StepConditionDetail> {
+  return apiClient.post<StepConditionDetail>(
+    `/api/campaigns/${campaignId}/steps/${stepId}/conditions`,
+    data,
+  );
+}
+
+export function updateStepCondition(
+  campaignId: string,
+  stepId: string,
+  conditionId: string,
+  data: UpdateStepConditionRequest,
+): Promise<StepConditionDetail> {
+  return apiClient.patch<StepConditionDetail>(
+    `/api/campaigns/${campaignId}/steps/${stepId}/conditions/${conditionId}`,
+    data,
+  );
+}
+
+export function deleteStepCondition(
+  campaignId: string,
+  stepId: string,
+  conditionId: string,
+): Promise<void> {
+  return apiClient.delete<void>(
+    `/api/campaigns/${campaignId}/steps/${stepId}/conditions/${conditionId}`,
   );
 }
 

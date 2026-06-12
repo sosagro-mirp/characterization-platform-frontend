@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
+import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
 
 interface SurveyCompletedCardProps {
     title?: string;
@@ -22,9 +23,16 @@ export default function SurveyCompletedCard({
 }: SurveyCompletedCardProps) {
     const sessionIdFromStore = useCampaignSessionStore((s) => s.sessionId);
     const activeCampaignId = useCampaignSessionStore((s) => s.campaignId) ?? null;
+    const completedSurveyId = useInstrumentSurveyStore((s) => s.surveyId);
 
     const activeSessionId = campaignSessionId ?? sessionIdFromStore ?? null;
     const inCampaign = Boolean(activeSessionId && activeCampaignId);
+
+    const campaignContinueHref = inCampaign
+        ? completedSurveyId
+            ? `/campaign/${activeCampaignId}/session/${activeSessionId}?completedSurveyId=${completedSurveyId}`
+            : `/campaign/${activeCampaignId}/session/${activeSessionId}`
+        : "/campaign";
 
     const displayMessage = savedOffline
         ? "Sus respuestas han sido guardadas localmente y se enviaran al servidor cuando haya conexion."
@@ -54,7 +62,7 @@ export default function SurveyCompletedCard({
             {inCampaign ? (
                 <div className="flex flex-col items-center gap-3 mt-12">
                     <Link
-                        href={`/campaign/${activeCampaignId}/session/${activeSessionId}`}
+                        href={campaignContinueHref}
                         className="bg-green-900 px-4 py-3 rounded-xl text-gray-200 flex items-center gap-2"
                     >
                         Continuar con la siguiente encuesta

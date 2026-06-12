@@ -1,172 +1,109 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface AvailableQuestion {
-  questionId: string;
-  text: string;
-  typeName: string;
-  options: { optionId: string; text: string }[];
-}
+import { useState } from "react";
+import { CropRef, StepConditionDetail } from "@/app/(admin)/types";
+import {
+  createStepCondition,
+  deleteStepCondition,
+  updateStepCondition,
+} from "@/services/campaigns.service";
+import StepConditionRow from "./StepConditionRow";
 
 export interface QuestionGroup {
   stepOrder: number;
   instrumentName: string;
-  questions: AvailableQuestion[];
+  questions: {
+    questionId: string;
+    text: string;
+    typeName: string;
+    options: { optionId: string; text: string }[];
+  }[];
 }
 
 interface StepConditionEditorProps {
-  initialQuestionId: string | null;
-  initialValue: string | null;
+  campaignId: string;
+  stepId: string;
+  initialConditions: StepConditionDetail[];
   questionGroups: QuestionGroup[];
   loadingQuestions?: boolean;
-  onSave: (data: {
-    conditionQuestionId: string | null;
-    conditionValue: string | null;
-  }) => Promise<void>;
-  onCancel: () => void;
+  availableCrops: CropRef[];
+  onChanged: () => Promise<void>;
 }
 
 export default function StepConditionEditor({
-  initialQuestionId,
-  initialValue,
+  campaignId,
+  stepId,
+  initialConditions,
   questionGroups,
   loadingQuestions = false,
-  onSave,
-  onCancel,
+  availableCrops,
+  onChanged,
 }: StepConditionEditorProps) {
-  const [qid, setQid] = useState(initialQuestionId ?? "");
-  const [val, setVal] = useState(initialValue ?? "");
-  const [saving, setSaving] = useState(false);
+  const [showNewRow, setShowNewRow] = useState(false);
 
-  const allQuestions = questionGroups.flatMap((g) => g.questions);
+  const sorted = [...initialConditions].sort((a, b) => a.order - b.order);
 
-  useEffect(() => {
-    if (qid !== initialQuestionId) setVal("");
-  }, [qid, initialQuestionId]);
-
-  const selectedQuestion = allQuestions.find((q) => q.questionId === qid);
-  const typeName = selectedQuestion?.typeName ?? "";
-  const hasOptions = ["single_choice", "likert", "compliance"].includes(typeName);
-
-  async function handleSave() {
-    setSaving(true);
-    try {
-      await onSave({
-        conditionQuestionId: qid || null,
-        conditionValue: qid && val ? val : null,
-      });
-      onCancel();
-    } finally {
-      setSaving(false);
-    }
+  if (loadingQuestions) {
+    return (
+      <p className="text-xs text-[var(--text-muted)] italic py-2">
+        Cargando preguntas de pasos anteriores…
+      </p>
+    );
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-[var(--border)] p-4 bg-[var(--surface-muted)]/40">
+    <div className="space-y-2">
       <p className="text-sm font-medium text-[var(--text-primary)]">
-        Condición de visibilidad
+        Condiciones de visibilidad
       </p>
 
-      <div>
-        <label className="block text-xs text-[var(--text-muted)] mb-1">
-          Mostrar este paso solo si la respuesta a…
-        </label>
-        {loadingQuestions ? (
-          <p className="text-xs text-[var(--text-muted)] italic py-2">
-            Cargando preguntas de pasos anteriores…
-          </p>
-        ) : (
-          <select
-            value={qid}
-            onChange={(e) => setQid(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm bg-[var(--surface)]"
-          >
-            <option value="">Sin condición (siempre se aplica)</option>
-            {questionGroups.map((group) =>
-              group.questions.length > 0 ? (
-                <optgroup
-                  key={`${group.stepOrder}-${group.instrumentName}`}
-                  label={`Paso ${group.stepOrder} · ${group.instrumentName}`}
-                >
-                  {group.questions.map((q) => (
-                    <option key={q.questionId} value={q.questionId}>
-                      {q.text.slice(0, 80)}{q.text.length > 80 ? "…" : ""}
-                    </option>
-                  ))}
-                </optgroup>
-              ) : null
-            )}
-          </select>
-        )}
-        {!loadingQuestions && allQuestions.length === 0 && (
-          <p className="mt-1 text-xs text-[var(--text-muted)] italic">
-            No hay pasos anteriores con preguntas disponibles.
-          </p>
-        )}
-      </div>
+      {sorted.map((cond, idx) => (
+        <StepConditionRow
+          key={cond.conditionId}
+          condition={cond}
+          isFirst={idx === 0}
+          questionGroups={questionGroups}
+          availableCrops={availableCrops}
+          onSave={async (data) => {
+            await updateStepCondition(campaignId, stepId, cond.conditionId, data);
+            await onChanged();
+          }}
+          onRemove={async () => {
+            await deleteStepCondition(campaignId, stepId, cond.conditionId);
+            await onChanged();
+          }}
+        />
+      ))}
 
-      {qid && (
-        <div>
-          <label className="block text-xs text-[var(--text-muted)] mb-1">
-            …es igual a
-          </label>
-
-          {typeName === "yes_no" ? (
-            <select
-              value={val}
-              onChange={(e) => setVal(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm bg-[var(--surface)]"
-            >
-              <option value="">Seleccionar…</option>
-              <option value="true">Sí</option>
-              <option value="false">No</option>
-            </select>
-          ) : hasOptions ? (
-            <select
-              value={val}
-              onChange={(e) => setVal(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm bg-[var(--surface)]"
-            >
-              <option value="">Seleccionar opción…</option>
-              {(selectedQuestion?.options ?? []).map((opt) => (
-                <option key={opt.optionId} value={opt.optionId}>
-                  {opt.text}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type={typeName === "numeric" ? "number" : "text"}
-              value={val}
-              maxLength={50}
-              onChange={(e) => setVal(e.target.value)}
-              placeholder={
-                typeName === "numeric" ? "Ej: 3" : "Valor de texto esperado"
-              }
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-            />
-          )}
-        </div>
+      {showNewRow && (
+        <StepConditionRow
+          condition={null}
+          isFirst={sorted.length === 0}
+          questionGroups={questionGroups}
+          availableCrops={availableCrops}
+          onSave={async (data) => {
+            await createStepCondition(campaignId, stepId, {
+              order: sorted.length + 1,
+              ...data,
+            });
+            setShowNewRow(false);
+            await onChanged();
+          }}
+          onRemove={async () => {
+            setShowNewRow(false);
+          }}
+        />
       )}
 
-      <div className="flex gap-2 pt-1">
+      {!showNewRow && (
         <button
           type="button"
-          onClick={handleSave}
-          disabled={saving || loadingQuestions}
-          className="rounded-lg bg-[var(--brand)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+          onClick={() => setShowNewRow(true)}
+          className="rounded-lg border border-dashed border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-muted)] hover:border-[var(--brand)] hover:text-[var(--brand)] w-full"
         >
-          {saving ? "Guardando…" : "Guardar condición"}
+          + Agregar condición
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
-        >
-          Cancelar
-        </button>
-      </div>
+      )}
     </div>
   );
 }

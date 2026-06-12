@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import {
   CampaignStepDetail,
+  CropRef,
   InstrumentListItem,
   QuestionDetail,
+  StepConditionDetail,
 } from "@/app/(admin)/types";
 import {
   createStep,
@@ -18,6 +20,7 @@ interface StepEditorProps {
   campaignId: string;
   steps: CampaignStepDetail[];
   instruments: InstrumentListItem[];
+  availableCrops: CropRef[];
   onChanged: () => Promise<void>;
 }
 
@@ -25,6 +28,7 @@ export default function StepEditor({
   campaignId,
   steps,
   instruments,
+  availableCrops,
   onChanged,
 }: StepEditorProps) {
   const [newInstrumentId, setNewInstrumentId] = useState("");
@@ -34,7 +38,6 @@ export default function StepEditor({
   const [questionsCache, setQuestionsCache] = useState<Record<string, QuestionDetail[]>>({});
   const [loadingQuestions, setLoadingQuestions] = useState(false);
 
-  // Load questions for all instruments in the campaign (needed for summaries + condition editor)
   useEffect(() => {
     const allIds = steps
       .map((s) => s.instrument.instrumentId)
@@ -69,35 +72,21 @@ export default function StepEditor({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps]);
 
-  function getConditionSummary(step: CampaignStepDetail) {
-    if (!step.conditionQuestion) return null;
+  function getConditionsSummary(conditions: StepConditionDetail[]): string | null {
+    const sorted = [...conditions].sort((a, b) => a.order - b.order);
+    if (sorted.length === 0) return null;
 
-    const refStep = steps.find(
-      (s) =>
-        s.order < step.order &&
-        (questionsCache[s.instrument.instrumentId] ?? []).some(
-          (q) => q.questionId === step.conditionQuestion!.questionId,
-        ),
-    );
+    const parts = sorted.map((c, idx) => {
+      const prefix = idx === 0 ? "" : `${c.logicalOperator} `;
+      if (c.conditionType === "crop") {
+        return `${prefix}Cultiva ${c.conditionCrop?.name ?? "—"}`;
+      }
+      const qText = c.conditionQuestion?.text?.slice(0, 40) ?? "—";
+      const val = c.conditionValue ?? "—";
+      return `${prefix}${qText} = ${val}`;
+    });
 
-    const cachedQuestion = refStep
-      ? (questionsCache[refStep.instrument.instrumentId] ?? []).find(
-          (q) => q.questionId === step.conditionQuestion!.questionId,
-        )
-      : null;
-
-    const valueLabel =
-      cachedQuestion?.options?.find((o) => o.optionId === step.conditionValue)?.text ??
-      (step.conditionValue === "true"
-        ? "Sí"
-        : step.conditionValue === "false"
-          ? "No"
-          : (step.conditionValue ?? "—"));
-
-    const stepLabel = refStep ? `Paso ${refStep.order} · ` : "";
-    const questionText = step.conditionQuestion.text;
-
-    return { stepLabel, questionText, valueLabel };
+    return parts.join(" ");
   }
 
   function buildQuestionGroups(step: CampaignStepDetail): QuestionGroup[] {
@@ -174,21 +163,6 @@ export default function StepEditor({
     }
   }
 
-  async function handleClearCondition(stepId: string) {
-    setPendingStepId(stepId);
-    try {
-      await updateStep(campaignId, stepId, {
-        conditionQuestionId: null,
-        conditionValue: null,
-      });
-      await onChanged();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al quitar condición.");
-    } finally {
-      setPendingStepId(null);
-    }
-  }
-
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-[var(--text-primary)]">
@@ -203,7 +177,8 @@ export default function StepEditor({
 
       <ul className="space-y-3">
         {steps.map((step, idx) => {
-          const summary = getConditionSummary(step);
+          const conditionsSummary = getConditionsSummary(step.conditions ?? []);
+          const condCount = (step.conditions ?? []).length;
 
           return (
             <li
@@ -261,18 +236,17 @@ export default function StepEditor({
               </div>
 
               <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">
-                {summary ? (
-                  <span>
+                {condCount > 0 ? (
+                  <>
                     <span className="font-medium text-[var(--text-primary)]">
-                      {summary.stepLabel}
+                      {condCount} {condCount === 1 ? "condición" : "condiciones"}
                     </span>
-                    {summary.questionText.slice(0, 60)}
-                    {summary.questionText.length > 60 ? "…" : ""}
-                    {" = "}
-                    <span className="font-medium text-[var(--text-primary)]">
-                      {summary.valueLabel}
-                    </span>
-                  </span>
+                    {conditionsSummary && (
+                      <span className="truncate max-w-xs" title={conditionsSummary}>
+                        · {conditionsSummary}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <span>Sin condición (siempre se aplica)</span>
                 )}
@@ -288,35 +262,17 @@ export default function StepEditor({
                 >
                   {editingConditionStepId === step.stepId ? "Cerrar" : "Configurar"}
                 </button>
-                {summary && (
-                  <>
-                    <span className="text-[var(--border)]">·</span>
-                    <button
-                      type="button"
-                      disabled={pendingStepId === step.stepId}
-                      onClick={() => handleClearCondition(step.stepId)}
-                      className="text-[var(--danger-fg)] underline disabled:opacity-50"
-                    >
-                      Quitar condición
-                    </button>
-                  </>
-                )}
               </div>
 
               {editingConditionStepId === step.stepId && (
                 <StepConditionEditor
-                  initialQuestionId={step.conditionQuestion?.questionId ?? null}
-                  initialValue={step.conditionValue}
+                  campaignId={campaignId}
+                  stepId={step.stepId}
+                  initialConditions={step.conditions ?? []}
                   questionGroups={buildQuestionGroups(step)}
                   loadingQuestions={loadingQuestions}
-                  onSave={async ({ conditionQuestionId, conditionValue }) => {
-                    await updateStep(campaignId, step.stepId, {
-                      conditionQuestionId,
-                      conditionValue,
-                    });
-                    await onChanged();
-                  }}
-                  onCancel={() => setEditingConditionStepId(null)}
+                  availableCrops={availableCrops}
+                  onChanged={onChanged}
                 />
               )}
             </li>
