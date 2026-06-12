@@ -155,7 +155,7 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export interface UserDetail extends UserListItem {}
+export type UserDetail = UserListItem;
 
 export interface CreateUserRequest {
   name: string;

@@ -21,6 +21,7 @@ interface InstrumentQuestionFlowProps {
     campaignSessionId?: string;
     stepOrder?: number;
     previewMode?: boolean;
+    existingSurveyId?: string;
     onPreviewComplete?: () => void;
 }
 
@@ -33,6 +34,7 @@ export default function InstrumentQuestionFlow({
     campaignSessionId,
     stepOrder,
     previewMode = false,
+    existingSurveyId,
     onPreviewComplete,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
@@ -152,6 +154,7 @@ export default function InstrumentQuestionFlow({
             const result = await submitResponses(apiBaseUrl, {
                 campaignSessionId,
                 stepOrder,
+                existingSurveyId,
             });
 
             if (result.outcome === "submitted") {

@@ -41,7 +41,7 @@ interface InstrumentSurveyState {
   buildResponsesPayload: () => CreateResponsePayload[];
   submitResponses: (
     apiBaseUrl: string,
-    campaignContext?: { campaignSessionId?: string; stepOrder?: number },
+    campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
   ) => Promise<SubmitResult>;
 }
 
@@ -210,7 +210,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     // * Enviar respuestas al servidor
     submitResponses: async (
       apiBaseUrl: string,
-      campaignContext?: { campaignSessionId?: string; stepOrder?: number },
+      campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
     ): Promise<SubmitResult> => {
       // * 1. Validaciones iniciales
       const { localId, flattenedQuestions, answers, buildResponsesPayload } =
@@ -288,59 +288,65 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       set({ answers: updatedAnswers });
 
-      // *3. Crear encuesta en el servidor para obtener surveyId real
+      // *3. Obtener surveyId: usar el existente (overwrite) o crear uno nuevo
       let surveyId: string;
 
-      try {
-        const pendingSurvey = await offlineDb.pendingSurveys.get(localId);
-        if (!pendingSurvey) {
-          throw new Error("No se encontró la encuesta local");
-        }
-
-        const accessToken = useAuthStore.getState().accessToken;
-        const surveyHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (accessToken) {
-          surveyHeaders["Authorization"] = `Bearer ${accessToken}`;
-        }
-
-        const surveyBody: Record<string, unknown> = {
-          instrumentIds: [pendingSurvey.instrumentId],
-        };
-        if (campaignContext?.campaignSessionId) {
-          surveyBody.campaignSessionId = campaignContext.campaignSessionId;
-        }
-        if (typeof campaignContext?.stepOrder === "number") {
-          surveyBody.stepOrder = campaignContext.stepOrder;
-        }
-
-        const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
-          method: "POST",
-          headers: surveyHeaders,
-          body: JSON.stringify(surveyBody),
-        });
-
-        if (surveyRes.status === 401) {
-          set({ submitting: false });
-          return { outcome: "session_expired" };
-        }
-        if (!surveyRes.ok) throw new Error(`Server error: ${surveyRes.status}`);
-
-        const surveyData = await surveyRes.json();
-        surveyId = surveyData.surveyId;
+      if (campaignContext?.existingSurveyId) {
+        // overwrite flow: el backend ya creó la survey vacía, usarla directamente
+        surveyId = campaignContext.existingSurveyId;
         set({ surveyId });
-      } catch (e) {
-        if (e instanceof TypeError) {
-          set({ submitting: false });
-          return { outcome: "saved_offline" };
+      } else {
+        try {
+          const pendingSurvey = await offlineDb.pendingSurveys.get(localId);
+          if (!pendingSurvey) {
+            throw new Error("No se encontró la encuesta local");
+          }
+
+          const accessToken = useAuthStore.getState().accessToken;
+          const surveyHeaders: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (accessToken) {
+            surveyHeaders["Authorization"] = `Bearer ${accessToken}`;
+          }
+
+          const surveyBody: Record<string, unknown> = {
+            instrumentIds: [pendingSurvey.instrumentId],
+          };
+          if (campaignContext?.campaignSessionId) {
+            surveyBody.campaignSessionId = campaignContext.campaignSessionId;
+          }
+          if (typeof campaignContext?.stepOrder === "number") {
+            surveyBody.stepOrder = campaignContext.stepOrder;
+          }
+
+          const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
+            method: "POST",
+            headers: surveyHeaders,
+            body: JSON.stringify(surveyBody),
+          });
+
+          if (surveyRes.status === 401) {
+            set({ submitting: false });
+            return { outcome: "session_expired" };
+          }
+          if (!surveyRes.ok) throw new Error(`Server error: ${surveyRes.status}`);
+
+          const surveyData = await surveyRes.json();
+          surveyId = surveyData.surveyId;
+          set({ surveyId });
+        } catch (e) {
+          if (e instanceof TypeError) {
+            set({ submitting: false });
+            return { outcome: "saved_offline" };
+          }
+          const message =
+            e instanceof Error
+              ? e.message
+              : "Error al crear la encuesta en el servidor";
+          set({ error: message, submitting: false });
+          return { outcome: "error", message };
         }
-        const message =
-          e instanceof Error
-            ? e.message
-            : "Error al crear la encuesta en el servidor";
-        set({ error: message, submitting: false });
-        return { outcome: "error", message };
       }
 
       // *4. Construir payload con el surveyId real ya disponible en state

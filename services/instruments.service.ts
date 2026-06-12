@@ -15,10 +15,13 @@ export function getInstrumentByCode(
   );
 }
 
-export function getInstruments(): Promise<InstrumentListItem[]> {
-  return apiClient.get<InstrumentListItem[]>("/api/instruments", {
-    cache: "no-store",
-  });
+export function getInstruments(
+  options?: { excludeSystem?: boolean },
+): Promise<InstrumentListItem[]> {
+  const url = options?.excludeSystem
+    ? "/api/instruments?excludeSystem=true"
+    : "/api/instruments";
+  return apiClient.get<InstrumentListItem[]>(url, { cache: "no-store" });
 }
 
 export function getInstrumentById(id: string): Promise<InstrumentDetail> {

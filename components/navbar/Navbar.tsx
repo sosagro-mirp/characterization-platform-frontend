@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
+import { useIsHydrated } from "@/hooks/useIsHydrated";
 
 const sectionLinks = [
   { href: "/#proyecto", label: "El proyecto" },
@@ -20,7 +21,7 @@ export const Navbar = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverHero, setIsOverHero] = useState(true);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useIsHydrated();
 
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -35,13 +36,9 @@ export const Navbar = () => {
   };
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
     const hero = document.getElementById("inicio");
     if (!hero) {
-      setIsOverHero(false);
+      queueMicrotask(() => setIsOverHero(false));
       return;
     }
     const observer = new IntersectionObserver(

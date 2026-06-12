@@ -36,6 +36,7 @@ interface InstrumentLoaderProps {
   campaignSessionId?: string;
   stepOrder?: number;
   previewMode?: boolean;
+  existingSurveyId?: string;
 }
 
 export default function InstrumentLoader({
@@ -44,6 +45,7 @@ export default function InstrumentLoader({
   campaignSessionId,
   stepOrder,
   previewMode = false,
+  existingSurveyId,
 }: InstrumentLoaderProps) {
   const router = useRouter();
   const clearSession = useCampaignSessionStore((s) => s.clearSession);
@@ -227,6 +229,7 @@ export default function InstrumentLoader({
       campaignSessionId={campaignSessionId}
       stepOrder={stepOrder}
       previewMode={previewMode}
+      existingSurveyId={existingSurveyId}
       onPreviewComplete={previewMode ? () => router.replace('/admin/instruments') : undefined}
     />
   );
