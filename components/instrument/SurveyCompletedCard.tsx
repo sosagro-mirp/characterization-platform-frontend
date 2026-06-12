@@ -28,9 +28,11 @@ export default function SurveyCompletedCard({
     const activeSessionId = campaignSessionId ?? sessionIdFromStore ?? null;
     const inCampaign = Boolean(activeSessionId && activeCampaignId);
 
-    const campaignContinueHref = completedSurveyId
-        ? `/campaign/${activeCampaignId}/session/${activeSessionId}?completedSurveyId=${completedSurveyId}`
-        : `/campaign/${activeCampaignId}/session/${activeSessionId}`;
+    const campaignContinueHref = inCampaign
+        ? completedSurveyId
+            ? `/campaign/${activeCampaignId}/session/${activeSessionId}?completedSurveyId=${completedSurveyId}`
+            : `/campaign/${activeCampaignId}/session/${activeSessionId}`
+        : "/campaign";
 
     const displayMessage = savedOffline
         ? "Sus respuestas han sido guardadas localmente y se enviaran al servidor cuando haya conexion."

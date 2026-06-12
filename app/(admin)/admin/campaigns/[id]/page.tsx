@@ -46,17 +46,24 @@ export default function EditCampaignPage() {
   }, [campaignId]);
 
   useEffect(() => {
-    (async () => {
-      await refresh();
-      setLoading(false);
-    })();
+    let cancelled = false;
+    refresh().then(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [refresh]);
 
   async function handleSave(
     data: CreateCampaignRequest | UpdateCampaignRequest,
   ) {
-    const updated = await updateCampaign(campaignId, data as UpdateCampaignRequest);
-    setCampaign(updated);
+    try {
+      const updated = await updateCampaign(campaignId, data as UpdateCampaignRequest);
+      setCampaign(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al guardar cambios.");
+    }
   }
 
   if (loading) {

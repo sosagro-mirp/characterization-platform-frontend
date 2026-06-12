@@ -98,8 +98,8 @@ export default function CampaignIntroPage() {
           <p className="mt-2 text-sm text-neutral-600">{campaign.description}</p>
         )}
         <p className="mt-4 text-xs text-neutral-500">
-          Esta campaña incluye {campaign.steps.length} paso
-          {campaign.steps.length === 1 ? "" : "s"}.
+          Esta campaña incluye {(campaign.steps ?? []).length} paso
+          {(campaign.steps ?? []).length === 1 ? "" : "s"}.
         </p>
       </header>
 
