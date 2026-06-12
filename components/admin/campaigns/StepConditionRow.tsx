@@ -49,6 +49,12 @@ export default function StepConditionRow({
   );
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  function showToast(message: string, type: "success" | "error") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 2500);
+  }
 
   const allQuestions = questionGroups.flatMap((g) => g.questions);
   const selectedQuestion = allQuestions.find((q) => q.questionId === questionId);
@@ -69,6 +75,9 @@ export default function StepConditionRow({
           conditionCropId: cropId || undefined,
         }),
       });
+      showToast("Condición guardada", "success");
+    } catch {
+      showToast("Error al guardar la condición", "error");
     } finally {
       setSaving(false);
     }
@@ -78,6 +87,9 @@ export default function StepConditionRow({
     setRemoving(true);
     try {
       await onRemove();
+      showToast("Condición eliminada", "success");
+    } catch {
+      showToast("Error al eliminar la condición", "error");
     } finally {
       setRemoving(false);
     }
@@ -207,7 +219,7 @@ export default function StepConditionRow({
         </div>
       )}
 
-      <div className="flex gap-2 pt-1">
+      <div className="flex items-center gap-3 pt-1">
         <button
           type="button"
           onClick={handleSave}
@@ -224,6 +236,17 @@ export default function StepConditionRow({
         >
           {removing ? "Eliminando…" : "Eliminar"}
         </button>
+        {toast && (
+          <span
+            className={`text-xs font-medium ${
+              toast.type === "success"
+                ? "text-[var(--success-fg,#16a34a)]"
+                : "text-[var(--danger-fg)]"
+            }`}
+          >
+            {toast.message}
+          </span>
+        )}
       </div>
     </div>
   );

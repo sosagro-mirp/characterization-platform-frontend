@@ -185,14 +185,23 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
           return;
         }
 
-        payload.push({
+        const trimmedText = answer.textValue?.trim();
+        const item = {
           surveyId,
           questionId: answer.questionId,
-          optionId: answer.optionId,
-          textValue: answer.textValue,
-          numericValue: answer.numericValue,
-          booleanValue: answer.booleanValue,
-        });
+          ...(answer.optionId !== undefined && { optionId: answer.optionId }),
+          ...(trimmedText ? { textValue: trimmedText } : {}),
+          ...(answer.numericValue !== undefined && { numericValue: answer.numericValue }),
+          ...(answer.booleanValue !== undefined && { booleanValue: answer.booleanValue }),
+        };
+
+        const hasValue =
+          "optionId" in item ||
+          "textValue" in item ||
+          "numericValue" in item ||
+          "booleanValue" in item;
+
+        if (hasValue) payload.push(item);
       });
 
       return payload;
