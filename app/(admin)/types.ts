@@ -186,12 +186,49 @@ export interface QuestionRef {
   text: string;
 }
 
+export interface CropRef {
+  cropId: string;
+  name: string;
+}
+
+export type ConditionType = "question" | "crop";
+export type LogicalOperator = "AND" | "OR";
+
+export interface StepConditionDetail {
+  conditionId: string;
+  order: number;
+  logicalOperator: LogicalOperator | null;
+  conditionType: ConditionType;
+  conditionQuestion: QuestionRef | null;
+  conditionValue: string | null;
+  conditionCrop: CropRef | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateStepConditionRequest {
+  order: number;
+  logicalOperator?: LogicalOperator;
+  conditionType: ConditionType;
+  conditionQuestionId?: string;
+  conditionValue?: string;
+  conditionCropId?: string;
+}
+
+export interface UpdateStepConditionRequest {
+  order?: number;
+  logicalOperator?: LogicalOperator;
+  conditionType?: ConditionType;
+  conditionQuestionId?: string;
+  conditionValue?: string;
+  conditionCropId?: string;
+}
+
 export interface CampaignStepDetail {
   stepId: string;
   order: number;
   instrument: InstrumentRef;
-  conditionQuestion: QuestionRef | null;
-  conditionValue: string | null;
+  conditions: StepConditionDetail[];
 }
 
 export interface CampaignSummary {
@@ -222,13 +259,9 @@ export interface UpdateCampaignRequest {
 export interface CreateCampaignStepRequest {
   instrumentId: string;
   order: number;
-  conditionQuestionId?: string;
-  conditionValue?: string;
 }
 
 export interface UpdateCampaignStepRequest {
   instrumentId?: string;
   order?: number;
-  conditionQuestionId?: string | null;
-  conditionValue?: string | null;
 }
