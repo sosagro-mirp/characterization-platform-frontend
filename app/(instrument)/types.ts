@@ -196,6 +196,11 @@ export interface CreateFarmerPayload {
   altitude?: number;
 }
 
+export interface DuplicateCheckResult {
+  hasDuplicate: boolean;
+  surveyId?: string;
+}
+
 export interface PreSurveyFormData {
   mode: 'search' | 'create';
   searchQuery: string;

@@ -34,7 +34,7 @@ export default function EditCampaignPage() {
     try {
       const [c, i, cr] = await Promise.all([
         getCampaign(campaignId),
-        getInstruments(),
+        getInstruments({ excludeSystem: true }),
         listCrops(),
       ]);
       setCampaign(c);
