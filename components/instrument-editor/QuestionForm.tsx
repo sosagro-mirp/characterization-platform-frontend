@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { QuestionDetail, TypeOfQuestionSummary } from "@/app/(admin)/types";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import OptionsEditor from "./OptionsEditor";
@@ -35,20 +35,6 @@ export default function QuestionForm({
   );
   const [showTypeWarning, setShowTypeWarning] = useState(false);
   const [pendingTypeId, setPendingTypeId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setText(question.text);
-    setTypeId(question.type?.typeId ?? "");
-    setIsRequired(question.isRequired);
-    setIsSelectionCriteria(question.isSelectionCriteria);
-    setConditionQuestionId(question.conditionQuestionId ?? "");
-    setConditionValue(question.conditionValue ?? "");
-  }, [question.questionId]);
-
-  useEffect(() => {
-    setConditionQuestionId(question.conditionQuestionId ?? "");
-    setConditionValue(question.conditionValue ?? "");
-  }, [question.conditionQuestionId, question.conditionValue]);
 
   const orderedQuestions = [...sections]
     .sort((a, b) => a.order - b.order)

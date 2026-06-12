@@ -27,8 +27,8 @@ export default function EditCampaignPage() {
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
   const [instruments, setInstruments] = useState<InstrumentListItem[]>([]);
   const [crops, setCrops] = useState<CropRef[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loading = campaign === null && error === null;
 
   const refresh = useCallback(async () => {
     try {
@@ -47,13 +47,25 @@ export default function EditCampaignPage() {
 
   useEffect(() => {
     let cancelled = false;
-    refresh().then(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [refresh]);
+    async function load() {
+      try {
+        const [c, i, cr] = await Promise.all([
+          getCampaign(campaignId),
+          getInstruments({ excludeSystem: true }),
+          listCrops(),
+        ]);
+        if (cancelled) return;
+        setCampaign(c);
+        setInstruments(i);
+        setCrops(cr.map((x) => ({ cropId: x.cropId, name: x.name })));
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Error al cargar campaña.");
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [campaignId]);
 
   async function handleSave(
     data: CreateCampaignRequest | UpdateCampaignRequest,

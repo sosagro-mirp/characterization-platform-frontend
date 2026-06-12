@@ -18,6 +18,12 @@ interface NewsCardProps {
   entry: NewsEntry;
 }
 
+const cardClass =
+  "group flex h-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-brand/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2";
+
+const staticCardClass =
+  "flex h-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5";
+
 export function NewsCard({ entry }: NewsCardProps) {
   const dateObj = new Date(entry.date);
   const dateLabel = isNaN(dateObj.getTime())
@@ -26,24 +32,8 @@ export function NewsCard({ entry }: NewsCardProps) {
 
   const isExternal = Boolean(entry.url);
 
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    isExternal ? (
-      <a
-        href={entry.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex h-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-brand/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-      >
-        {children}
-      </a>
-    ) : (
-      <article className="flex h-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-        {children}
-      </article>
-    );
-
-  return (
-    <Wrapper>
+  const inner = (
+    <>
       <div className="flex items-center justify-between gap-2">
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tagStyle[entry.tag]}`}
@@ -73,6 +63,21 @@ export function NewsCard({ entry }: NewsCardProps) {
       <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
         {entry.summary}
       </p>
-    </Wrapper>
+    </>
   );
+
+  if (isExternal) {
+    return (
+      <a
+        href={entry.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cardClass}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  return <article className={staticCardClass}>{inner}</article>;
 }

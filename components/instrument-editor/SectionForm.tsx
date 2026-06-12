@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SectionDetail } from "@/app/(admin)/types";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 
@@ -11,10 +11,6 @@ interface SectionFormProps {
 export default function SectionForm({ section }: SectionFormProps) {
   const { updateSectionInStore } = useInstrumentEditorStore();
   const [name, setName] = useState(section.name);
-
-  useEffect(() => {
-    setName(section.name);
-  }, [section.sectionId, section.name]);
 
   const handleBlur = async () => {
     const trimmed = name.trim();
