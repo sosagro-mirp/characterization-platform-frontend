@@ -8,6 +8,16 @@ import ConfirmDialog from "./ConfirmDialog";
 
 const TYPES_WITH_OPTIONS = ["single_choice", "likert", "multiple_choice"];
 
+const TYPE_LABELS: Record<string, string> = {
+  open_text: "Texto abierto",
+  numeric: "Número",
+  yes_no: "Sí / No",
+  single_choice: "Selección única",
+  likert: "Likert",
+  multiple_choice: "Selección múltiple",
+  compliance: "Cumplimiento",
+};
+
 interface QuestionFormProps {
   question: QuestionDetail;
   sectionId: string;
@@ -138,7 +148,7 @@ export default function QuestionForm({
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
             <option key={t.typeId} value={t.typeId}>
-              {t.name}
+              {TYPE_LABELS[t.name] ?? t.name}
             </option>
           ))}
         </select>
