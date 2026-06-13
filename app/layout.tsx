@@ -9,8 +9,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SosAgro 4.C ",
-  description: "SosAgro 4.C es un proyecto financiado por el ministerio de ciencia ...",
+  metadataBase: new URL("https://sosagro4c.vercel.app"),
+  title: {
+    default: "SOS Agro 4C",
+    template: "%s — SOS Agro 4C",
+  },
+  description:
+    "Plataforma del proyecto SIGP 108927: fortalecimiento de capacidades científico-tecnológicas para café, cacao, cannabis y cáñamo en seis departamentos de Colombia.",
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
@@ -26,6 +32,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body
         className={`${jetbrainsMono.variable} ${jetbrainsMono.className} antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>

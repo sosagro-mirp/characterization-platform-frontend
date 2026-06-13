@@ -5,6 +5,16 @@ import {
   UpdateOptionRequest,
 } from "@/app/(admin)/types";
 
+export function createOption(
+  questionId: string,
+  text: string,
+): Promise<{ optionId: string; text: string }> {
+  return apiClient.post<{ optionId: string; text: string }>(
+    `/api/questions/${questionId}/options`,
+    { text },
+  );
+}
+
 export function batchCreateOptions(
   questionId: string,
   options: CreateOptionRequest[],

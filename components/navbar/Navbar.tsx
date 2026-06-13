@@ -193,6 +193,7 @@ export const Navbar = () => {
       <div
         id="mobile-menu"
         aria-hidden={!isMenuOpen}
+        {...(!isMenuOpen ? { inert: true } : {})}
         className={`lg:hidden fixed inset-0 top-16 z-40 bg-white transition-all duration-300 ease-in-out ${isMenuOpen
           ? "opacity-100 pointer-events-auto translate-y-0"
           : "opacity-0 pointer-events-none -translate-y-2"
@@ -204,7 +205,7 @@ export const Navbar = () => {
               <Link
                 href={l.href}
                 onClick={closeMenu}
-                className="block py-3 text-gray-700 hover:text-brand-dark"
+                className="block py-3 text-gray-700 hover:text-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
               >
                 {l.label}
               </Link>

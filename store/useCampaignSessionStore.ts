@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { noopStorage } from "@/lib/noopStorage";
 
 type PreSurveyPhase = 'idle' | 's1_pending' | 's2_pending' | 'done';
 
@@ -67,7 +68,9 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
     }),
     {
       name: "sosagro.campaign-session",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window === "undefined" ? noopStorage : window.localStorage
+      ),
     },
   ),
 );

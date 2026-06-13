@@ -16,17 +16,20 @@ export default function NewUserPage() {
   const [topError, setTopError] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+    async function load() {
       try {
-        setRoles(await listRoles());
+        const roles = await listRoles();
+        if (!cancelled) setRoles(roles);
       } catch (err) {
-        setTopError(
-          err instanceof Error ? err.message : "Error al cargar roles.",
-        );
+        if (!cancelled)
+          setTopError(err instanceof Error ? err.message : "Error al cargar roles.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
+    }
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   async function handleSubmit(data: CreateUserRequest | Partial<CreateUserRequest>) {
