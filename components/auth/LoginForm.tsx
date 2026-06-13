@@ -72,6 +72,9 @@ export default function LoginForm() {
     }
   }
 
+  const inputClass =
+    "w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light text-gray-100 disabled:opacity-60";
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -86,7 +89,11 @@ export default function LoginForm() {
           Cuenta creada exitosamente. Ya puedes iniciar sesión.
         </p>
       )}
+      <label htmlFor="login-email" className="sr-only">
+        Correo electrónico
+      </label>
       <input
+        id="login-email"
         type="email"
         required
         autoComplete="email"
@@ -94,9 +101,13 @@ export default function LoginForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         disabled={loading}
-        className="w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light text-gray-100 disabled:opacity-60"
+        className={inputClass}
       />
+      <label htmlFor="login-password" className="sr-only">
+        Contraseña
+      </label>
       <input
+        id="login-password"
         type="password"
         required
         minLength={8}
@@ -105,7 +116,7 @@ export default function LoginForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         disabled={loading}
-        className="w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light text-gray-100 disabled:opacity-60"
+        className={inputClass}
       />
 
       {error && (

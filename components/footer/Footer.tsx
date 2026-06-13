@@ -82,7 +82,7 @@ const Footer = () => {
           </nav>
 
           {/* Sección: Institucional */}
-          <div>
+          <nav aria-label="Entidades institucionales">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white/90 mb-4">
               Institucional
             </h3>
@@ -116,7 +116,7 @@ const Footer = () => {
                 </a>
               </li>
             </ul>
-          </div>
+          </nav>
         </div>
 
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-xs text-white/50">
