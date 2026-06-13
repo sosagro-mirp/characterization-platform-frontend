@@ -18,6 +18,13 @@ function destinationForRole(role: string | null): string {
 }
 
 export function middleware(request: NextRequest) {
+  // --- MAINTENANCE MODE ---
+  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+  if (isMaintenanceMode && request.nextUrl.pathname !== "/maintenance") {
+    return NextResponse.redirect(new URL("/maintenance", request.url));
+  }
+  // --- END MAINTENANCE MODE ---
+
   const { pathname, search } = request.nextUrl;
   const hasSession = request.cookies.get(SESSION_COOKIE)?.value === "1";
   const role = request.cookies.get(ROLE_COOKIE)?.value
@@ -68,10 +75,11 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
-    "/instrument/:path*",
-    "/campaign/:path*",
-    "/change-password",
-    "/login",
+    /*
+     * Applies middleware to all routes except:
+     * - Next.js static files (_next/static, _next/image, favicon.ico)
+     * - Files with an extension (images, fonts, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 };
