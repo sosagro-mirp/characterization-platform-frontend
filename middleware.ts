@@ -1,21 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { MUST_CHANGE_COOKIE, ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCookie";
+import { isSafeRedirectPath } from "@/lib/safeRedirect";
+import { defaultRouteForRole, PANEL_ROLES } from "@/lib/roleRouting";
 
 const PROTECTED_PREFIXES = ["/admin", "/instrument", "/campaign", "/change-password"];
-const PANEL_ROLES = new Set(["admin", "researcher"]);
-
-function isSafeFromPath(from: string | null): from is string {
-  if (!from) return false;
-  if (!from.startsWith("/") || from.startsWith("//")) return false;
-  if (from.startsWith("/login")) return false;
-  return true;
-}
-
-function destinationForRole(role: string | null): string {
-  if (role && PANEL_ROLES.has(role)) return "/admin/instruments";
-  return "/instrument";
-}
 
 export function middleware(request: NextRequest) {
   // --- MAINTENANCE MODE ---
@@ -66,7 +55,7 @@ export function middleware(request: NextRequest) {
 
   if (pathname === "/login" && hasSession) {
     const from = request.nextUrl.searchParams.get("from");
-    const target = isSafeFromPath(from) ? from : destinationForRole(role);
+    const target = isSafeRedirectPath(from) ? from : defaultRouteForRole(role);
     return NextResponse.redirect(new URL(target, request.url));
   }
 

@@ -13,7 +13,8 @@ import {
 } from "@/lib/db/offlineSurveyService";
 import { offlineDb } from "@/lib/db/offlineDb";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
-import { useAuthStore } from "@/store/useAuthStore";
+import { createSurvey, submitBatchResponses } from "@/services/surveys.service";
+import { createOption } from "@/services/options.service";
 
 interface FlattenedQuestionItem {
   sectionId: string;
@@ -40,7 +41,6 @@ interface InstrumentSurveyState {
   resetSurvey: () => void;
   buildResponsesPayload: () => CreateResponsePayload[];
   submitResponses: (
-    apiBaseUrl: string,
     campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
   ) => Promise<SubmitResult>;
 }
@@ -209,7 +209,6 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
     // * Enviar respuestas al servidor
     submitResponses: async (
-      apiBaseUrl: string,
       campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
     ): Promise<SubmitResult> => {
       // * 1. Validaciones iniciales
@@ -240,18 +239,10 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         if (!otherSelected) continue;
 
         try {
-          const res = await fetch(
-            `${apiBaseUrl}/api/questions/${question.questionId}/options`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text: answer.otherText.trim() }),
-            },
+          const newOption = await createOption(
+            question.questionId,
+            answer.otherText.trim(),
           );
-
-          if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-          const newOption = await res.json();
           updatedAnswers[question.questionId] = isMultiple
             ? {
                 ...answer,
@@ -302,43 +293,23 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
             throw new Error("No se encontró la encuesta local");
           }
 
-          const accessToken = useAuthStore.getState().accessToken;
-          const surveyHeaders: Record<string, string> = {
-            "Content-Type": "application/json",
-          };
-          if (accessToken) {
-            surveyHeaders["Authorization"] = `Bearer ${accessToken}`;
-          }
-
-          const surveyBody: Record<string, unknown> = {
+          const surveyData = await createSurvey({
             instrumentIds: [pendingSurvey.instrumentId],
-          };
-          if (campaignContext?.campaignSessionId) {
-            surveyBody.campaignSessionId = campaignContext.campaignSessionId;
-          }
-          if (typeof campaignContext?.stepOrder === "number") {
-            surveyBody.stepOrder = campaignContext.stepOrder;
-          }
-
-          const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
-            method: "POST",
-            headers: surveyHeaders,
-            body: JSON.stringify(surveyBody),
+            ...(campaignContext?.campaignSessionId && { campaignSessionId: campaignContext.campaignSessionId }),
+            ...(typeof campaignContext?.stepOrder === "number" && { stepOrder: campaignContext.stepOrder }),
           });
 
-          if (surveyRes.status === 401) {
-            set({ submitting: false });
-            return { outcome: "session_expired" };
-          }
-          if (!surveyRes.ok) throw new Error(`Server error: ${surveyRes.status}`);
-
-          const surveyData = await surveyRes.json();
           surveyId = surveyData.surveyId;
           set({ surveyId });
         } catch (e) {
           if (e instanceof TypeError) {
             set({ submitting: false });
             return { outcome: "saved_offline" };
+          }
+          const isUnauthorized = e instanceof Error && e.message.includes("401");
+          if (isUnauthorized) {
+            set({ submitting: false });
+            return { outcome: "session_expired" };
           }
           const message =
             e instanceof Error
@@ -359,26 +330,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       // *5. Enviar respuestas al servidor
       try {
-        const accessToken = useAuthStore.getState().accessToken;
-        const batchHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (accessToken) {
-          batchHeaders["Authorization"] = `Bearer ${accessToken}`;
-        }
-
-        const res = await fetch(`${apiBaseUrl}/api/responses/batch`, {
-          method: "POST",
-          headers: batchHeaders,
-          body: JSON.stringify(payload),
-        });
-
-        if (res.status === 401) {
-          set({ submitting: false });
-          return { outcome: "session_expired" };
-        }
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
+        await submitBatchResponses(payload);
         await markSurveyAsDone(localId, surveyId);
         set({ submitting: false });
         return { outcome: "submitted" };
@@ -386,6 +338,11 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         if (e instanceof TypeError) {
           set({ submitting: false });
           return { outcome: "saved_offline" };
+        }
+        const isUnauthorized = e instanceof Error && e.message.includes("401");
+        if (isUnauthorized) {
+          set({ submitting: false });
+          return { outcome: "session_expired" };
         }
         const message =
           e instanceof Error ? e.message : "Error al enviar respuestas";

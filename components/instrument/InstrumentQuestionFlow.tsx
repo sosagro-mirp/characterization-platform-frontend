@@ -151,7 +151,7 @@ export default function InstrumentQuestionFlow({
                 return;
             }
 
-            const result = await submitResponses(apiBaseUrl, {
+            const result = await submitResponses({
                 campaignSessionId,
                 stepOrder,
                 existingSurveyId,

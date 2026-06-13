@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/services/auth.service";
 import { ApiError } from "@/lib/apiClient";
+import { isSafeRedirectPath } from "@/lib/safeRedirect";
+import { defaultRouteForRole } from "@/lib/roleRouting";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -16,18 +18,6 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  function isSafeFrom(value: string | null): value is string {
-    if (!value) return false;
-    if (!value.startsWith("/") || value.startsWith("//")) return false;
-    if (value.startsWith("/login")) return false;
-    return true;
-  }
-
-  function fallbackForRole(role: string | null): string {
-    if (role === "admin" || role === "researcher") return "/admin/instruments";
-    return "/instrument";
-  }
 
   function validate(): string | null {
     const trimmedEmail = email.trim();
@@ -58,7 +48,7 @@ export default function LoginForm() {
         router.replace("/change-password");
         return;
       }
-      const target = isSafeFrom(from) ? from : fallbackForRole(user.role);
+      const target = isSafeRedirectPath(from) ? from : defaultRouteForRole(user.role);
       router.replace(target);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
