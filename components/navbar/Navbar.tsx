@@ -8,13 +8,12 @@ import { logout } from "@/services/auth.service";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
 
 const sectionLinks = [
-  { href: "/#proyecto", label: "El proyecto" },
   { href: "/#cultivos", label: "Cultivos" },
   { href: "/#territorios", label: "Territorios" },
   { href: "/#ejes", label: "Ejes" },
-  { href: "/#participar", label: "Participar" },
-  { href: "/#aliados", label: "Aliados" },
   { href: "/#resultados", label: "Resultados" },
+  { href: "/#grupos", label: "Grupos" },
+  { href: "/#participar", label: "Participar" },
 ] as const;
 
 export const Navbar = () => {
