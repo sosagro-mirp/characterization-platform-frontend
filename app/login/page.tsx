@@ -5,9 +5,8 @@ import Image from "next/image";
 import LoginForm from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
-    title: "SosAgro 4.C — Iniciar sesión",
-    description: "Inicia sesión en la plataforma de caracterización SosAgro 4.C.",
-    manifest: "/manifest.json",
+    title: "Iniciar sesión",
+    description: "Inicia sesión en la plataforma de caracterización SOS Agro 4C.",
 };
 
 
@@ -36,13 +35,15 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
-            <div className="hidden lg:block w-[50%] h-full overflow-hidden">
+            <div className="hidden lg:block relative w-[50%] h-full overflow-hidden">
                 <Image
                     src="/crops/cacao.jpg"
-                    alt="campesino"
-                    width={1000}
-                    height={1000}
-                    className="w-full h-full object-cover"
+                    alt=""
+                    role="presentation"
+                    fill
+                    sizes="50vw"
+                    priority
+                    className="object-cover"
                 />
             </div>
             {/*  */}

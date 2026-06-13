@@ -1,14 +1,16 @@
+export type QuestionTypeName =
+  | "open_text"
+  | "numeric"
+  | "yes_no"
+  | "single_choice"
+  | "multiple_choice"
+  | "likert"
+  | "compliance"
+  | (string & {});
+
 export interface InstrumentType {
   typeId: string;
-  name:
-    | "open_text"
-    | "numeric"
-    | "yes_no"
-    | "single_choice"
-    | "multiple_choice"
-    | "likert"
-    | "compliance"
-    | string;
+  name: QuestionTypeName;
 }
 
 export interface InstrumentOption {

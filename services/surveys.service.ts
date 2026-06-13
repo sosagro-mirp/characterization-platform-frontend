@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
-import {
+import type {
+  CreateResponsePayload,
   DuplicateCheckResult,
   ExtractCropsResult,
   ExtractFarmerResult,
@@ -62,4 +63,8 @@ export function skipStep(payload: {
   stepOrder: number;
 }): Promise<{ surveyId: string }> {
   return apiClient.post<{ surveyId: string }>("/api/surveys/skip-step", payload);
+}
+
+export function submitBatchResponses(responses: CreateResponsePayload[]): Promise<void> {
+  return apiClient.post<void>("/api/responses/batch", responses);
 }

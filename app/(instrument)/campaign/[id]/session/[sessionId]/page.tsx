@@ -158,6 +158,8 @@ export default function CampaignSessionPage() {
       cancelled = true;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // farmerId, campaignId: read from store inside run(), not reactive dependencies.
+  // router, setFarmer, setProgress, setPreSurveyPhase: stable references (Zustand/Next.js).
   }, [sessionId, preSurveyPhase, searchParams, forceRetry, duplicatePending]);
 
   async function handleOverwrite() {
@@ -264,7 +266,6 @@ export default function CampaignSessionPage() {
         />
       )}
 
-      <input type="hidden" value={campaignId} readOnly />
     </main>
   );
 }

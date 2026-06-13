@@ -66,7 +66,9 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="w-full lg:pr-12 flex flex-col mt-8" noValidate>
+      <label htmlFor="register-name" className="sr-only">Nombre</label>
       <input
+        id="register-name"
         type="text"
         required
         autoComplete="given-name"
@@ -76,7 +78,9 @@ export default function RegisterForm() {
         disabled={loading}
         className={inputClass}
       />
+      <label htmlFor="register-last-name" className="sr-only">Apellido</label>
       <input
+        id="register-last-name"
         type="text"
         required
         autoComplete="family-name"
@@ -86,7 +90,9 @@ export default function RegisterForm() {
         disabled={loading}
         className={inputClass}
       />
+      <label htmlFor="register-email" className="sr-only">Correo electrónico</label>
       <input
+        id="register-email"
         type="email"
         required
         autoComplete="email"
@@ -96,7 +102,9 @@ export default function RegisterForm() {
         disabled={loading}
         className={inputClass}
       />
+      <label htmlFor="register-password" className="sr-only">Contraseña</label>
       <input
+        id="register-password"
         type="password"
         required
         minLength={8}
@@ -107,7 +115,9 @@ export default function RegisterForm() {
         disabled={loading}
         className={inputClass}
       />
+      <label htmlFor="register-validation-code" className="sr-only">Código de validación</label>
       <input
+        id="register-validation-code"
         type="text"
         required
         autoComplete="off"

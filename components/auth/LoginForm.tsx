@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/services/auth.service";
 import { ApiError } from "@/lib/apiClient";
+import { isSafeRedirectPath } from "@/lib/safeRedirect";
+import { defaultRouteForRole } from "@/lib/roleRouting";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -16,18 +18,6 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  function isSafeFrom(value: string | null): value is string {
-    if (!value) return false;
-    if (!value.startsWith("/") || value.startsWith("//")) return false;
-    if (value.startsWith("/login")) return false;
-    return true;
-  }
-
-  function fallbackForRole(role: string | null): string {
-    if (role === "admin" || role === "researcher") return "/admin/instruments";
-    return "/instrument";
-  }
 
   function validate(): string | null {
     const trimmedEmail = email.trim();
@@ -58,7 +48,7 @@ export default function LoginForm() {
         router.replace("/change-password");
         return;
       }
-      const target = isSafeFrom(from) ? from : fallbackForRole(user.role);
+      const target = isSafeRedirectPath(from) ? from : defaultRouteForRole(user.role);
       router.replace(target);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -71,6 +61,9 @@ export default function LoginForm() {
       setLoading(false);
     }
   }
+
+  const inputClass =
+    "w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light text-gray-100 disabled:opacity-60";
 
   return (
     <form
@@ -86,7 +79,11 @@ export default function LoginForm() {
           Cuenta creada exitosamente. Ya puedes iniciar sesión.
         </p>
       )}
+      <label htmlFor="login-email" className="sr-only">
+        Correo electrónico
+      </label>
       <input
+        id="login-email"
         type="email"
         required
         autoComplete="email"
@@ -94,9 +91,13 @@ export default function LoginForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         disabled={loading}
-        className="w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light text-gray-100 disabled:opacity-60"
+        className={inputClass}
       />
+      <label htmlFor="login-password" className="sr-only">
+        Contraseña
+      </label>
       <input
+        id="login-password"
         type="password"
         required
         minLength={8}
@@ -105,7 +106,7 @@ export default function LoginForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         disabled={loading}
-        className="w-full mt-6 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-red-300/40 border border-gray-400 placeholder:text-gray-300 font-light text-gray-100 disabled:opacity-60"
+        className={inputClass}
       />
 
       {error && (
