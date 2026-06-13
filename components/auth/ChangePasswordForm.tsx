@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { changePassword } from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ApiError } from "@/lib/apiClient";
 
 export default function ChangePasswordForm() {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -41,7 +39,7 @@ export default function ChangePasswordForm() {
     setLoading(true);
     try {
       await changePassword({ currentPassword, newPassword });
-      router.replace(destinationForRole(user?.role ?? null));
+      window.location.href = destinationForRole(user?.role ?? null);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setError("La contraseña actual es incorrecta.");
