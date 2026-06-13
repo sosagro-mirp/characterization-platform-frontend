@@ -14,14 +14,24 @@ export function LogoCarousel() {
       aria-label="Entidades aliadas"
       className="w-full overflow-hidden border-y border-gray-100 bg-white py-8"
     >
-      <div className="flex w-max animate-marquee items-center gap-12 md:gap-16">
-        {[...logos, ...logos].map((logo, i) => (
-          <img
-            key={`${logo.src}-${i < logos.length ? "a" : "b"}`}
-            src={logo.src}
-            alt={logo.alt}
-            className="h-10 w-auto object-contain grayscale opacity-60 transition-all duration-300 hover:grayscale-0 hover:opacity-100"
-          />
+      {/*
+        Two identical copies of the logo strip, each with symmetric px padding.
+        This guarantees that -50% translateX == exactly one strip width,
+        eliminating the gap-boundary jump that occurs when using flex gap.
+      */}
+      <div className="flex animate-marquee">
+        {[0, 1].map((setIndex) => (
+          <div key={setIndex} className="flex flex-shrink-0 items-center">
+            {logos.map((logo) => (
+              <div key={logo.src} className="flex-shrink-0 px-10 md:px-14">
+                <img
+                  src={logo.src}
+                  alt={logo.alt}
+                  className="h-14 w-auto max-w-[130px] object-contain grayscale opacity-60 transition-all duration-300 hover:grayscale-0 hover:opacity-100"
+                />
+              </div>
+            ))}
+          </div>
         ))}
       </div>
     </div>
