@@ -1,3 +1,9 @@
+export interface UserAuditSummary {
+  userId: string;
+  name: string;
+  lastName: string;
+}
+
 export interface ActorTypeSummary {
   actorTypeId: string;
   name: string;
@@ -106,6 +112,8 @@ export interface InstrumentListItem {
   publishDate: string;
   isActive: boolean;
   actorTypes: ActorTypeSummary[];
+  createdBy?: UserAuditSummary | null;
+  updatedBy?: UserAuditSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -236,6 +244,8 @@ export interface CampaignSummary {
   name: string;
   description: string | null;
   isActive: boolean;
+  createdBy?: UserAuditSummary | null;
+  updatedBy?: UserAuditSummary | null;
   createdAt: string;
   updatedAt: string;
 }
