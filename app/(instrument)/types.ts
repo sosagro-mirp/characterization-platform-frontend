@@ -70,12 +70,12 @@ export interface SurveyResponse {
 
 export type SubmitResult =
   | { outcome: "submitted" }
-  | { outcome: "saved_offline" }
   | { outcome: "session_expired" }
   | { outcome: "error"; message: string };
 
 export interface InitializeSurveyPayload {
   localId: string;
+  instrumentId: string;
   instrumentName: string;
   sections: InstrumentSection[];
 }

@@ -139,7 +139,7 @@ export function Platform() {
               "Preguntas tipo Likert, sí/no, opción múltiple y texto libre",
               "Tu información alimenta la hoja de ruta de tu sector",
             ]}
-            cta={{ label: "Responder encuesta", href: "/instrument" }}
+            cta={{ label: "Responder encuesta", href: "/campaign" }}
           />
         </div>
       </div>
