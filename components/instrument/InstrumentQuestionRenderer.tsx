@@ -1,7 +1,14 @@
 import OpenInput from "@/components/inputs/OpenInput";
 import CheckboxGroup from "@/components/inputs/CheckboxGroup";
 import SingleChoiceGroup from "@/components/inputs/SingleChoiceGroup";
-import type { InstrumentDraftAnswer, InstrumentQuestion, InstrumentOption } from "@/app/(instrument)/types";
+import MediaAttachmentViewer from "@/components/inputs/MediaAttachmentViewer";
+import GpsCoordinateInput from "@/components/inputs/GpsCoordinateInput";
+import type { InstrumentDraftAnswer, InstrumentQuestion, InstrumentOption, MediaAttachment } from "@/app/(instrument)/types";
+
+const GPS_SYSTEM_FIELDS: Record<string, "latitude" | "longitude"> = {
+    "farm.latitude": "latitude",
+    "farm.longitude": "longitude",
+};
 
 type InstrumentOptionValue = InstrumentOption["value"];
 
@@ -9,13 +16,42 @@ interface InstrumentQuestionRendererProps {
     question: InstrumentQuestion;
     answer?: InstrumentDraftAnswer;
     onAnswerChange: (answer: InstrumentDraftAnswer) => void;
+    mediaAttachment?: MediaAttachment;
 }
+
+const MEDIA_QUESTION_TYPES = new Set(["image", "voice_recording", "document", "video"]);
 
 export default function InstrumentQuestionRenderer({
     question,
     answer,
     onAnswerChange,
+    mediaAttachment,
 }: InstrumentQuestionRendererProps) {
+    if (question.systemField && question.systemField in GPS_SYSTEM_FIELDS) {
+        const fieldType = GPS_SYSTEM_FIELDS[question.systemField];
+        return (
+            <GpsCoordinateInput
+                questionId={question.questionId}
+                fieldType={fieldType}
+                label={question.text}
+                isRequired={question.isRequired}
+                value={answer?.numericValue}
+                onChange={onAnswerChange}
+            />
+        );
+    }
+
+    if (MEDIA_QUESTION_TYPES.has(question.type.name)) {
+        if (mediaAttachment && mediaAttachment.status === "uploaded") {
+            return <MediaAttachmentViewer attachment={mediaAttachment} />;
+        }
+        return (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+                Sin evidencia capturada
+            </div>
+        );
+    }
+
     if (question.type.name === "open_text") {
         return (
             <OpenInput
