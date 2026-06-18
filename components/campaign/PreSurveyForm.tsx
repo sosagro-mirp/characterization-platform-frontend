@@ -10,14 +10,12 @@ interface PreSurveyFormProps {
   onSearchSelect: (farmerId: string) => void;
   onNewFarmer: () => void;
   onContinueLast: (farmerId: string) => void;
-  onSkip: () => void;
 }
 
 export default function PreSurveyForm({
   onSearchSelect,
   onNewFarmer,
   onContinueLast,
-  onSkip,
 }: PreSurveyFormProps) {
   const { farmerId: storedFarmerId, farmerName: storedFarmerName } =
     useCampaignSessionStore();
@@ -141,14 +139,6 @@ export default function PreSurveyForm({
         </button>
       )}
 
-      <div className="text-center pt-1">
-        <button
-          onClick={onSkip}
-          className="text-xs text-gray-400 hover:text-gray-600 underline"
-        >
-          Continuar sin identificar encuestado
-        </button>
-      </div>
     </div>
   );
 }
