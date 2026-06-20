@@ -275,3 +275,39 @@ export interface UpdateCampaignStepRequest {
   instrumentId?: string;
   order?: number;
 }
+
+// ── Farmer / Farm (admin edit) ───────────────────────────────────────────────
+
+export interface FarmSummaryForFarmer {
+  farmId: string;
+  name: string;
+  vereda: string | null;
+  altitude: number | null;
+  crops: { cropId: string; name: string }[];
+}
+
+export interface FarmerDetail {
+  id: string;
+  name: string;
+  lastName: string | null;
+  documentId: string | null;
+  phone: string | null;
+  email: string | null;
+  farm: FarmSummaryForFarmer | null;
+  createdAt: string;
+}
+
+export interface UpdateFarmerRequest {
+  name?: string;
+  lastName?: string;
+  documentId?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface UpdateFarmRequest {
+  name?: string;
+  vereda?: string;
+  altitude?: number;
+  cropIds?: string[];
+}
