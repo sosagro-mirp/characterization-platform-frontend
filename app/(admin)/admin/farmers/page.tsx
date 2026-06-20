@@ -1,41 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FarmerDetail } from "@/app/(admin)/types";
 import { apiClient } from "@/lib/apiClient";
 
 export default function FarmersListPage() {
   const router = useRouter();
-  const [farmers, setFarmers] = useState<FarmerDetail[]>([]);
+  const [allFarmers, setAllFarmers] = useState<FarmerDetail[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  async function load(search: string) {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = search ? `?search=${encodeURIComponent(search)}` : "";
-      const data = await apiClient.get<FarmerDetail[]>(`/api/farmers${params}`);
-      setFarmers(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar agricultores.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
-    load("");
+    apiClient
+      .get<FarmerDetail[]>("/api/farmers")
+      .then(setAllFarmers)
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Error al cargar agricultores."),
+      )
+      .finally(() => setLoading(false));
   }, []);
 
-  function handleSearch(value: string) {
-    setQuery(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => load(value), 300);
-  }
+  const q = query.trim().toLowerCase();
+  const farmers = q
+    ? allFarmers.filter(
+        (f) =>
+          f.name.toLowerCase().includes(q) ||
+          (f.lastName ?? "").toLowerCase().includes(q) ||
+          (f.documentId ?? "").toLowerCase().includes(q),
+      )
+    : allFarmers;
 
   return (
     <div className="space-y-6">
@@ -51,7 +46,7 @@ export default function FarmersListPage() {
       <input
         type="text"
         value={query}
-        onChange={(e) => handleSearch(e.target.value)}
+        onChange={(e) => setQuery(e.target.value)}
         placeholder="Buscar por nombre o documento…"
         className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
       />
