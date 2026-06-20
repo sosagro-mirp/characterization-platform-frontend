@@ -49,7 +49,7 @@ export default function EditFarmerPage() {
           setFarmName(f.farm.name ?? "");
           setVereda(f.farm.vereda ?? "");
           setAltitude(f.farm.altitude != null ? String(f.farm.altitude) : "");
-          setSelectedCropIds(f.farm.crops.map((c) => c.cropId));
+          setSelectedCropIds((f.farm.crops ?? []).map((c) => c.cropId));
         }
       } catch (err) {
         if (!cancelled)
