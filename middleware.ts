@@ -4,7 +4,7 @@ import { MUST_CHANGE_COOKIE, ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCo
 import { isSafeRedirectPath } from "@/lib/safeRedirect";
 import { defaultRouteForRole, PANEL_ROLES } from "@/lib/roleRouting";
 
-const PROTECTED_PREFIXES = ["/admin", "/instrument", "/campaign", "/change-password"];
+const PROTECTED_PREFIXES = ["/admin", "/campaign", "/change-password"];
 
 export function middleware(request: NextRequest) {
   // --- MAINTENANCE MODE ---
@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
 
     if (pathname.startsWith("/admin")) {
       if (!role || !PANEL_ROLES.has(role)) {
-        return NextResponse.redirect(new URL("/instrument", request.url));
+        return NextResponse.redirect(new URL("/campaign", request.url));
       }
       if (
         role === "researcher" &&

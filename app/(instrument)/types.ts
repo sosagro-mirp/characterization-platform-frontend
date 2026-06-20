@@ -70,12 +70,12 @@ export interface SurveyResponse {
 
 export type SubmitResult =
   | { outcome: "submitted" }
-  | { outcome: "saved_offline" }
   | { outcome: "session_expired" }
   | { outcome: "error"; message: string };
 
 export interface InitializeSurveyPayload {
   localId: string;
+  instrumentId: string;
   instrumentName: string;
   sections: InstrumentSection[];
 }
@@ -104,12 +104,21 @@ export interface CampaignActiveSummary {
   isActive: boolean;
 }
 
+export interface StepConditionRender {
+  conditionId: string;
+  order: number;
+  logicalOperator: 'AND' | 'OR' | null;
+  conditionType: 'question' | 'crop';
+  conditionCrop: { cropId: string; name: string } | null;
+  conditionQuestion: { questionId: string; text: string } | null;
+  conditionValue: string | null;
+}
+
 export interface CampaignStepRender {
   stepId: string;
   order: number;
   instrument: { instrumentId: string; name: string; isActive: boolean };
-  conditionQuestion: { questionId: string; text: string } | null;
-  conditionValue: string | null;
+  conditions: StepConditionRender[];
 }
 
 export interface CampaignRender extends CampaignActiveSummary {

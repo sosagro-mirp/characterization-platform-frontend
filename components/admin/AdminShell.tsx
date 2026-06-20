@@ -52,10 +52,10 @@ export default function AdminShell({ children }: AdminShellProps) {
 
         )}
         <Link
-          href="/instrument"
+          href="/campaign"
           className="rounded-lg mt-4 px-3 py-2 text-sm font-medium  bg-green-700 hover:scale-105 transition-transform uppercase text-center text-white"
         >
-          Aplicar instrumento
+          Campañas
         </Link>
 
         <div className="mt-auto pt-4 flex flex-col gap-3">

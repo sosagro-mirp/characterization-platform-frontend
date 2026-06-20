@@ -218,9 +218,9 @@ export default function CampaignPreviewPage() {
         <InstrumentQuestionFlow
           key={stepIndex}
           localId={`preview-step-${stepIndex}`}
+          instrumentId={instrument.instrumentId}
           instrumentName={instrument.name}
           sections={instrument.sections}
-          isOffline={false}
           apiBaseUrl={API_BASE_URL}
           previewMode
           onPreviewComplete={handleStepComplete}

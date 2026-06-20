@@ -9,7 +9,6 @@ interface SurveyCompletedCardProps {
     message?: string;
     ctaText?: string;
     ctaHref?: string;
-    savedOffline?: boolean;
     campaignSessionId?: string;
 }
 
@@ -17,8 +16,7 @@ export default function SurveyCompletedCard({
     title = "Encuesta completada",
     message = "Gracias por completar la encuesta. Sus respuestas han sido registradas correctamente.",
     ctaText = "Volver al inicio",
-    ctaHref = "/instrument",
-    savedOffline = false,
+    ctaHref = "/campaign",
     campaignSessionId,
 }: SurveyCompletedCardProps) {
     const sessionIdFromStore = useCampaignSessionStore((s) => s.sessionId);
@@ -33,10 +31,6 @@ export default function SurveyCompletedCard({
             ? `/campaign/${activeCampaignId}/session/${activeSessionId}?completedSurveyId=${completedSurveyId}`
             : `/campaign/${activeCampaignId}/session/${activeSessionId}`
         : "/campaign";
-
-    const displayMessage = savedOffline
-        ? "Sus respuestas han sido guardadas localmente y se enviaran al servidor cuando haya conexion."
-        : message;
 
     return (
         <section className="w-full max-w-xl mx-auto mt-19 h-[calc(100vh-76px)] bg-white flex flex-col justify-center items-center">
@@ -57,7 +51,7 @@ export default function SurveyCompletedCard({
                 </svg>
             </div>
             <h2 className="font-bold text-3xl mt-6">{title}</h2>
-            <p className="text-gray-500 mt-2 px-4 text-center">{displayMessage}</p>
+            <p className="text-gray-500 mt-2 px-4 text-center">{message}</p>
 
             {inCampaign ? (
                 <div className="flex flex-col items-center gap-3 mt-12">
