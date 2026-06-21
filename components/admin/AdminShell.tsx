@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useIsAdminDark } from "@/lib/theme/useApplyAdminTheme";
 import ThemeToggle from "@/components/admin/ThemeToggle";
 import { useAuthStore } from "@/store/useAuthStore";
+import NewRequestModal from "@/components/admin/requests/NewRequestModal";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -12,6 +14,7 @@ interface AdminShellProps {
 export default function AdminShell({ children }: AdminShellProps) {
   const isDark = useIsAdminDark();
   const role = useAuthStore((s) => s.user?.role ?? null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   return (
     <div
@@ -49,7 +52,14 @@ export default function AdminShell({ children }: AdminShellProps) {
           >
             Usuarios
           </Link>
-
+        )}
+        {(role === "admin" || role === "researcher") && (
+          <Link
+            href="/admin/requests"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+          >
+            Solicitudes
+          </Link>
         )}
         <Link
           href="/campaign"
@@ -59,11 +69,24 @@ export default function AdminShell({ children }: AdminShellProps) {
         </Link>
 
         <div className="mt-auto pt-4 flex flex-col gap-3">
-
+          <button
+            type="button"
+            onClick={() => setShowReportModal(true)}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-muted)] transition-colors text-left"
+          >
+            Reportar problema
+          </button>
           <ThemeToggle />
         </div>
       </aside>
       <main className="flex-1 overflow-auto p-8">{children}</main>
+
+      {showReportModal && (
+        <NewRequestModal
+          onClose={() => setShowReportModal(false)}
+          onCreated={() => setShowReportModal(false)}
+        />
+      )}
     </div>
   );
 }
