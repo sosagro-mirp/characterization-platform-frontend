@@ -7,11 +7,15 @@ import { getFarmer, updateFarmer } from "@/services/farmers.service";
 import { updateFarm } from "@/services/farms.service";
 import { listCrops } from "@/services/types-of-crops.service";
 import { CropSummary } from "@/app/(instrument)/types";
+import { SurveysTab } from "./SurveysTab";
+
+type Tab = "datos" | "encuestas";
 
 export default function EditFarmerPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
 
+  const [activeTab, setActiveTab] = useState<Tab>("datos");
   const [farmer, setFarmer] = useState<FarmerDetail | null>(null);
   const [crops, setCrops] = useState<CropSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +116,8 @@ export default function EditFarmerPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
+      {/* Header */}
       <div>
         <button
           onClick={() => router.push("/admin/farmers")}
@@ -121,114 +126,140 @@ export default function EditFarmerPage() {
           ← Volver al listado
         </button>
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Editar agricultor
-        </h1>
-        <p className="text-sm text-[var(--text-muted)]">
           {farmer.name}{farmer.lastName ? ` ${farmer.lastName}` : ""}
-        </p>
+        </h1>
+        {farmer.documentId && (
+          <p className="text-sm text-[var(--text-muted)]">CC {farmer.documentId}</p>
+        )}
       </div>
 
-      {error && (
-        <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
-          {error}
-        </p>
-      )}
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[var(--border)]">
+        {(["datos", "encuestas"] as Tab[]).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+              activeTab === tab
+                ? "border-[var(--brand)] text-[var(--brand)]"
+                : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            {tab === "datos" ? "Datos" : "Encuestas"}
+          </button>
+        ))}
+      </div>
 
-      {success && (
-        <p className="text-sm text-[var(--success-fg)] rounded-lg bg-[var(--success-bg)] px-3 py-2">
-          Cambios guardados correctamente.
-        </p>
-      )}
+      {/* Tab: Datos */}
+      {activeTab === "datos" && (
+        <div className="space-y-8">
+          {error && (
+            <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
+              {error}
+            </p>
+          )}
 
-      {/* Datos del agricultor */}
-      <section className="space-y-4">
-        <h2 className="text-base font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
-          Datos del agricultor
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Nombre completo *">
-            <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Apellido">
-            <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Número de documento">
-            <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Teléfono">
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Correo electrónico" className="sm:col-span-2">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
-          </Field>
-        </div>
-      </section>
+          {success && (
+            <p className="text-sm text-[var(--success-fg)] rounded-lg bg-[var(--success-bg)] px-3 py-2">
+              Cambios guardados correctamente.
+            </p>
+          )}
 
-      {/* Datos de la finca */}
-      {farmer.farm && (
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
-            Datos de la finca
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Nombre de la finca" className="sm:col-span-2">
-              <input value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputClass} />
-            </Field>
-            <Field label="Vereda / Sector">
-              <input value={vereda} onChange={(e) => setVereda(e.target.value)} className={inputClass} />
-            </Field>
-            <Field label="Altitud (m.s.n.m.)">
-              <input
-                type="number"
-                min={0}
-                value={altitude}
-                onChange={(e) => setAltitude(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-[var(--text-primary)] mb-2">Cultivos</p>
-            <div className="flex flex-wrap gap-2">
-              {crops.map((crop) => {
-                const selected = selectedCropIds.includes(crop.cropId);
-                return (
-                  <button
-                    key={crop.cropId}
-                    type="button"
-                    onClick={() => toggleCrop(crop.cropId)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-                      selected
-                        ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                        : "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--brand)]"
-                    }`}
-                  >
-                    {crop.name}
-                  </button>
-                );
-              })}
+          {/* Datos del agricultor */}
+          <section className="space-y-4">
+            <h2 className="text-base font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
+              Datos del agricultor
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Nombre completo *">
+                <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Apellido">
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Número de documento">
+                <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Teléfono">
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Correo electrónico" className="sm:col-span-2">
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+              </Field>
             </div>
+          </section>
+
+          {/* Datos de la finca */}
+          {farmer.farm && (
+            <section className="space-y-4">
+              <h2 className="text-base font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
+                Datos de la finca
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Nombre de la finca" className="sm:col-span-2">
+                  <input value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label="Vereda / Sector">
+                  <input value={vereda} onChange={(e) => setVereda(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label="Altitud (m.s.n.m.)">
+                  <input
+                    type="number"
+                    min={0}
+                    value={altitude}
+                    onChange={(e) => setAltitude(e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)] mb-2">Cultivos</p>
+                <div className="flex flex-wrap gap-2">
+                  {crops.map((crop) => {
+                    const selected = selectedCropIds.includes(crop.cropId);
+                    return (
+                      <button
+                        key={crop.cropId}
+                        type="button"
+                        onClick={() => toggleCrop(crop.cropId)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                          selected
+                            ? "bg-[var(--brand)] text-white border-[var(--brand)]"
+                            : "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--brand)]"
+                        }`}
+                      >
+                        {crop.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Acciones */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={handleSave}
+              disabled={saving || !name.trim()}
+              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
+            >
+              {saving ? "Guardando…" : "Guardar"}
+            </button>
+            <button
+              onClick={() => router.push("/admin/farmers")}
+              className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+            >
+              Cancelar
+            </button>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Acciones */}
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={handleSave}
-          disabled={saving || !name.trim()}
-          className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
-        >
-          {saving ? "Guardando…" : "Guardar"}
-        </button>
-        <button
-          onClick={() => router.push("/admin/farmers")}
-          className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-raised)] transition-colors"
-        >
-          Cancelar
-        </button>
-      </div>
+      {/* Tab: Encuestas */}
+      {activeTab === "encuestas" && <SurveysTab farmerId={id} />}
     </div>
   );
 }
