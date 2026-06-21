@@ -311,3 +311,37 @@ export interface UpdateFarmRequest {
   altitude?: number;
   cropIds?: string[];
 }
+
+// ── Survey history (farmer profile) ─────────────────────────────────────────
+
+export interface InstrumentSummaryForSurvey {
+  instrumentId: string;
+  name: string;
+}
+
+export interface SurveyListItem {
+  surveyId: string;
+  sincronized: boolean;
+  createdAt: string;
+  updatedAt: string;
+  instruments: InstrumentSummaryForSurvey[];
+}
+
+export interface SurveyResponseItem {
+  responseId: string;
+  questionId: string;
+  questionText: string;
+  questionType: string;
+  sectionTitle: string;
+  textValue: string | null;
+  numericValue: number | null;
+  booleanValue: boolean | null;
+  optionText: string | null;
+}
+
+export interface SurveyResponsesResult {
+  surveyId: string;
+  instrumentName: string | null;
+  syncedAt: string;
+  responses: SurveyResponseItem[];
+}
