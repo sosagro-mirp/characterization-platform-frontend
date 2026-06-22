@@ -14,6 +14,10 @@ const TYPE_LABELS: Record<string, string> = {
   likert: "Likert",
   multiple_choice: "Múltiple",
   compliance: "Cumplimiento",
+  image: "Imagen",
+  voice_recording: "Voz",
+  document: "PDF",
+  video: "Video",
 };
 
 interface QuestionNodeProps {

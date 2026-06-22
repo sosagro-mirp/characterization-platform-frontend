@@ -16,6 +16,10 @@ const TYPE_LABELS: Record<string, string> = {
   likert: "Likert",
   multiple_choice: "Selección múltiple",
   compliance: "Cumplimiento",
+  image: "Imagen",
+  voice_recording: "Grabación de voz",
+  document: "Documento PDF",
+  video: "Video",
 };
 
 interface QuestionFormProps {
