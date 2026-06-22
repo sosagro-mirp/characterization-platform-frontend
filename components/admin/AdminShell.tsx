@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Flag } from "lucide-react";
 import { useIsAdminDark } from "@/lib/theme/useApplyAdminTheme";
 import ThemeToggle from "@/components/admin/ThemeToggle";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -23,7 +24,7 @@ export default function AdminShell({ children }: AdminShellProps) {
       className={`flex h-screen bg-surface-muted text-text-primary ${isDark ? "dark" : ""}`}
     >
 
-      <aside className="w-56 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1 h-full">
+      <aside className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1 h-full">
         <Link
           href="/"
           className="rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition-colors bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
@@ -72,9 +73,10 @@ export default function AdminShell({ children }: AdminShellProps) {
           <button
             type="button"
             onClick={() => setShowReportModal(true)}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-muted)] transition-colors text-left"
+            className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
           >
-            Reportar problema
+            <Flag className="size-5 shrink-0" />
+            Reportar un problema
           </button>
           <ThemeToggle />
         </div>
