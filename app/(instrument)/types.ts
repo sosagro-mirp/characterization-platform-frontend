@@ -41,6 +41,10 @@ export interface InstrumentDraftAnswer {
   numericValue?: number;
   booleanValue?: boolean;
   otherText?: string;
+  // Multimedia — solo lectura en web; capturado en mobile y subido a R2
+  publicUrl?: string;
+  mimeType?: string;
+  originalFilename?: string;
 }
 
 export interface CreateResponsePayload extends InstrumentDraftAnswer {
