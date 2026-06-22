@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
+import { PANEL_ROLES } from "@/lib/roleRouting";
 
 const sectionLinks = [
   { href: "/#proyecto", label: "El proyecto" },
@@ -78,7 +79,7 @@ export const Navbar = () => {
     : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200";
 
   const showSession = hydrated && isAuthenticated && user;
-  const isAdmin = !!showSession && user.role === "admin";
+  const isAdmin = !!showSession && PANEL_ROLES.has(user.role);
 
   const adminLinkClass = isOverHero
     ? "border-white/40 text-white hover:bg-white/10"
