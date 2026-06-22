@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { Flag } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
+import NewRequestModal from "@/components/admin/requests/NewRequestModal";
 
 interface NavItem {
   label: string;
@@ -57,6 +60,7 @@ export default function PollsterNav() {
   const user = useAuthStore((s) => s.user);
   const userRole = user?.role ?? null;
   const canAccessPanel = userRole !== null && PANEL_ROLES.includes(userRole);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -116,6 +120,14 @@ export default function PollsterNav() {
         </nav>
         {user && (
           <div className="flex items-center gap-4 ml-auto">
+            <button
+              type="button"
+              onClick={() => setShowReportModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors"
+            >
+              <Flag className="size-4 shrink-0" />
+              Reportar problema
+            </button>
             <span className="text-sm font-medium text-neutral-600">
               {user.name} {user.lastName}
             </span>
@@ -155,6 +167,14 @@ export default function PollsterNav() {
         })}
         <button
           type="button"
+          onClick={() => setShowReportModal(true)}
+          className="flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors"
+        >
+          <Flag className="size-5" />
+          Reportar
+        </button>
+        <button
+          type="button"
           onClick={handleLogout}
           className="flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-neutral-400 hover:text-red-600 transition-colors"
         >
@@ -164,6 +184,13 @@ export default function PollsterNav() {
           Salir
         </button>
       </nav>
+
+      {showReportModal && (
+        <NewRequestModal
+          onClose={() => setShowReportModal(false)}
+          onCreated={() => setShowReportModal(false)}
+        />
+      )}
     </>
   );
 }
