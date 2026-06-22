@@ -311,3 +311,39 @@ export interface UpdateFarmRequest {
   altitude?: number;
   cropIds?: string[];
 }
+
+// ── Change Requests ───────────────────────────────────────────────────────────
+
+export type ChangeRequestSource = "mobile" | "web";
+export type ChangeRequestStatus = "open" | "resolved";
+export type ChangeRequestCategory = "bug_ui" | "data_error" | "suggestion" | "other";
+
+export interface ChangeRequestUserSummary {
+  userId: string;
+  name: string;
+  lastName: string;
+}
+
+export interface ChangeRequestFarmerSummary {
+  id: string;
+  name: string;
+  lastName: string | null;
+}
+
+export interface ChangeRequestListItem {
+  changeRequestId: string;
+  description: string;
+  source: ChangeRequestSource;
+  category: ChangeRequestCategory | null;
+  status: ChangeRequestStatus;
+  createdBy: ChangeRequestUserSummary;
+  farmer: ChangeRequestFarmerSummary | null;
+  resolvedBy: ChangeRequestUserSummary | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateChangeRequestWebPayload {
+  description: string;
+  category: ChangeRequestCategory;
+}
