@@ -261,7 +261,7 @@ export default function CampaignSessionPage() {
           instrumentName={duplicatePending.instrument.name}
           onOverwrite={handleOverwrite}
           onSkip={handleSkip}
-          onCancel={() => setDuplicatePending(null)}
+          onCancel={() => router.replace("/campaign")}
           loading={duplicateActionLoading}
         />
       )}
