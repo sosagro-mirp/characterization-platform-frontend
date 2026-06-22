@@ -16,7 +16,6 @@ export const metadata: Metadata = {
   },
   description:
     "Plataforma del proyecto SIGP 108927: fortalecimiento de capacidades científico-tecnológicas para café, cacao, cannabis y cáñamo en seis departamentos de Colombia.",
-  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
