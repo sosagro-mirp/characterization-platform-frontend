@@ -78,7 +78,11 @@ export default function FarmersListPage() {
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {farmers.map((farmer) => (
-                <tr key={farmer.id} className="bg-[var(--surface)] hover:bg-[var(--surface-raised)] transition-colors">
+                <tr
+                  key={farmer.id}
+                  onClick={() => router.push(`/admin/farmers/${farmer.id}`)}
+                  className="bg-[var(--surface)] hover:bg-[var(--surface-raised)] transition-colors cursor-pointer"
+                >
                   <td className="px-4 py-3 text-[var(--text-primary)]">
                     {farmer.name}{farmer.lastName ? ` ${farmer.lastName}` : ""}
                   </td>
@@ -93,14 +97,6 @@ export default function FarmersListPage() {
                   </td>
                   <td className="px-4 py-3 text-[var(--text-muted)]">
                     {new Date(farmer.createdAt).toLocaleDateString("es-CO")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => router.push(`/admin/farmers/${farmer.id}`)}
-                      className="rounded-lg border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-raised)] transition-colors"
-                    >
-                      Editar
-                    </button>
                   </td>
                 </tr>
               ))}
