@@ -337,6 +337,9 @@ export interface SurveyResponseItem {
   numericValue: number | null;
   booleanValue: boolean | null;
   optionText: string | null;
+  publicUrl: string | null;
+  mimeType: string | null;
+  originalFilename: string | null;
 }
 
 export interface SurveyResponsesResult {
