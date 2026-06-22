@@ -54,7 +54,7 @@ export default function AdminShell({ children }: AdminShellProps) {
             Usuarios
           </Link>
         )}
-        {(role === "admin" || role === "researcher") && (
+        {role === "admin" && (
           <Link
             href="/admin/requests"
             className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
