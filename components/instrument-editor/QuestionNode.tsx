@@ -83,7 +83,7 @@ export default function QuestionNode({
       </span>
       <div className="flex-1 min-w-0">
         <p className="text-sm truncate text-[var(--text-primary)]">{question.text}</p>
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           <span className="text-[10px] font-medium rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[var(--text-muted)]">
             {TYPE_LABELS[question.type?.name] ?? question.type?.name}
           </span>
