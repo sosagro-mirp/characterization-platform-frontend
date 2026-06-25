@@ -1,15 +1,12 @@
 import type { Metadata } from 'next';
 import { Hero } from '../../components/landing/hero/Hero';
-import { About } from '../../components/landing/about/About';
+import { LogoCarousel } from '../../components/landing/logoCarousel/LogoCarousel';
 import { Crops } from '../../components/landing/crops/Crops';
 import { Territories } from '../../components/landing/territories/Territories';
 import { Axes } from '../../components/landing/axes/Axes';
-import { Platform } from '../../components/landing/platform/Platform';
 import { Participation } from '../../components/landing/participation/Participation';
-import { Partners } from '../../components/landing/partners/Partners';
 import { Outcomes } from '../../components/landing/outcomes/Outcomes';
 import { ResearchGroups } from '../../components/landing/researchGroups/ResearchGroups';
-import { News } from '../../components/landing/news/News';
 import { project } from '../../lib/landing-content';
 
 export const metadata: Metadata = {
@@ -88,22 +85,19 @@ const projectJsonLd = {
 
 export default function Home() {
   return (
-    <section className="flex flex-col">
+    <main className="flex flex-col">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
       />
       <Hero />
-      <About />
+      <LogoCarousel />
       <Crops />
       <Territories />
       <Axes />
-      {/* <Platform /> */}
-      <Partners />
       <Outcomes />
       <ResearchGroups />
-      {/* <News /> */}
       <Participation />
-    </section>
+    </main>
   );
 }

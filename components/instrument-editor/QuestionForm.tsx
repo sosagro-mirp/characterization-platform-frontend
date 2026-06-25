@@ -1,12 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { QuestionDetail, TypeOfQuestionSummary } from "@/app/(admin)/types";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import OptionsEditor from "./OptionsEditor";
 import ConfirmDialog from "./ConfirmDialog";
 
 const TYPES_WITH_OPTIONS = ["single_choice", "likert", "multiple_choice"];
+
+const TYPE_LABELS: Record<string, string> = {
+  open_text: "Texto abierto",
+  numeric: "Número",
+  yes_no: "Sí / No",
+  single_choice: "Selección única",
+  likert: "Likert",
+  multiple_choice: "Selección múltiple",
+  compliance: "Cumplimiento",
+  image: "Imagen",
+  voice_recording: "Grabación de voz",
+  document: "Documento PDF",
+  video: "Video",
+};
 
 interface QuestionFormProps {
   question: QuestionDetail;
@@ -27,6 +41,7 @@ export default function QuestionForm({
   const [isSelectionCriteria, setIsSelectionCriteria] = useState(
     question.isSelectionCriteria
   );
+  const [isKeyQuestion, setIsKeyQuestion] = useState(question.isKeyQuestion);
   const [conditionQuestionId, setConditionQuestionId] = useState<string>(
     question.conditionQuestionId ?? ""
   );
@@ -35,20 +50,6 @@ export default function QuestionForm({
   );
   const [showTypeWarning, setShowTypeWarning] = useState(false);
   const [pendingTypeId, setPendingTypeId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setText(question.text);
-    setTypeId(question.type?.typeId ?? "");
-    setIsRequired(question.isRequired);
-    setIsSelectionCriteria(question.isSelectionCriteria);
-    setConditionQuestionId(question.conditionQuestionId ?? "");
-    setConditionValue(question.conditionValue ?? "");
-  }, [question.questionId]);
-
-  useEffect(() => {
-    setConditionQuestionId(question.conditionQuestionId ?? "");
-    setConditionValue(question.conditionValue ?? "");
-  }, [question.conditionQuestionId, question.conditionValue]);
 
   const orderedQuestions = [...sections]
     .sort((a, b) => a.order - b.order)
@@ -108,6 +109,13 @@ export default function QuestionForm({
     });
   };
 
+  const handleKeyQuestionChange = async (checked: boolean) => {
+    setIsKeyQuestion(checked);
+    await updateQuestionInStore(sectionId, question.questionId, {
+      isKeyQuestion: checked,
+    });
+  };
+
   const saveCondition = async (newQuestionId: string, newValue: string) => {
     await updateQuestionInStore(sectionId, question.questionId, {
       conditionQuestionId: newQuestionId || null,
@@ -152,7 +160,7 @@ export default function QuestionForm({
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
             <option key={t.typeId} value={t.typeId}>
-              {t.name}
+              {TYPE_LABELS[t.name] ?? t.name}
             </option>
           ))}
         </select>
@@ -184,6 +192,22 @@ export default function QuestionForm({
           className="text-sm text-[var(--text-primary)]"
         >
           Criterio de selección de unidades productivas
+        </label>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="isKeyQuestion"
+          checked={isKeyQuestion}
+          onChange={(e) => handleKeyQuestionChange(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+        />
+        <label
+          htmlFor="isKeyQuestion"
+          className="text-sm text-[var(--text-primary)]"
+        >
+          Pregunta estratégica de caracterización tecnológica
         </label>
       </div>
 

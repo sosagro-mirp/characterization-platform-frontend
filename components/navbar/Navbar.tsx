@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
+import { useIsHydrated } from "@/hooks/useIsHydrated";
+import { PANEL_ROLES } from "@/lib/roleRouting";
 
 const sectionLinks = [
   { href: "/#proyecto", label: "El proyecto" },
@@ -20,7 +22,7 @@ export const Navbar = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverHero, setIsOverHero] = useState(true);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useIsHydrated();
 
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -35,13 +37,9 @@ export const Navbar = () => {
   };
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
     const hero = document.getElementById("inicio");
     if (!hero) {
-      setIsOverHero(false);
+      queueMicrotask(() => setIsOverHero(false));
       return;
     }
     const observer = new IntersectionObserver(
@@ -81,7 +79,7 @@ export const Navbar = () => {
     : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200";
 
   const showSession = hydrated && isAuthenticated && user;
-  const isAdmin = !!showSession && user.role === "admin";
+  const isAdmin = !!showSession && PANEL_ROLES.has(user.role);
 
   const adminLinkClass = isOverHero
     ? "border-white/40 text-white hover:bg-white/10"
@@ -121,10 +119,10 @@ export const Navbar = () => {
             {showSession ? (
               <div className="hidden lg:flex items-center gap-2">
                 <Link
-                  href="/instrument"
+                  href="/campaign"
                   className={`inline-flex items-center px-4 py-2 rounded-lg border 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
                 >
-                  Aplicar instrumento
+                  Campañas
                 </Link>
                 {isAdmin && (
                   <Link
@@ -196,6 +194,7 @@ export const Navbar = () => {
       <div
         id="mobile-menu"
         aria-hidden={!isMenuOpen}
+        {...(!isMenuOpen ? { inert: true } : {})}
         className={`lg:hidden fixed inset-0 top-16 z-40 bg-white transition-all duration-300 ease-in-out ${isMenuOpen
           ? "opacity-100 pointer-events-auto translate-y-0"
           : "opacity-0 pointer-events-none -translate-y-2"
@@ -207,7 +206,7 @@ export const Navbar = () => {
               <Link
                 href={l.href}
                 onClick={closeMenu}
-                className="block py-3 text-gray-700 hover:text-brand-dark"
+                className="block py-3 text-gray-700 hover:text-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
               >
                 {l.label}
               </Link>
@@ -220,11 +219,11 @@ export const Navbar = () => {
                   {user.name} {user.lastName}
                 </span>
                 <Link
-                  href="/instrument"
+                  href="/campaign"
                   onClick={closeMenu}
                   className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
                 >
-                  Aplicar instrumento
+                  Campañas
                 </Link>
                 {isAdmin && (
                   <Link

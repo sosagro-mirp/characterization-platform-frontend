@@ -31,41 +31,31 @@ export default function EditUserPage() {
   const [topError, setTopError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<UpdateUserRequest | null>(null);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+    async function load() {
       try {
         const [u, r] = await Promise.all([getUser(userId), listRoles()]);
-        setUser(u);
-        setRoles(r);
+        if (!cancelled) {
+          setUser(u);
+          setRoles(r);
+        }
       } catch (err) {
-        setTopError(
-          err instanceof Error ? err.message : "Error al cargar usuario.",
-        );
+        if (!cancelled)
+          setTopError(err instanceof Error ? err.message : "Error al cargar usuario.");
       } finally {
-        setLoading(false);
-      }
-    })();
-  }, [userId]);
-
-  async function handleSubmit(data: UpdateUserRequest) {
-    setEmailError(null);
-    setTopError(null);
-
-    if (
-      currentUserId === userId &&
-      data.roleId &&
-      user?.role?.roleId !== data.roleId
-    ) {
-      const newRoleName = roles.find((r) => r.roleId === data.roleId)?.name;
-      if (newRoleName !== "admin") {
-        const proceed = window.confirm(
-          "Estás cambiando tu propio rol y dejarás de tener acceso al panel de administración. ¿Continuar?",
-        );
-        if (!proceed) return;
+        if (!cancelled) setLoading(false);
       }
     }
+    load();
+    return () => { cancelled = true; };
+  }, [userId]);
 
+  async function executeUpdate(data: UpdateUserRequest) {
+    setEmailError(null);
+    setTopError(null);
     try {
       const updated = await updateUser(userId, data);
       setUser(updated);
@@ -74,11 +64,25 @@ export default function EditUserPage() {
         setEmailError("Este correo ya está registrado.");
         throw err;
       }
-      const message =
-        err instanceof Error ? err.message : "Error al actualizar.";
+      const message = err instanceof Error ? err.message : "Error al actualizar.";
       setTopError(message);
       throw err;
     }
+  }
+
+  async function handleSubmit(data: UpdateUserRequest) {
+    if (
+      currentUserId === userId &&
+      data.roleId &&
+      user?.role?.roleId !== data.roleId
+    ) {
+      const newRoleName = roles.find((r) => r.roleId === data.roleId)?.name;
+      if (newRoleName !== "admin") {
+        setPendingUpdate(data);
+        return;
+      }
+    }
+    await executeUpdate(data);
   }
 
   async function handleDelete() {
@@ -149,6 +153,16 @@ export default function EditUserPage() {
         destructive
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      <ConfirmDialog
+        open={!!pendingUpdate}
+        title="Cambiar tu propio rol"
+        description="Dejarás de tener acceso al panel de administración. ¿Continuar?"
+        confirmLabel="Sí, cambiar rol"
+        destructive
+        onConfirm={() => { if (pendingUpdate) executeUpdate(pendingUpdate); setPendingUpdate(null); }}
+        onCancel={() => setPendingUpdate(null)}
       />
     </div>
   );

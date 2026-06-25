@@ -41,7 +41,6 @@ export default function InstrumentEditorPage({ params }: PageProps) {
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
     Promise.all([
       getInstrumentForEditor(id).catch(() => null),
       getActorTypes(),

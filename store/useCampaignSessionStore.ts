@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { noopStorage } from "@/lib/noopStorage";
 
 type PreSurveyPhase = 'idle' | 's1_pending' | 's2_pending' | 'done';
 
@@ -19,7 +20,6 @@ interface CampaignSessionState {
     campaignName: string;
     farmerId?: string | null;
     farmerName?: string | null;
-    skipPreSurvey?: boolean;
   }) => void;
   setProgress: (params: {
     currentStepOrder: number | null;
@@ -47,7 +47,7 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
   persist(
     (set) => ({
       ...initial,
-      startSession: ({ sessionId, campaignId, campaignName, farmerId, farmerName, skipPreSurvey }) =>
+      startSession: ({ sessionId, campaignId, campaignName, farmerId, farmerName }) =>
         set({
           ...initial,
           sessionId,
@@ -55,7 +55,7 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
           campaignName,
           farmerId: farmerId ?? null,
           farmerName: farmerName ?? null,
-          preSurveyPhase: (farmerId || skipPreSurvey) ? 'done' : 'idle',
+          preSurveyPhase: farmerId ? 'done' : 'idle',
         }),
       setProgress: ({ currentStepOrder, totalSteps, completedCount }) =>
         set({ currentStepOrder, totalSteps, completedCount }),
@@ -67,7 +67,9 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
     }),
     {
       name: "sosagro.campaign-session",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window === "undefined" ? noopStorage : window.localStorage
+      ),
     },
   ),
 );

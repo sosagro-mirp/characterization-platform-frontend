@@ -6,14 +6,9 @@ import type {
   InstrumentQuestion,
   SubmitResult,
 } from "@/app/(instrument)/types";
-import {
-  updateSurveyProgress,
-  markSurveyAsDone,
-  savePendingOption,
-} from "@/lib/db/offlineSurveyService";
-import { offlineDb } from "@/lib/db/offlineDb";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
-import { useAuthStore } from "@/store/useAuthStore";
+import { createSurvey, submitBatchResponses } from "@/services/surveys.service";
+import { createOption } from "@/services/options.service";
 
 interface FlattenedQuestionItem {
   sectionId: string;
@@ -25,6 +20,7 @@ interface FlattenedQuestionItem {
 interface InstrumentSurveyState {
   localId?: string;
   surveyId?: string;
+  instrumentId?: string;
   instrumentName: string;
   flattenedQuestions: FlattenedQuestionItem[];
   currentIndex: number;
@@ -40,14 +36,14 @@ interface InstrumentSurveyState {
   resetSurvey: () => void;
   buildResponsesPayload: () => CreateResponsePayload[];
   submitResponses: (
-    apiBaseUrl: string,
-    campaignContext?: { campaignSessionId?: string; stepOrder?: number },
+    campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
   ) => Promise<SubmitResult>;
 }
 
 const initialState = {
   localId: undefined,
   surveyId: undefined,
+  instrumentId: undefined,
   instrumentName: "",
   flattenedQuestions: [],
   currentIndex: 0,
@@ -61,7 +57,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
   (set, get) => ({
     ...initialState,
 
-    initializeSurvey: ({ localId, instrumentName, sections }) => {
+    initializeSurvey: ({ localId, instrumentId, instrumentName, sections }) => {
       const state = get();
 
       const flattenedQuestions = [...sections]
@@ -78,8 +74,6 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         );
 
       if (state.initialized && state.localId === localId) {
-        // Sesión ya activa — solo refrescar los metadatos de preguntas
-        // (condiciones, textos, tipos) sin resetear respuestas ni posición
         set({ flattenedQuestions });
         return;
       }
@@ -87,6 +81,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
       set({
         localId,
         surveyId: undefined,
+        instrumentId,
         instrumentName,
         flattenedQuestions,
         currentIndex: 0,
@@ -98,24 +93,9 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     setAnswer: (answer) => {
-      set((state) => {
-        const updatedAnswers = {
-          ...state.answers,
-          [answer.questionId]: answer,
-        };
-
-        if (state.localId) {
-          updateSurveyProgress(
-            state.localId,
-            updatedAnswers,
-            state.currentIndex,
-          ).catch((e) =>
-            console.warn("[offlineDb] updateSurveyProgress failed:", e),
-          );
-        }
-
-        return { answers: updatedAnswers };
-      });
+      set((state) => ({
+        answers: { ...state.answers, [answer.questionId]: answer },
+      }));
     },
 
     goNext: () => {
@@ -152,7 +132,6 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
     resetSurvey: () => set(initialState),
 
-    // * Convertir las respuestas guardadas en el store en una lista para enviar al servidor
     buildResponsesPayload: () => {
       const { surveyId, flattenedQuestions, answers } = get();
 
@@ -165,64 +144,60 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
       flattenedQuestions
         .filter(({ question }) => isQuestionVisible(question, answers))
         .forEach(({ question }) => {
-        const answer = answers[question.questionId];
+          const answer = answers[question.questionId];
 
-        if (!answer) {
-          return;
-        }
+          if (!answer) {
+            return;
+          }
 
-        if (question.type.name === "multiple_choice") {
-          const selectedOptionIds = answer.optionIds ?? [];
+          if (question.type.name === "multiple_choice") {
+            const selectedOptionIds = answer.optionIds ?? [];
 
-          selectedOptionIds.forEach((optionId) => {
-            payload.push({
-              surveyId,
-              questionId: question.questionId,
-              optionId,
+            selectedOptionIds.forEach((optionId) => {
+              payload.push({
+                surveyId,
+                questionId: question.questionId,
+                optionId,
+              });
             });
-          });
 
-          return;
-        }
+            return;
+          }
 
-        const trimmedText = answer.textValue?.trim();
-        const item = {
-          surveyId,
-          questionId: answer.questionId,
-          ...(answer.optionId !== undefined && { optionId: answer.optionId }),
-          ...(trimmedText ? { textValue: trimmedText } : {}),
-          ...(answer.numericValue !== undefined && { numericValue: answer.numericValue }),
-          ...(answer.booleanValue !== undefined && { booleanValue: answer.booleanValue }),
-        };
+          const trimmedText = answer.textValue?.trim();
+          const item = {
+            surveyId,
+            questionId: answer.questionId,
+            ...(answer.optionId !== undefined && { optionId: answer.optionId }),
+            ...(trimmedText ? { textValue: trimmedText } : {}),
+            ...(answer.numericValue !== undefined && { numericValue: answer.numericValue }),
+            ...(answer.booleanValue !== undefined && { booleanValue: answer.booleanValue }),
+          };
 
-        const hasValue =
-          "optionId" in item ||
-          "textValue" in item ||
-          "numericValue" in item ||
-          "booleanValue" in item;
+          const hasValue =
+            "optionId" in item ||
+            "textValue" in item ||
+            "numericValue" in item ||
+            "booleanValue" in item;
 
-        if (hasValue) payload.push(item);
-      });
+          if (hasValue) payload.push(item);
+        });
 
       return payload;
     },
 
-    // * Enviar respuestas al servidor
     submitResponses: async (
-      apiBaseUrl: string,
-      campaignContext?: { campaignSessionId?: string; stepOrder?: number },
+      campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
     ): Promise<SubmitResult> => {
-      // * 1. Validaciones iniciales
-      const { localId, flattenedQuestions, answers, buildResponsesPayload } =
-        get();
+      const { instrumentId, flattenedQuestions, answers, buildResponsesPayload } = get();
 
-      if (!localId) {
+      if (!instrumentId) {
         return { outcome: "error", message: "No hay encuesta activa" };
       }
 
       set({ submitting: true, error: undefined });
 
-      // * 2. Pre-paso: crear opciones dinámicas para respuestas con otherText
+      // Pre-paso: crear opciones dinámicas para respuestas con otherText
       const updatedAnswers = { ...answers };
 
       for (const { question } of flattenedQuestions) {
@@ -240,18 +215,10 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         if (!otherSelected) continue;
 
         try {
-          const res = await fetch(
-            `${apiBaseUrl}/api/questions/${question.questionId}/options`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text: answer.otherText.trim() }),
-            },
+          const newOption = await createOption(
+            question.questionId,
+            answer.otherText.trim(),
           );
-
-          if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-          const newOption = await res.json();
           updatedAnswers[question.questionId] = isMultiple
             ? {
                 ...answer,
@@ -269,18 +236,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
                 otherText: undefined,
               };
         } catch (e) {
-          if (e instanceof TypeError) {
-            // * Sin red: guardar opción "Otros" en IndexedDB para resolver en sync
-            await savePendingOption(
-              question.questionId,
-              otherOption.optionId,
-              answer.otherText.trim(),
-            );
-            set({ submitting: false });
-            return { outcome: "saved_offline" };
-          }
-          const message =
-            "Error al guardar la nueva opción. Intenta nuevamente.";
+          const message = "Error al guardar la nueva opción. Intenta nuevamente.";
           set({ error: message, submitting: false });
           return { outcome: "error", message };
         }
@@ -288,62 +244,37 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       set({ answers: updatedAnswers });
 
-      // *3. Crear encuesta en el servidor para obtener surveyId real
+      // Obtener surveyId: usar el existente (overwrite) o crear uno nuevo
       let surveyId: string;
 
-      try {
-        const pendingSurvey = await offlineDb.pendingSurveys.get(localId);
-        if (!pendingSurvey) {
-          throw new Error("No se encontró la encuesta local");
-        }
-
-        const accessToken = useAuthStore.getState().accessToken;
-        const surveyHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (accessToken) {
-          surveyHeaders["Authorization"] = `Bearer ${accessToken}`;
-        }
-
-        const surveyBody: Record<string, unknown> = {
-          instrumentIds: [pendingSurvey.instrumentId],
-        };
-        if (campaignContext?.campaignSessionId) {
-          surveyBody.campaignSessionId = campaignContext.campaignSessionId;
-        }
-        if (typeof campaignContext?.stepOrder === "number") {
-          surveyBody.stepOrder = campaignContext.stepOrder;
-        }
-
-        const surveyRes = await fetch(`${apiBaseUrl}/api/surveys`, {
-          method: "POST",
-          headers: surveyHeaders,
-          body: JSON.stringify(surveyBody),
-        });
-
-        if (surveyRes.status === 401) {
-          set({ submitting: false });
-          return { outcome: "session_expired" };
-        }
-        if (!surveyRes.ok) throw new Error(`Server error: ${surveyRes.status}`);
-
-        const surveyData = await surveyRes.json();
-        surveyId = surveyData.surveyId;
+      if (campaignContext?.existingSurveyId) {
+        surveyId = campaignContext.existingSurveyId;
         set({ surveyId });
-      } catch (e) {
-        if (e instanceof TypeError) {
-          set({ submitting: false });
-          return { outcome: "saved_offline" };
+      } else {
+        try {
+          const surveyData = await createSurvey({
+            instrumentIds: [instrumentId],
+            ...(campaignContext?.campaignSessionId && { campaignSessionId: campaignContext.campaignSessionId }),
+            ...(typeof campaignContext?.stepOrder === "number" && { stepOrder: campaignContext.stepOrder }),
+          });
+
+          surveyId = surveyData.surveyId;
+          set({ surveyId });
+        } catch (e) {
+          const isUnauthorized = e instanceof Error && e.message.includes("401");
+          if (isUnauthorized) {
+            set({ submitting: false });
+            return { outcome: "session_expired" };
+          }
+          const message =
+            e instanceof Error
+              ? e.message
+              : "Error al crear la encuesta en el servidor";
+          set({ error: message, submitting: false });
+          return { outcome: "error", message };
         }
-        const message =
-          e instanceof Error
-            ? e.message
-            : "Error al crear la encuesta en el servidor";
-        set({ error: message, submitting: false });
-        return { outcome: "error", message };
       }
 
-      // *4. Construir payload con el surveyId real ya disponible en state
       const payload = buildResponsesPayload();
 
       if (payload.length === 0) {
@@ -351,35 +282,15 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         return { outcome: "error", message: "No hay respuestas para enviar" };
       }
 
-      // *5. Enviar respuestas al servidor
       try {
-        const accessToken = useAuthStore.getState().accessToken;
-        const batchHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (accessToken) {
-          batchHeaders["Authorization"] = `Bearer ${accessToken}`;
-        }
-
-        const res = await fetch(`${apiBaseUrl}/api/responses/batch`, {
-          method: "POST",
-          headers: batchHeaders,
-          body: JSON.stringify(payload),
-        });
-
-        if (res.status === 401) {
-          set({ submitting: false });
-          return { outcome: "session_expired" };
-        }
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-        await markSurveyAsDone(localId, surveyId);
+        await submitBatchResponses(payload);
         set({ submitting: false });
         return { outcome: "submitted" };
       } catch (e) {
-        if (e instanceof TypeError) {
+        const isUnauthorized = e instanceof Error && e.message.includes("401");
+        if (isUnauthorized) {
           set({ submitting: false });
-          return { outcome: "saved_offline" };
+          return { outcome: "session_expired" };
         }
         const message =
           e instanceof Error ? e.message : "Error al enviar respuestas";

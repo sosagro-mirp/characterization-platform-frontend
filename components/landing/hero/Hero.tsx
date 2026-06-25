@@ -1,43 +1,6 @@
-import { GraduationCap, HeartHandshake, MapPinHouse, Sprout, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { project } from "../../../lib/landing-content";
 import { HeroBadge } from "./HeroBadge";
-
-interface HeroRole {
-  label: string;
-  description: string;
-  icon: LucideIcon;
-  href: string;
-  primary?: boolean;
-}
-
-const roles: readonly HeroRole[] = [
-  {
-    label: "Soy agricultor",
-    description: "Responde la encuesta de tu finca",
-    icon: Sprout,
-    href: "/",
-    primary: true,
-  },
-  {
-    label: "Soy extensionista",
-    description: "Acompaño a productores en campo",
-    icon: HeartHandshake,
-    href: "/",
-  },
-  {
-    label: "Soy propietario",
-    description: "Gestiono una unidad productiva",
-    icon: MapPinHouse,
-    href: "/",
-  },
-  {
-    label: "Soy investigador",
-    description: "Ingresar a la plataforma",
-    icon: GraduationCap,
-    href: "/login",
-  },
-] as const;
 
 export function Hero() {
   return (
@@ -51,6 +14,7 @@ export function Hero() {
         muted
         loop
         playsInline
+        aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover object-center -z-10"
       />
       <div
@@ -80,41 +44,24 @@ export function Hero() {
             </div>
           </div>
 
-          <div className="mt-4 max-w-7xl">
+          <div className="mt-4">
             <p className="text-xs uppercase tracking-wider text-white/60 mb-3">
-              Empieza según tu rol
+              Da el primer paso
             </p>
-            <ul
-              role="list"
-              className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4"
-            >
-              {roles.map((role) => {
-                const isPrimary = Boolean(role.primary);
-                return (
-                  <li key={role.label}>
-                    <Link
-                      href={role.href}
-                      className={`group flex h-full flex-col gap-3 rounded-xl border p-4 lg:p-5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark ${isPrimary
-                        ? "border-green-300/60 bg-green-400/95 text-brand-dark hover:bg-green-300 focus-visible:ring-green-300"
-                        : "border-white/30 bg-white/5 text-white backdrop-blur-sm hover:bg-white/10 focus-visible:ring-white"
-                        }`}
-                    >
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm lg:text-base font-bold tracking-tight">
-                          {role.label}
-                        </span>
-                        <span
-                          className={`text-[11px] lg:text-xs leading-snug ${isPrimary ? "text-brand-dark/75" : "text-white/65"
-                            }`}
-                        >
-                          {role.description}
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/#participar"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-green-300/60 bg-green-400/95 px-6 py-4 text-sm font-bold tracking-tight text-brand-dark transition-colors hover:bg-green-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark"
+              >
+                Contáctanos
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/5 px-6 py-4 text-sm font-bold tracking-tight text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark"
+              >
+                Soy investigador
+              </Link>
+            </div>
           </div>
         </div>
       </div>

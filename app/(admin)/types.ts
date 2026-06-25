@@ -1,3 +1,9 @@
+export interface UserAuditSummary {
+  userId: string;
+  name: string;
+  lastName: string;
+}
+
 export interface ActorTypeSummary {
   actorTypeId: string;
   name: string;
@@ -39,6 +45,7 @@ export interface QuestionDetail {
   text: string;
   isRequired: boolean;
   isSelectionCriteria: boolean;
+  isKeyQuestion: boolean;
   order: number;
   type: TypeOfQuestionSummary;
   options: OptionDetail[];
@@ -53,6 +60,7 @@ export interface CreateQuestionRequest {
   typeId: string;
   isRequired: boolean;
   isSelectionCriteria?: boolean;
+  isKeyQuestion?: boolean;
   order: number;
   conditionQuestionId?: string;
   conditionValue?: string;
@@ -63,6 +71,7 @@ export interface UpdateQuestionRequest {
   typeId?: string;
   isRequired?: boolean;
   isSelectionCriteria?: boolean;
+  isKeyQuestion?: boolean;
   order?: number;
   conditionQuestionId?: string | null;
   conditionValue?: string | null;
@@ -106,6 +115,8 @@ export interface InstrumentListItem {
   publishDate: string;
   isActive: boolean;
   actorTypes: ActorTypeSummary[];
+  createdBy?: UserAuditSummary | null;
+  updatedBy?: UserAuditSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -155,7 +166,7 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export interface UserDetail extends UserListItem {}
+export type UserDetail = UserListItem;
 
 export interface CreateUserRequest {
   name: string;
@@ -236,6 +247,8 @@ export interface CampaignSummary {
   name: string;
   description: string | null;
   isActive: boolean;
+  createdBy?: UserAuditSummary | null;
+  updatedBy?: UserAuditSummary | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -264,4 +277,113 @@ export interface CreateCampaignStepRequest {
 export interface UpdateCampaignStepRequest {
   instrumentId?: string;
   order?: number;
+}
+
+// ── Farmer / Farm (admin edit) ───────────────────────────────────────────────
+
+export interface FarmSummaryForFarmer {
+  farmId: string;
+  name: string;
+  vereda: string | null;
+  altitude: number | null;
+  crops: { cropId: string; name: string }[];
+}
+
+export interface FarmerDetail {
+  id: string;
+  name: string;
+  lastName: string | null;
+  documentId: string | null;
+  phone: string | null;
+  email: string | null;
+  farm: FarmSummaryForFarmer | null;
+  createdAt: string;
+}
+
+export interface UpdateFarmerRequest {
+  name?: string;
+  lastName?: string;
+  documentId?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface UpdateFarmRequest {
+  name?: string;
+  vereda?: string;
+  altitude?: number;
+  cropIds?: string[];
+}
+
+// ── Change Requests ───────────────────────────────────────────────────────────
+
+export type ChangeRequestSource = "mobile" | "web";
+export type ChangeRequestStatus = "open" | "resolved";
+export type ChangeRequestCategory = "bug_ui" | "data_error" | "suggestion" | "other";
+
+export interface ChangeRequestUserSummary {
+  userId: string;
+  name: string;
+  lastName: string;
+}
+
+export interface ChangeRequestFarmerSummary {
+  id: string;
+  name: string;
+  lastName: string | null;
+}
+
+export interface ChangeRequestListItem {
+  changeRequestId: string;
+  description: string;
+  source: ChangeRequestSource;
+  category: ChangeRequestCategory | null;
+  status: ChangeRequestStatus;
+  createdBy: ChangeRequestUserSummary;
+  farmer: ChangeRequestFarmerSummary | null;
+  resolvedBy: ChangeRequestUserSummary | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateChangeRequestWebPayload {
+  description: string;
+  category: ChangeRequestCategory;
+}
+
+// ── Survey history (farmer profile) ─────────────────────────────────────────
+
+export interface InstrumentSummaryForSurvey {
+  instrumentId: string;
+  name: string;
+}
+
+export interface SurveyListItem {
+  surveyId: string;
+  sincronized: boolean;
+  createdAt: string;
+  updatedAt: string;
+  instruments: InstrumentSummaryForSurvey[];
+}
+
+export interface SurveyResponseItem {
+  responseId: string;
+  questionId: string;
+  questionText: string;
+  questionType: string;
+  sectionTitle: string;
+  textValue: string | null;
+  numericValue: number | null;
+  booleanValue: boolean | null;
+  optionText: string | null;
+  publicUrl: string | null;
+  mimeType: string | null;
+  originalFilename: string | null;
+}
+
+export interface SurveyResponsesResult {
+  surveyId: string;
+  instrumentName: string | null;
+  syncedAt: string;
+  responses: SurveyResponseItem[];
 }

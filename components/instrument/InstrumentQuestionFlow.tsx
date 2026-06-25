@@ -14,31 +14,32 @@ import { isQuestionVisible } from "@/lib/isQuestionVisible";
 
 interface InstrumentQuestionFlowProps {
     localId: string;
+    instrumentId: string;
     instrumentName: string;
     sections: InstrumentSection[];
-    isOffline: boolean;
     apiBaseUrl: string;
     campaignSessionId?: string;
     stepOrder?: number;
     previewMode?: boolean;
+    existingSurveyId?: string;
     onPreviewComplete?: () => void;
 }
 
 export default function InstrumentQuestionFlow({
     localId,
+    instrumentId,
     instrumentName,
     sections,
-    isOffline,
     apiBaseUrl,
     campaignSessionId,
     stepOrder,
     previewMode = false,
+    existingSurveyId,
     onPreviewComplete,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
-    const [savedOffline, setSavedOffline] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [sessionExpired, setSessionExpired] = useState(false);
     const {
@@ -58,10 +59,11 @@ export default function InstrumentQuestionFlow({
     useEffect(() => {
         initializeSurvey({
             localId,
+            instrumentId,
             instrumentName,
             sections,
         });
-    }, [initializeSurvey, localId, instrumentName, sections]);
+    }, [initializeSurvey, localId, instrumentId, instrumentName, sections]);
 
     const currentItem = flattenedQuestions[currentIndex];
     const currentQuestion = currentItem?.question as InstrumentQuestion | undefined;
@@ -149,16 +151,14 @@ export default function InstrumentQuestionFlow({
                 return;
             }
 
-            const result = await submitResponses(apiBaseUrl, {
+            const result = await submitResponses({
                 campaignSessionId,
                 stepOrder,
+                existingSurveyId,
             });
 
             if (result.outcome === "submitted") {
                 setCompleted(true);
-            } else if (result.outcome === "saved_offline") {
-                setCompleted(true);
-                setSavedOffline(true);
             } else if (result.outcome === "session_expired") {
                 setSessionExpired(true);
             }
@@ -175,7 +175,7 @@ export default function InstrumentQuestionFlow({
 
     const handleConfirmExit = () => {
         setShowExitConfirm(false);
-        router.push("/instrument");
+        router.push("/campaign");
     };
 
     if (completed) {
@@ -191,7 +191,6 @@ export default function InstrumentQuestionFlow({
         }
         return (
             <SurveyCompletedCard
-                savedOffline={savedOffline}
                 campaignSessionId={campaignSessionId}
             />
         );
@@ -213,11 +212,6 @@ export default function InstrumentQuestionFlow({
                     >
                         Iniciar sesión
                     </button>
-                </div>
-            )}
-            {isOffline && (
-                <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
-                    Sin conexión. Las respuestas se guardarán localmente y se enviarán cuando haya red.
                 </div>
             )}
             {previewMode && (

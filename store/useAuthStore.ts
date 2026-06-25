@@ -8,13 +8,15 @@ import {
   setRoleCookie,
   setSessionCookie,
 } from "@/lib/sessionCookie";
+import { noopStorage } from "@/lib/noopStorage";
+import type { RoleName } from "@/app/(admin)/types";
 
 export interface AuthUser {
   userId: string;
   name: string;
   lastName: string;
   email: string;
-  role: string | null;
+  role: RoleName | null;
   mustChangePassword: boolean;
 }
 
@@ -54,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() =>
-        typeof window === "undefined" ? noopStorage : window.localStorage,
+        typeof window === "undefined" ? noopStorage : window.localStorage
       ),
       partialize: (state) => ({
         user: state.user,
@@ -79,12 +81,3 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 );
-
-const noopStorage: Storage = {
-  length: 0,
-  clear: () => {},
-  getItem: () => null,
-  key: () => null,
-  removeItem: () => {},
-  setItem: () => {},
-};

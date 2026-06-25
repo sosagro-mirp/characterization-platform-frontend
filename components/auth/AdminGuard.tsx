@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useIsHydrated } from "@/hooks/useIsHydrated";
 
 const PANEL_ROLES = ["admin", "researcher"];
 
@@ -18,11 +19,7 @@ export default function AdminGuard({
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  const hydrated = useIsHydrated();
 
   useEffect(() => {
     if (!hydrated) return;
@@ -33,7 +30,7 @@ export default function AdminGuard({
       return;
     }
     if (!user.role || !PANEL_ROLES.includes(user.role)) {
-      router.replace("/instrument");
+      router.replace("/campaign");
     }
   }, [hydrated, isAuthenticated, user, router, pathname, searchParams]);
 

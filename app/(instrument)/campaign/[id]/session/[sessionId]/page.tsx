@@ -5,9 +5,22 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { NextStepResponse } from "@/app/(instrument)/types";
 import { getNextStep } from "@/services/campaign-sessions.service";
 import { getInstrumentByCode } from "@/services/instruments.service";
-import { extractFarmer, extractCrops } from "@/services/surveys.service";
+import {
+  checkDuplicate,
+  extractFarmer,
+  extractCrops,
+  overwriteSurvey,
+  skipStep,
+} from "@/services/surveys.service";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import CampaignProgress from "@/components/campaign/CampaignProgress";
+import DuplicateDialog from "@/components/campaign/DuplicateDialog";
+
+interface DuplicatePending {
+  instrument: { instrumentId: string; name: string; isActive: boolean };
+  stepOrder: number;
+  duplicateSurveyId: string;
+}
 
 export default function CampaignSessionPage() {
   const params = useParams<{ id: string; sessionId: string }>();
@@ -27,20 +40,25 @@ export default function CampaignSessionPage() {
   const [next, setNext] = useState<NextStepResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [duplicatePending, setDuplicatePending] = useState<DuplicatePending | null>(null);
+  const [duplicateActionLoading, setDuplicateActionLoading] = useState(false);
+  // Incrementing this triggers the main useEffect to re-run after a skip
+  const [forceRetry, setForceRetry] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+
+    // Don't run the flow while the duplicate dialog is open
+    if (duplicatePending !== null) return;
 
     async function run() {
       try {
         // ── Phase: idle — check if farmer is needed ──────────────────────────
         if (preSurveyPhase === "idle") {
           if (farmerId) {
-            // Farmer already assigned (via search or continue-last): skip pre-survey
             setPreSurveyPhase("done");
             return;
           }
-          // No farmer → send user to fill S1; survey created on submit by InstrumentQuestionFlow
           const s1 = await getInstrumentByCode("S1");
           if (cancelled) return;
           setPreSurveyPhase("s1_pending");
@@ -51,13 +69,9 @@ export default function CampaignSessionPage() {
         }
 
         // ── Phase: s1_pending — S1 submitted, extract farmer then launch S2 ─
-        // completedSurveyId is the real surveyId created during S1 submission,
-        // passed back via URL query param from SurveyCompletedCard.
         if (preSurveyPhase === "s1_pending") {
           const completedSurveyId = searchParams.get("completedSurveyId");
           if (!completedSurveyId) {
-            // No completedSurveyId — user navigated here without finishing S1
-            // (e.g., after a transient error). Re-launch S1 for recovery.
             const s1 = await getInstrumentByCode("S1");
             if (cancelled) return;
             router.replace(
@@ -82,7 +96,6 @@ export default function CampaignSessionPage() {
         if (preSurveyPhase === "s2_pending") {
           const completedSurveyId = searchParams.get("completedSurveyId");
           if (!completedSurveyId) {
-            // No completedSurveyId — re-launch S2 for recovery.
             const s2 = await getInstrumentByCode("S2");
             if (cancelled) return;
             router.replace(
@@ -99,12 +112,33 @@ export default function CampaignSessionPage() {
         const result = await getNextStep(sessionId);
         if (cancelled) return;
         setNext(result);
+
         if (result.instrument && typeof result.order === "number") {
           setProgress({
             currentStepOrder: result.order,
             totalSteps: result.totalSteps ?? 0,
             completedCount: result.completedCount ?? 0,
           });
+
+          // Check for duplicate responses before navigating
+          if (farmerId) {
+            const dupCheck = await checkDuplicate(
+              farmerId,
+              result.instrument.instrumentId,
+              campaignId,
+            );
+            if (cancelled) return;
+
+            if (dupCheck.hasDuplicate && dupCheck.surveyId) {
+              setDuplicatePending({
+                instrument: result.instrument,
+                stepOrder: result.order,
+                duplicateSurveyId: dupCheck.surveyId,
+              });
+              return;
+            }
+          }
+
           router.replace(
             `/instrument/${result.instrument.instrumentId}?campaignSessionId=${sessionId}&stepOrder=${result.order}`,
           );
@@ -124,7 +158,53 @@ export default function CampaignSessionPage() {
       cancelled = true;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, preSurveyPhase, searchParams]);
+  // farmerId, campaignId: read from store inside run(), not reactive dependencies.
+  // router, setFarmer, setProgress, setPreSurveyPhase: stable references (Zustand/Next.js).
+  }, [sessionId, preSurveyPhase, searchParams, forceRetry, duplicatePending]);
+
+  async function handleOverwrite() {
+    if (!duplicatePending) return;
+    setDuplicateActionLoading(true);
+    try {
+      const { surveyId: newSurveyId } = await overwriteSurvey({
+        surveyId: duplicatePending.duplicateSurveyId,
+        sessionId,
+        instrumentId: duplicatePending.instrument.instrumentId,
+        stepOrder: duplicatePending.stepOrder,
+      });
+      setDuplicatePending(null);
+      router.replace(
+        `/instrument/${duplicatePending.instrument.instrumentId}` +
+        `?campaignSessionId=${sessionId}` +
+        `&stepOrder=${duplicatePending.stepOrder}` +
+        `&existingSurveyId=${newSurveyId}`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al sobrescribir respuestas.");
+      setDuplicatePending(null);
+    } finally {
+      setDuplicateActionLoading(false);
+    }
+  }
+
+  async function handleSkip() {
+    if (!duplicatePending) return;
+    setDuplicateActionLoading(true);
+    try {
+      await skipStep({
+        sessionId,
+        instrumentId: duplicatePending.instrument.instrumentId,
+        stepOrder: duplicatePending.stepOrder,
+      });
+      setDuplicatePending(null);
+      setForceRetry((c) => c + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al pasar al siguiente paso.");
+      setDuplicatePending(null);
+    } finally {
+      setDuplicateActionLoading(false);
+    }
+  }
 
   const finished = !loading && (!next || !next.instrument);
 
@@ -176,7 +256,16 @@ export default function CampaignSessionPage() {
         </section>
       )}
 
-      <input type="hidden" value={campaignId} readOnly />
+      {duplicatePending && (
+        <DuplicateDialog
+          instrumentName={duplicatePending.instrument.name}
+          onOverwrite={handleOverwrite}
+          onSkip={handleSkip}
+          onCancel={() => router.replace("/campaign")}
+          loading={duplicateActionLoading}
+        />
+      )}
+
     </main>
   );
 }

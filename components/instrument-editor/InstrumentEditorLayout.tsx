@@ -99,7 +99,7 @@ export default function InstrumentEditorLayout({
         (s) => s.sectionId === selection.sectionId
       );
       if (!section) return null;
-      return <SectionForm section={section} />;
+      return <SectionForm key={section.sectionId} section={section} />;
     }
 
     if (selection.kind === "new-question") {
@@ -116,6 +116,7 @@ export default function InstrumentEditorLayout({
       if (!section || !question) return null;
       return (
         <QuestionForm
+          key={question.questionId}
           question={question}
           sectionId={section.sectionId}
           questionTypes={questionTypes}

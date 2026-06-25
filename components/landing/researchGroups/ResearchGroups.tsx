@@ -17,12 +17,12 @@ export function ResearchGroups() {
       <SectionHeading
         badge="Investigación"
         title="Grupos de investigación"
-        subtitle="Grupos categorizados por Minciencias (A1 y A) que articulan capacidades de control, IoT, ciencia de datos y procesamiento de señales en torno al proyecto."
+        subtitle="Grupos categorizados por Minciencias que articulan capacidades de control, IoT, ciencia de datos, procesamiento de señales y tecnologías ambientales en torno al proyecto."
       />
 
       <ul
         role="list"
-        className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6"
+        className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
       >
         {researchGroups.map((group) => (
           <li key={group.slug} className="h-full">
