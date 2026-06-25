@@ -98,6 +98,14 @@ export default function QuestionNode({
               Criterio
             </span>
           )}
+          {question.isKeyQuestion && (
+            <span
+              className="text-[10px] font-medium rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+              title="Pregunta estratégica de caracterización tecnológica"
+            >
+              Estratégica
+            </span>
+          )}
           {question.conditionQuestionId && (
             <span title="Pregunta condicional">
               <GitBranch className="w-2.5 h-2.5 text-[var(--text-muted)]" />
