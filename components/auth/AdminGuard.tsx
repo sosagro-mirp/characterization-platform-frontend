@@ -30,7 +30,7 @@ export default function AdminGuard({
       return;
     }
     if (!user.role || !PANEL_ROLES.includes(user.role)) {
-      router.replace("/instrument");
+      router.replace("/campaign");
     }
   }, [hydrated, isAuthenticated, user, router, pathname, searchParams]);
 

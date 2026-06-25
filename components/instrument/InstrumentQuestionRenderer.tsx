@@ -1,6 +1,7 @@
 import OpenInput from "@/components/inputs/OpenInput";
 import CheckboxGroup from "@/components/inputs/CheckboxGroup";
 import SingleChoiceGroup from "@/components/inputs/SingleChoiceGroup";
+import MediaAttachmentViewer from "@/components/inputs/MediaAttachmentViewer";
 import type { InstrumentDraftAnswer, InstrumentQuestion, InstrumentOption } from "@/app/(instrument)/types";
 
 type InstrumentOptionValue = InstrumentOption["value"];
@@ -221,6 +222,23 @@ export default function InstrumentQuestionRenderer({
                         otherText: text,
                     })
                 }
+            />
+        );
+    }
+
+    if (
+        question.type.name === "image" ||
+        question.type.name === "voice_recording" ||
+        question.type.name === "document" ||
+        question.type.name === "video"
+    ) {
+        return (
+            <MediaAttachmentViewer
+                label={question.text}
+                isRequired={question.isRequired}
+                publicUrl={answer?.publicUrl}
+                mimeType={answer?.mimeType}
+                originalFilename={answer?.originalFilename}
             />
         );
     }

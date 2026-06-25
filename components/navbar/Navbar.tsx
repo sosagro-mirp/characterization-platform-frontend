@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
+import { PANEL_ROLES } from "@/lib/roleRouting";
 
 const sectionLinks = [
   { href: "/#cultivos", label: "Cultivos" },
@@ -77,7 +78,7 @@ export const Navbar = () => {
     : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200";
 
   const showSession = hydrated && isAuthenticated && user;
-  const isAdmin = !!showSession && user.role === "admin";
+  const isAdmin = !!showSession && !!user?.role && PANEL_ROLES.has(user.role);
 
   const adminLinkClass = isOverHero
     ? "border-white/40 text-white hover:bg-white/10"
@@ -117,10 +118,10 @@ export const Navbar = () => {
             {showSession ? (
               <div className="hidden lg:flex items-center gap-2">
                 <Link
-                  href="/instrument"
+                  href="/campaign"
                   className={`inline-flex items-center px-4 py-2 rounded-lg border 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
                 >
-                  Aplicar instrumento
+                  Campañas
                 </Link>
                 {isAdmin && (
                   <Link
@@ -217,11 +218,11 @@ export const Navbar = () => {
                   {user.name} {user.lastName}
                 </span>
                 <Link
-                  href="/instrument"
+                  href="/campaign"
                   onClick={closeMenu}
                   className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-white"
                 >
-                  Aplicar instrumento
+                  Campañas
                 </Link>
                 {isAdmin && (
                   <Link

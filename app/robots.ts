@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/#*"],
-        disallow: ["/admin/", "/instrument", "/change-password", "/register", "/maintenance"],
+        disallow: ["/admin/", "/campaign", "/change-password", "/register", "/maintenance"],
       },
     ],
     sitemap: "https://sosagro4c.vercel.app/sitemap.xml",

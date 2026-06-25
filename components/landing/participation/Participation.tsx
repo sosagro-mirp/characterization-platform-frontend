@@ -68,7 +68,7 @@ const roles: readonly ParticipationRole[] = [
     title: "Soy agricultor o agremiación",
     description:
       "Las unidades productivas y las asociaciones de ingenieros agrónomos son el centro del proyecto. Tu participación define la hoja de ruta de tu sector.",
-    action: { label: "Responder encuesta", href: "/instrument" },
+    action: { label: "Responder encuesta", href: "/campaign" },
   },
 ] as const;
 

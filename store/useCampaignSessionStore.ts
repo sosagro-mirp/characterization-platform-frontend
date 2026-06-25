@@ -20,7 +20,6 @@ interface CampaignSessionState {
     campaignName: string;
     farmerId?: string | null;
     farmerName?: string | null;
-    skipPreSurvey?: boolean;
   }) => void;
   setProgress: (params: {
     currentStepOrder: number | null;
@@ -48,7 +47,7 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
   persist(
     (set) => ({
       ...initial,
-      startSession: ({ sessionId, campaignId, campaignName, farmerId, farmerName, skipPreSurvey }) =>
+      startSession: ({ sessionId, campaignId, campaignName, farmerId, farmerName }) =>
         set({
           ...initial,
           sessionId,
@@ -56,7 +55,7 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
           campaignName,
           farmerId: farmerId ?? null,
           farmerName: farmerName ?? null,
-          preSurveyPhase: (farmerId || skipPreSurvey) ? 'done' : 'idle',
+          preSurveyPhase: farmerId ? 'done' : 'idle',
         }),
       setProgress: ({ currentStepOrder, totalSteps, completedCount }) =>
         set({ currentStepOrder, totalSteps, completedCount }),
