@@ -41,6 +41,7 @@ export default function QuestionForm({
   const [isSelectionCriteria, setIsSelectionCriteria] = useState(
     question.isSelectionCriteria
   );
+  const [isKeyQuestion, setIsKeyQuestion] = useState(question.isKeyQuestion);
   const [conditionQuestionId, setConditionQuestionId] = useState<string>(
     question.conditionQuestionId ?? ""
   );
@@ -105,6 +106,13 @@ export default function QuestionForm({
     setIsSelectionCriteria(checked);
     await updateQuestionInStore(sectionId, question.questionId, {
       isSelectionCriteria: checked,
+    });
+  };
+
+  const handleKeyQuestionChange = async (checked: boolean) => {
+    setIsKeyQuestion(checked);
+    await updateQuestionInStore(sectionId, question.questionId, {
+      isKeyQuestion: checked,
     });
   };
 
@@ -184,6 +192,22 @@ export default function QuestionForm({
           className="text-sm text-[var(--text-primary)]"
         >
           Criterio de selección de unidades productivas
+        </label>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="isKeyQuestion"
+          checked={isKeyQuestion}
+          onChange={(e) => handleKeyQuestionChange(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+        />
+        <label
+          htmlFor="isKeyQuestion"
+          className="text-sm text-[var(--text-primary)]"
+        >
+          Pregunta estratégica de caracterización tecnológica
         </label>
       </div>
 

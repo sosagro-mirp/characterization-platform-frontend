@@ -83,7 +83,7 @@ export default function QuestionNode({
       </span>
       <div className="flex-1 min-w-0">
         <p className="text-sm truncate text-[var(--text-primary)]">{question.text}</p>
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           <span className="text-[10px] font-medium rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[var(--text-muted)]">
             {TYPE_LABELS[question.type?.name] ?? question.type?.name}
           </span>
@@ -96,6 +96,14 @@ export default function QuestionNode({
               title="Criterio de selección de unidades productivas"
             >
               Criterio
+            </span>
+          )}
+          {question.isKeyQuestion && (
+            <span
+              className="text-[10px] font-medium rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+              title="Pregunta estratégica de caracterización tecnológica"
+            >
+              Estratégica
             </span>
           )}
           {question.conditionQuestionId && (
