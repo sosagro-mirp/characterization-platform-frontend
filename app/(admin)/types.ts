@@ -45,6 +45,7 @@ export interface QuestionDetail {
   text: string;
   isRequired: boolean;
   isSelectionCriteria: boolean;
+  isKeyQuestion: boolean;
   order: number;
   type: TypeOfQuestionSummary;
   options: OptionDetail[];
@@ -59,6 +60,7 @@ export interface CreateQuestionRequest {
   typeId: string;
   isRequired: boolean;
   isSelectionCriteria?: boolean;
+  isKeyQuestion?: boolean;
   order: number;
   conditionQuestionId?: string;
   conditionValue?: string;
@@ -69,6 +71,7 @@ export interface UpdateQuestionRequest {
   typeId?: string;
   isRequired?: boolean;
   isSelectionCriteria?: boolean;
+  isKeyQuestion?: boolean;
   order?: number;
   conditionQuestionId?: string | null;
   conditionValue?: string | null;
