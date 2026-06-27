@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import InstrumentQuestionRenderer from "@/components/instrument/InstrumentQuestionRenderer";
 import SurveyCompletedCard from "@/components/instrument/SurveyCompletedCard";
 import type {
     InstrumentDraftAnswer,
+    InstrumentOption,
     InstrumentQuestion,
     InstrumentSection,
 } from "@/app/(instrument)/types";
@@ -68,6 +69,45 @@ export default function InstrumentQuestionFlow({
     const currentItem = flattenedQuestions[currentIndex];
     const currentQuestion = currentItem?.question as InstrumentQuestion | undefined;
     const currentAnswer = currentQuestion ? answers[currentQuestion.questionId] : undefined;
+
+    // Preguntas geográficas para filtrado de municipios
+    const allQuestions = useMemo(
+        () => sections.flatMap((s) => s.questions),
+        [sections],
+    );
+    const deptQuestion = useMemo(
+        () => allQuestions.find((q) => q.systemField === "farm.department") ?? null,
+        [allQuestions],
+    );
+    const townQuestion = useMemo(
+        () => allQuestions.find((q) => q.systemField === "farm.town") ?? null,
+        [allQuestions],
+    );
+    const selectedDeptOptionId = deptQuestion ? (answers[deptQuestion.questionId]?.optionId ?? null) : null;
+    const selectedDepartmentId = useMemo(() => {
+        if (!deptQuestion || !selectedDeptOptionId) return null;
+        const opt = deptQuestion.options.find((o) => o.optionId === selectedDeptOptionId);
+        return (opt as InstrumentOption | undefined)?.departmentId ?? null;
+    }, [deptQuestion, selectedDeptOptionId]);
+
+    // Opciones filtradas para la pregunta farm.town
+    const filteredTownOptions = useMemo<InstrumentOption[] | undefined>(() => {
+        if (currentQuestion?.systemField !== "farm.town") return undefined;
+        const opts = currentQuestion.options as InstrumentOption[];
+        if (!selectedDepartmentId) return opts;
+        return opts.filter((o) => o.departmentId === selectedDepartmentId);
+    }, [currentQuestion, selectedDepartmentId]);
+
+    // Limpiar respuesta de Municipio cuando cambia la de Departamento
+    const prevDeptOptionIdRef = useRef<string | null | undefined>(selectedDeptOptionId);
+    useEffect(() => {
+        if (prevDeptOptionIdRef.current !== selectedDeptOptionId && townQuestion) {
+            if (prevDeptOptionIdRef.current !== undefined) {
+                setAnswer({ questionId: townQuestion.questionId });
+            }
+        }
+        prevDeptOptionIdRef.current = selectedDeptOptionId;
+    }, [selectedDeptOptionId, townQuestion, setAnswer]);
 
     const visibleQuestions = useMemo(
         () => flattenedQuestions.filter(({ question }) => isQuestionVisible(question, answers)),
@@ -274,6 +314,7 @@ export default function InstrumentQuestionFlow({
                             question={currentQuestion}
                             answer={currentAnswer}
                             onAnswerChange={handleAnswerChange}
+                            filteredOptions={filteredTownOptions}
                         />
                     ) : (
                         <div className="bg-white rounded-lg shadow-sm px-6 py-8 text-center text-gray-500">

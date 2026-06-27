@@ -10,12 +10,14 @@ interface InstrumentQuestionRendererProps {
     question: InstrumentQuestion;
     answer?: InstrumentDraftAnswer;
     onAnswerChange: (answer: InstrumentDraftAnswer) => void;
+    filteredOptions?: InstrumentOption[];
 }
 
 export default function InstrumentQuestionRenderer({
     question,
     answer,
     onAnswerChange,
+    filteredOptions,
 }: InstrumentQuestionRendererProps) {
     if (question.type.name === "open_text") {
         return (
@@ -83,10 +85,11 @@ export default function InstrumentQuestionRenderer({
     }
 
     if (question.type.name === "single_choice") {
-        const otherOption = question.options.find((o) => o.isOther);
+        const optionsToRender = filteredOptions ?? question.options;
+        const otherOption = optionsToRender.find((o) => o.isOther);
         const sortedOptions = [
-            ...question.options.filter((o) => !o.isOther),
-            ...question.options.filter((o) => o.isOther),
+            ...optionsToRender.filter((o) => !o.isOther),
+            ...optionsToRender.filter((o) => o.isOther),
         ];
         return (
             <SingleChoiceGroup
