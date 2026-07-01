@@ -311,6 +311,7 @@ export default function InstrumentQuestionFlow({
                     {/* Tarjeta de la pregunta */}
                     {currentQuestion ? (
                         <InstrumentQuestionRenderer
+                            key={currentQuestion.questionId}
                             question={currentQuestion}
                             answer={currentAnswer}
                             onAnswerChange={handleAnswerChange}
