@@ -25,7 +25,6 @@ export default function EditFarmerPage() {
 
   // Farmer fields
   const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [documentId, setDocumentId] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -45,7 +44,6 @@ export default function EditFarmerPage() {
         setFarmer(f);
         setCrops(c);
         setName(f.name ?? "");
-        setLastName(f.lastName ?? "");
         setDocumentId(f.documentId ?? "");
         setPhone(f.phone ?? "");
         setEmail(f.email ?? "");
@@ -80,7 +78,6 @@ export default function EditFarmerPage() {
     try {
       const farmerPayload: UpdateFarmerRequest = {
         name: name.trim() || undefined,
-        lastName: lastName.trim() || undefined,
         documentId: documentId.trim() || undefined,
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
@@ -126,7 +123,7 @@ export default function EditFarmerPage() {
           ← Volver al listado
         </button>
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          {farmer.name}{farmer.lastName ? ` ${farmer.lastName}` : ""}
+          {farmer.name}
         </h1>
         {farmer.documentId && (
           <p className="text-sm text-[var(--text-muted)]">CC {farmer.documentId}</p>
@@ -174,9 +171,6 @@ export default function EditFarmerPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Nombre completo *">
                 <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-              </Field>
-              <Field label="Apellido">
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
               </Field>
               <Field label="Número de documento">
                 <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} className={inputClass} />
