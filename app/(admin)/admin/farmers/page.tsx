@@ -27,7 +27,6 @@ export default function FarmersListPage() {
     ? allFarmers.filter(
         (f) =>
           f.name.toLowerCase().includes(q) ||
-          (f.lastName ?? "").toLowerCase().includes(q) ||
           (f.documentId ?? "").toLowerCase().includes(q),
       )
     : allFarmers;
@@ -84,7 +83,7 @@ export default function FarmersListPage() {
                   className="bg-[var(--surface)] hover:bg-[var(--surface-raised)] transition-colors cursor-pointer"
                 >
                   <td className="px-4 py-3 text-[var(--text-primary)]">
-                    {farmer.name}{farmer.lastName ? ` ${farmer.lastName}` : ""}
+                    {farmer.name}
                   </td>
                   <td className="px-4 py-3 text-[var(--text-muted)]">
                     {farmer.documentId ?? "—"}

@@ -168,7 +168,6 @@ export interface CropSummary {
 export interface FarmerSearchResult {
   id: string;
   name: string;
-  lastName: string;
   documentId: string;
   phone?: string | null;
   farm?: {
@@ -190,13 +189,11 @@ export interface ExtractCropsResult {
 export type LastFarmerResult = {
   farmerId: string;
   name: string;
-  lastName: string | null;
   farm?: { name: string };
 } | null;
 
 export interface CreateFarmerPayload {
   name: string;
-  lastName: string;
   documentId: string;
   phone?: string;
   email?: string;
@@ -223,7 +220,6 @@ export interface PreSurveyFormData {
   mode: 'search' | 'create';
   searchQuery: string;
   name: string;
-  lastName: string;
   documentId: string;
   phone: string;
   email: string;
