@@ -292,7 +292,6 @@ export interface FarmSummaryForFarmer {
 export interface FarmerDetail {
   id: string;
   name: string;
-  lastName: string | null;
   documentId: string | null;
   phone: string | null;
   email: string | null;
@@ -302,7 +301,6 @@ export interface FarmerDetail {
 
 export interface UpdateFarmerRequest {
   name?: string;
-  lastName?: string;
   documentId?: string;
   phone?: string;
   email?: string;
@@ -330,7 +328,6 @@ export interface ChangeRequestUserSummary {
 export interface ChangeRequestFarmerSummary {
   id: string;
   name: string;
-  lastName: string | null;
 }
 
 export interface ChangeRequestListItem {
