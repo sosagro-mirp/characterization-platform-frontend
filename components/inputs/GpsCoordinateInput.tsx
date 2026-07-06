@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2, MapPin } from "lucide-react";
 import OpenInput from "./OpenInput";
 import type { InstrumentDraftAnswer } from "@/app/(instrument)/types";
 
@@ -99,24 +100,27 @@ export default function GpsCoordinateInput({
                 type="button"
                 onClick={handleGpsClick}
                 disabled={isRequesting}
-                className="inline-flex items-center gap-2 self-start rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:bg-gray-400 transition-colors"
+                className="inline-flex items-center gap-2 self-start rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
             >
                 {isRequesting ? (
                     <>
-                        <span className="animate-spin">⏳</span>
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Obteniendo...
                     </>
                 ) : (
-                    <>📍 {buttonLabel}</>
+                    <>
+                        <MapPin className="h-4 w-4" />
+                        {buttonLabel}
+                    </>
                 )}
             </button>
 
             {gpsState === "obtained" && accuracy !== null && (
-                <p className="text-sm text-gray-500">Precisión: ±{Math.round(accuracy)} m</p>
+                <p className="text-sm text-[var(--text-muted)]">Precisión: ±{Math.round(accuracy)} m</p>
             )}
 
             {gpsState === "error" && (
-                <p className="text-sm text-red-600">{errorMessage}</p>
+                <p className="text-sm text-[var(--danger-fg)]">{errorMessage}</p>
             )}
         </div>
     );
