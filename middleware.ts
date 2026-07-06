@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
 
     if (pathname.startsWith("/admin")) {
       if (!role || !PANEL_ROLES.has(role)) {
-        return NextResponse.redirect(new URL("/instrument", request.url));
+        return NextResponse.redirect(new URL("/campaign", request.url));
       }
       if (
         role === "researcher" &&

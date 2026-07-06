@@ -10,14 +10,12 @@ interface PreSurveyFormProps {
   onSearchSelect: (farmerId: string) => void;
   onNewFarmer: () => void;
   onContinueLast: (farmerId: string) => void;
-  onSkip: () => void;
 }
 
 export default function PreSurveyForm({
   onSearchSelect,
   onNewFarmer,
   onContinueLast,
-  onSkip,
 }: PreSurveyFormProps) {
   const { farmerId: storedFarmerId, farmerName: storedFarmerName } =
     useCampaignSessionStore();
@@ -30,7 +28,7 @@ export default function PreSurveyForm({
 
   useEffect(() => {
     if (storedFarmerId && storedFarmerName) {
-      setLastFarmer({ farmerId: storedFarmerId, name: storedFarmerName, lastName: null });
+      setLastFarmer({ farmerId: storedFarmerId, name: storedFarmerName });
       return;
     }
     getLastFarmer()
@@ -60,9 +58,7 @@ export default function PreSurveyForm({
     };
   }, [searchQuery]);
 
-  const farmerLabel = lastFarmer
-    ? [lastFarmer.name, lastFarmer.lastName].filter(Boolean).join(" ")
-    : null;
+  const farmerLabel = lastFarmer ? lastFarmer.name : null;
 
   return (
     <div className="space-y-5">
@@ -93,7 +89,7 @@ export default function PreSurveyForm({
                   className="w-full text-left px-4 py-3 hover:bg-green-50 transition-colors"
                 >
                   <p className="text-sm font-semibold text-gray-900">
-                    {farmer.name} {farmer.lastName}
+                    {farmer.name}
                   </p>
                   <p className="text-xs text-gray-500">
                     Doc: {farmer.documentId}
@@ -141,14 +137,6 @@ export default function PreSurveyForm({
         </button>
       )}
 
-      <div className="text-center pt-1">
-        <button
-          onClick={onSkip}
-          className="text-xs text-gray-400 hover:text-gray-600 underline"
-        >
-          Continuar sin identificar encuestado
-        </button>
-      </div>
     </div>
   );
 }

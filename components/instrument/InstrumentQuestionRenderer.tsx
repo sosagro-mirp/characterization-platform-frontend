@@ -3,29 +3,27 @@ import CheckboxGroup from "@/components/inputs/CheckboxGroup";
 import SingleChoiceGroup from "@/components/inputs/SingleChoiceGroup";
 import MediaAttachmentViewer from "@/components/inputs/MediaAttachmentViewer";
 import GpsCoordinateInput from "@/components/inputs/GpsCoordinateInput";
-import type { InstrumentDraftAnswer, InstrumentQuestion, InstrumentOption, MediaAttachment } from "@/app/(instrument)/types";
+import type { InstrumentDraftAnswer, InstrumentQuestion, InstrumentOption } from "@/app/(instrument)/types";
+
+type InstrumentOptionValue = InstrumentOption["value"];
 
 const GPS_SYSTEM_FIELDS: Record<string, "latitude" | "longitude"> = {
     "farm.latitude": "latitude",
     "farm.longitude": "longitude",
 };
 
-type InstrumentOptionValue = InstrumentOption["value"];
-
 interface InstrumentQuestionRendererProps {
     question: InstrumentQuestion;
     answer?: InstrumentDraftAnswer;
     onAnswerChange: (answer: InstrumentDraftAnswer) => void;
-    mediaAttachment?: MediaAttachment;
+    filteredOptions?: InstrumentOption[];
 }
-
-const MEDIA_QUESTION_TYPES = new Set(["image", "voice_recording", "document", "video"]);
 
 export default function InstrumentQuestionRenderer({
     question,
     answer,
     onAnswerChange,
-    mediaAttachment,
+    filteredOptions,
 }: InstrumentQuestionRendererProps) {
     if (question.systemField && question.systemField in GPS_SYSTEM_FIELDS) {
         const fieldType = GPS_SYSTEM_FIELDS[question.systemField];
@@ -38,17 +36,6 @@ export default function InstrumentQuestionRenderer({
                 value={answer?.numericValue}
                 onChange={onAnswerChange}
             />
-        );
-    }
-
-    if (MEDIA_QUESTION_TYPES.has(question.type.name)) {
-        if (mediaAttachment && mediaAttachment.status === "uploaded") {
-            return <MediaAttachmentViewer attachment={mediaAttachment} />;
-        }
-        return (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-                Sin evidencia capturada
-            </div>
         );
     }
 
@@ -118,10 +105,11 @@ export default function InstrumentQuestionRenderer({
     }
 
     if (question.type.name === "single_choice") {
-        const otherOption = question.options.find((o) => o.isOther);
+        const optionsToRender = filteredOptions ?? question.options;
+        const otherOption = optionsToRender.find((o) => o.isOther);
         const sortedOptions = [
-            ...question.options.filter((o) => !o.isOther),
-            ...question.options.filter((o) => o.isOther),
+            ...optionsToRender.filter((o) => !o.isOther),
+            ...optionsToRender.filter((o) => o.isOther),
         ];
         return (
             <SingleChoiceGroup
@@ -257,6 +245,23 @@ export default function InstrumentQuestionRenderer({
                         otherText: text,
                     })
                 }
+            />
+        );
+    }
+
+    if (
+        question.type.name === "image" ||
+        question.type.name === "voice_recording" ||
+        question.type.name === "document" ||
+        question.type.name === "video"
+    ) {
+        return (
+            <MediaAttachmentViewer
+                label={question.text}
+                isRequired={question.isRequired}
+                publicUrl={answer?.publicUrl}
+                mimeType={answer?.mimeType}
+                originalFilename={answer?.originalFilename}
             />
         );
     }

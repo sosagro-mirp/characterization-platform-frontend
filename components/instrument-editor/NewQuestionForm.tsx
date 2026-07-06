@@ -11,6 +11,10 @@ const TYPE_LABELS: Record<string, string> = {
   likert: "Likert",
   multiple_choice: "Selección múltiple",
   compliance: "Cumplimiento",
+  image: "Imagen",
+  voice_recording: "Grabación de voz",
+  document: "Documento PDF",
+  video: "Video",
 };
 
 interface NewQuestionFormProps {
@@ -26,6 +30,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
   const [typeId, setTypeId] = useState(questionTypes[0]?.typeId ?? "");
   const [isRequired, setIsRequired] = useState(false);
   const [isSelectionCriteria, setIsSelectionCriteria] = useState(false);
+  const [isKeyQuestion, setIsKeyQuestion] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -41,6 +46,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         typeId,
         isRequired,
         isSelectionCriteria,
+        isKeyQuestion,
         order: nextOrder,
       });
     } catch (err) {
@@ -120,6 +126,22 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           className="text-sm text-[var(--text-primary)]"
         >
           Criterio de selección de unidades productivas
+        </label>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="newIsKeyQuestion"
+          checked={isKeyQuestion}
+          onChange={(e) => setIsKeyQuestion(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+        />
+        <label
+          htmlFor="newIsKeyQuestion"
+          className="text-sm text-[var(--text-primary)]"
+        >
+          Pregunta estratégica de caracterización tecnológica
         </label>
       </div>
 
