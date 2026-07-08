@@ -15,6 +15,7 @@ const sectionLinks = [
   { href: "/#resultados", label: "Resultados" },
   { href: "/#grupos", label: "Grupos" },
   { href: "/#participar", label: "Participar" },
+  { href: "/dashboard", label: "Dashboard" },
 ] as const;
 
 export const Navbar = () => {

@@ -7,6 +7,7 @@ import { Axes } from '../../components/landing/axes/Axes';
 import { Participation } from '../../components/landing/participation/Participation';
 import { Outcomes } from '../../components/landing/outcomes/Outcomes';
 import { ResearchGroups } from '../../components/landing/researchGroups/ResearchGroups';
+import { DashboardCta } from '../../components/landing/dashboard-cta/DashboardCta';
 import { project } from '../../lib/landing-content';
 
 export const metadata: Metadata = {
@@ -97,6 +98,7 @@ export default function Home() {
       <Axes />
       <Outcomes />
       <ResearchGroups />
+      <DashboardCta />
       <Participation />
     </main>
   );
