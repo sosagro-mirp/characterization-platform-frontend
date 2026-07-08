@@ -9,6 +9,7 @@ import ConfirmDialog from "./ConfirmDialog";
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto",
   numeric: "Número",
+  numeric_with_unit: "Nº + unidad",
   yes_no: "Sí/No",
   single_choice: "Única",
   likert: "Likert",

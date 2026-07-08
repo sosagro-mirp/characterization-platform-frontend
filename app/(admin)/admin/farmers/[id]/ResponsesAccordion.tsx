@@ -60,6 +60,12 @@ function formatValue(r: SurveyResponseItem): string {
       return r.optionText ?? "—";
     case "numeric":
       return r.numericValue != null ? String(r.numericValue) : "—";
+    case "numeric_with_unit":
+      return r.numericValue != null && r.optionText
+        ? `${r.numericValue} ${r.optionText}`
+        : r.numericValue != null
+          ? String(r.numericValue)
+          : "—";
     case "open_text":
       return r.textValue ?? "—";
     case "single_choice":

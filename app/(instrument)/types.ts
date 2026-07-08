@@ -1,12 +1,26 @@
 export type QuestionTypeName =
   | "open_text"
   | "numeric"
+  | "numeric_with_unit"
   | "yes_no"
   | "single_choice"
   | "multiple_choice"
   | "likert"
   | "compliance"
+  | "image"
+  | "voice_recording"
+  | "document"
+  | "video"
   | (string & {});
+
+export interface MediaAttachment {
+  attachmentId: string;
+  publicUrl: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  status: "pending" | "uploaded" | "failed";
+}
 
 export interface InstrumentType {
   typeId: string;

@@ -140,6 +140,8 @@ export default function InstrumentQuestionFlow({
                 return Boolean(answer.textValue?.trim());
             case "numeric":
                 return answer.numericValue !== undefined;
+            case "numeric_with_unit":
+                return answer.numericValue !== undefined && Boolean(answer.optionId);
             case "yes_no":
                 return answer.booleanValue !== undefined;
             case "multiple_choice": {
