@@ -6,11 +6,12 @@ import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import OptionsEditor from "./OptionsEditor";
 import ConfirmDialog from "./ConfirmDialog";
 
-const TYPES_WITH_OPTIONS = ["single_choice", "likert", "multiple_choice"];
+const TYPES_WITH_OPTIONS = ["single_choice", "likert", "multiple_choice", "numeric_with_unit"];
 
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto abierto",
   numeric: "Número",
+  numeric_with_unit: "Nº + unidad",
   yes_no: "Sí / No",
   single_choice: "Selección única",
   likert: "Likert",

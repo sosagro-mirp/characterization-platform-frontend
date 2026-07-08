@@ -6,6 +6,7 @@ import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto abierto",
   numeric: "Número",
+  numeric_with_unit: "Nº + unidad",
   yes_no: "Sí / No",
   single_choice: "Selección única",
   likert: "Likert",

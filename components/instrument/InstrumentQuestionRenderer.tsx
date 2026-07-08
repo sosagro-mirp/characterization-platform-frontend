@@ -78,6 +78,47 @@ export default function InstrumentQuestionRenderer({
         );
     }
 
+    if (question.type.name === "numeric_with_unit") {
+        return (
+            <div className="space-y-3">
+                <OpenInput
+                    id={question.questionId}
+                    name={question.questionId}
+                    label={question.text}
+                    isRequired={question.isRequired}
+                    type="number"
+                    value={answer?.numericValue ?? ""}
+                    onChange={(event) =>
+                        onAnswerChange({
+                            questionId: question.questionId,
+                            numericValue:
+                                event.target.value === "" ? undefined : Number(event.target.value),
+                            optionId: answer?.optionId,
+                        })
+                    }
+                />
+                <SingleChoiceGroup
+                    name={`${question.questionId}-unit`}
+                    label="Unidad"
+                    isRequired={question.isRequired}
+                    options={question.options.map((option) => ({
+                        id: option.optionId,
+                        label: option.text,
+                    }))}
+                    selectedOptionId={answer?.optionId}
+                    onChange={(optionId) =>
+                        onAnswerChange({
+                            questionId: question.questionId,
+                            numericValue: answer?.numericValue,
+                            optionId,
+                        })
+                    }
+                />
+            </div>
+        );
+    }
+
+
     if (question.type.name === "likert") {
         const sortedOptions = [...question.options].sort((a, b) => {
             const aVal = typeof a.value === "number" ? a.value : Number(a.value);
