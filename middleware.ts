@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
   }
   // --- END MAINTENANCE MODE ---
 
-  const { pathname, search } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   const hasSession = request.cookies.get(SESSION_COOKIE)?.value === "1";
   const role = request.cookies.get(ROLE_COOKIE)?.value
     ? decodeURIComponent(request.cookies.get(ROLE_COOKIE)!.value)
@@ -27,7 +27,10 @@ export function middleware(request: NextRequest) {
   if (isProtected) {
     if (!hasSession) {
       const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("from", pathname + search);
+      // Solo el pathname (sin `search`): evita que un `?from=` existente quede
+      // anidado dentro del nuevo `from` y dispare el crecimiento exponencial de
+      // la URL en el bucle de redirección.
+      loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);
     }
 
