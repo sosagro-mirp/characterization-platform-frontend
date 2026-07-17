@@ -4,6 +4,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
+import {
+  clearMustChangeCookie,
+  clearRoleCookie,
+  clearSessionCookie,
+} from "@/lib/sessionCookie";
 
 const ADMIN_ROLE = "admin";
 
@@ -21,6 +26,11 @@ export default function AdminOnlyGuard({
   useEffect(() => {
     if (!hydrated) return;
     if (!isAuthenticated || !user) {
+      // Sincroniza las cookies espejo con el store no autenticado para que el
+      // middleware no rebote de vuelta a esta ruta (evita el bucle de redirección).
+      clearSessionCookie();
+      clearRoleCookie();
+      clearMustChangeCookie();
       router.replace("/login");
       return;
     }
