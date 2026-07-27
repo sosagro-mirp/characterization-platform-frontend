@@ -100,12 +100,20 @@ export interface ExpectedProduct {
 
 export type GroupCategory = "A1" | "A" | "B" | "C" | "Reconocido";
 
+export type ResearchGroupArea =
+  | "datos"
+  | "robotica"
+  | "biomedica"
+  | "quimica";
+
 export interface ResearchGroup {
   slug: string;
   name: string;
   shortName?: string;
   gruplacCode: string;
   category: GroupCategory;
+  /** Área temática usada para el filtro de la sección de investigación. */
+  area: ResearchGroupArea;
   line: string;
   description: string;
   /** URL externa a la ficha del grupo (opcional, pendiente de verificación) */

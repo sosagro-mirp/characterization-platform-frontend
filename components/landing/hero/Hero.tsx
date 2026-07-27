@@ -8,17 +8,8 @@ export function Hero() {
       id="inicio"
       className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-brand-dark scroll-mt-24"
     >
-      <video
-        src={process.env.NEXT_PUBLIC_HERO_VIDEO_URL || undefined}
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover object-center -z-10"
-      />
       <div
-        className="absolute inset-0 -z-10 bg-linear-to-br from-brand-dark/85 via-brand-dark/75 to-black/70"
+        className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:6rem_4rem]"
         aria-hidden="true"
       />
 

@@ -28,10 +28,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es">
       <body
         className={`${jetbrainsMono.variable} ${jetbrainsMono.className} antialiased`}
-        suppressHydrationWarning
       >
         {children}
       </body>

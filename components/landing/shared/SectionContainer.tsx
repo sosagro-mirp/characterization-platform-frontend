@@ -26,9 +26,13 @@ export function SectionContainer({
   return (
     <section
       id={id}
-      className={`scroll-mt-24 px-4 md:px-6 lg:px-8 ${spacingClass[spacing]} ${className}`}
+      className={`relative isolate scroll-mt-24 px-4 md:px-6 lg:px-8 ${spacingClass[spacing]} ${className}`}
       {...rest}
     >
+      <div
+        className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"
+        aria-hidden="true"
+      />
       <div
         className={`max-w-7xl mx-auto w-full ${
           centered ? "flex flex-col items-center text-center" : ""

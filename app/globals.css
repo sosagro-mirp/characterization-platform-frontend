@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Tokens semánticos — modo claro (default). Solo se consumen
-     dentro del subárbol del panel admin. */
+  /* Tokens semánticos — modo claro (default). */
   --surface: #ffffff;
   --surface-muted: #fafafa;
   --surface-elevated: #ffffff;
@@ -29,29 +28,30 @@
   --info-fg: #1d4ed8;
 }
 
-/* Override del modo oscuro: solo aplica cuando algún ancestro
-   lleva la clase `.dark`. La clase vive en el wrapper del layout
-   admin, nunca en <html>, para no afectar rutas públicas. */
-.dark {
-  --surface: #0f172a;
-  --surface-muted: #1e293b;
-  --surface-elevated: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-inverse: #0f172a;
-  --border: #334155;
-  --border-strong: #64748b;
-  --brand: #15803d;
-  --brand-hover: #166534;
-  --accent: #fde047;
-  --success-bg: #052e16;
-  --success-fg: #4ade80;
-  --danger-bg: #450a0a;
-  --danger-fg: #f87171;
-  --warning-bg: #451a03;
-  --warning-fg: #fbbf24;
-  --info-bg: #172554;
-  --info-fg: #60a5fa;
+/* Override del modo oscuro: se dispara por la preferencia de tema
+   del sistema operativo del usuario, sin selector manual. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0f172a;
+    --surface-muted: #1e293b;
+    --surface-elevated: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-inverse: #0f172a;
+    --border: #334155;
+    --border-strong: #64748b;
+    --brand: #15803d;
+    --brand-hover: #166534;
+    --accent: #fde047;
+    --success-bg: #052e16;
+    --success-fg: #4ade80;
+    --danger-bg: #450a0a;
+    --danger-fg: #f87171;
+    --warning-bg: #451a03;
+    --warning-fg: #fbbf24;
+    --info-bg: #172554;
+    --info-fg: #60a5fa;
+  }
 }
 
 @theme inline {

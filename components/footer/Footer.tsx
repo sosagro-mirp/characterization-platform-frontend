@@ -30,6 +30,13 @@ const Footer = () => {
               className="inline-flex items-center gap-3 text-white"
               aria-label="Inicio — SOS Agro 4C"
             >
+              <Image
+                src="/logo-transparent.png"
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0"
+              />
               <span className="text-xl font-bold tracking-tight">
                 {project.shortName}
               </span>

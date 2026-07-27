@@ -1,7 +1,9 @@
+"use client";
+
 import { Atom, ExternalLink } from "lucide-react";
-import { researchGroups } from "../../../lib/landing-content";
 import { SectionContainer } from "../shared/SectionContainer";
 import { SectionHeading } from "../shared/SectionHeading";
+import { useResearchGroupsFilter } from "../../../lib/landing-content/hooks/useResearchGroupsFilter";
 
 const categoryStyle: Record<string, string> = {
   A1: "bg-brand text-white",
@@ -12,6 +14,9 @@ const categoryStyle: Record<string, string> = {
 };
 
 export function ResearchGroups() {
+  const { filters, activeFilter, setActiveFilter, visibleGroups } =
+    useResearchGroupsFilter();
+
   return (
     <SectionContainer id="grupos" spacing="lg">
       <SectionHeading
@@ -20,11 +25,29 @@ export function ResearchGroups() {
         subtitle="Grupos categorizados por Minciencias que articulan capacidades de control, IoT, ciencia de datos, procesamiento de señales y tecnologías ambientales en torno al proyecto."
       />
 
+      <div className="mt-8 flex flex-wrap justify-center gap-2">
+        {filters.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setActiveFilter(f.key)}
+            aria-pressed={f.key === activeFilter}
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+              f.key === activeFilter
+                ? "bg-brand text-white"
+                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       <ul
         role="list"
-        className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
+        className="mt-8 lg:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
       >
-        {researchGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <li key={group.slug} className="h-full">
             <article className="flex h-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md">
               <div className="flex items-start justify-between gap-3">

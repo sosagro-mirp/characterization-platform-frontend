@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
@@ -22,6 +24,8 @@ export const Navbar = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverHero, setIsOverHero] = useState(true);
+  const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
+  const sessionMenuRef = useRef<HTMLDivElement>(null);
   const hydrated = useIsHydrated();
 
   const user = useAuthStore((s) => s.user);
@@ -29,12 +33,32 @@ export const Navbar = () => {
 
   const toggleMenu = () => setIsMenuOpen((p) => !p);
   const closeMenu = () => setIsMenuOpen(false);
+  const closeSessionMenu = () => setIsSessionMenuOpen(false);
 
   const handleLogout = () => {
     logout();
+    closeSessionMenu();
     closeMenu();
     router.replace("/");
   };
+
+  useEffect(() => {
+    if (!isSessionMenuOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (!sessionMenuRef.current?.contains(e.target as Node)) {
+        closeSessionMenu();
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeSessionMenu();
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSessionMenuOpen]);
 
   useEffect(() => {
     const hero = document.getElementById("inicio");
@@ -61,8 +85,6 @@ export const Navbar = () => {
     ? "bg-transparent"
     : "bg-white/95 backdrop-blur-sm border-b border-gray-200";
 
-  const brandClass = isOverHero ? "text-white" : "text-brand-dark";
-
   const linkBaseClass =
     "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded";
   const linkColorClass = isOverHero
@@ -74,16 +96,10 @@ export const Navbar = () => {
     : "text-gray-700 hover:bg-gray-100";
 
   const sessionTextClass = isOverHero ? "text-gray-100" : "text-gray-700";
-  const logoutButtonClass = isOverHero
-    ? "bg-white/10 border border-white/30 text-white hover:bg-white/20"
-    : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200";
+  const sessionHoverClass = isOverHero ? "hover:bg-white/10" : "hover:bg-black/5";
 
   const showSession = hydrated && isAuthenticated && user;
   const isAdmin = !!showSession && !!user?.role && PANEL_ROLES.has(user.role);
-
-  const adminLinkClass = isOverHero
-    ? "border-white/40 text-white hover:bg-white/10"
-    : "border-brand/40 text-brand-dark hover:bg-brand/10";
 
   return (
     <>
@@ -93,18 +109,22 @@ export const Navbar = () => {
         <div className="flex items-center justify-between w-full mx-auto px-4 md:px-6 lg:px-8 py-3 lg:py-4">
           <Link
             href="/"
-            className={`flex gap-3 items-center transition-colors duration-300 ${brandClass}`}
+            className="flex items-center rounded-lg bg-white px-3 py-1.5"
             aria-label="Inicio — SOS Agro 4C"
             onClick={closeMenu}
           >
-
-            <span className="text-lg 2xl:text-xl font-bold tracking-tight">
-              Sos Agro 4.C
-            </span>
+            <Image
+              src="/logo-horizontal.png"
+              alt="Sos Agro 4.C"
+              width={2319}
+              height={663}
+              className="h-12 w-auto shrink-0"
+              priority
+            />
           </Link>
 
           <ul
-            className={`hidden lg:flex gap-7 2xl:text-sm lg:text-xs  tracking-tight font-semibold transition-colors duration-300 ${linkColorClass}`}
+            className={`hidden lg:flex gap-7 lg:text-sm  tracking-tight font-semibold transition-colors duration-300 ${linkColorClass}`}
           >
             {sectionLinks.map((l) => (
               <li key={l.href}>
@@ -117,34 +137,66 @@ export const Navbar = () => {
 
           <div className="flex gap-3 items-center">
             {showSession ? (
-              <div className="hidden lg:flex items-center gap-2">
-                <Link
-                  href="/campaign"
-                  className={`inline-flex items-center px-4 py-2 rounded-lg border 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
-                >
-                  Campañas
-                </Link>
-                {isAdmin && (
-                  <Link
-                    href="/admin/instruments"
-                    className={`inline-flex items-center px-4 py-2 rounded-lg border 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${adminLinkClass}`}
-                  >
-                    Panel administrativo
-                  </Link>
-                )}
-                <span
-                  className={`2xl:text-sm lg:text-xs font-semibold transition-colors duration-300 ${sessionTextClass}`}
-                  title={user.email}
-                >
-                  {user.name} {user.lastName}
-                </span>
+              <div className="relative hidden lg:block" ref={sessionMenuRef}>
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className={`inline-flex items-center px-4 py-2 rounded-lg 2xl:text-sm lg:text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${logoutButtonClass}`}
+                  onClick={() => setIsSessionMenuOpen((p) => !p)}
+                  aria-haspopup="menu"
+                  aria-expanded={isSessionMenuOpen}
+                  className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 2xl:text-sm lg:text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${sessionHoverClass}`}
                 >
-                  Cerrar sesión
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold uppercase text-white"
+                    aria-hidden="true"
+                  >
+                    {user.name?.[0]}
+                  </span>
+                  <span
+                    className={`transition-colors duration-300 ${sessionTextClass} text-sm`}
+                    title={user.email}
+                  >
+                    {user.name} {user.lastName}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${isSessionMenuOpen ? "rotate-180" : ""} ${sessionTextClass}`}
+                    aria-hidden="true"
+                  />
                 </button>
+
+                {isSessionMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1.5 shadow-lg"
+                  >
+                    <Link
+                      href="/campaign"
+                      role="menuitem"
+                      onClick={closeSessionMenu}
+                      className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-dark"
+                    >
+                      Campañas
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin/instruments"
+                        role="menuitem"
+                        onClick={closeSessionMenu}
+                        className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-dark"
+                      >
+                        Panel administrativo
+                      </Link>
+                    )}
+                    <div className="my-1 border-t border-gray-100" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-dark"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
