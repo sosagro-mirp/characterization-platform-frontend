@@ -1,97 +1,88 @@
-import { TrendingUp } from "lucide-react";
-import {
-  expectedProducts,
-  ifct4c,
-  subIndicators,
-} from "../../../lib/landing-content";
-import { SectionContainer } from "../shared/SectionContainer";
-import { SectionHeading } from "../shared/SectionHeading";
+import { ifct4c, subIndicators } from "../../../lib/landing-content";
 import { IndicatorBar } from "./IndicatorBar";
 
-const fmt = (n: number) =>
-  n.toFixed(2).replace(/\.?0+$/, "") || n.toString();
+const fmt = (n: number, precision = 2) =>
+  n.toFixed(precision).replace(/\.?0+$/, "") || n.toString();
+
+const progressPercent = (baseline: number, target: number) =>
+  target > 0 ? Math.min(100, Math.max(0, (baseline / target) * 100)) : 0;
 
 export function Outcomes() {
-  const totalDelta = ifct4c.target - ifct4c.baseline;
+  const ifctPercent = progressPercent(ifct4c.baseline, ifct4c.target);
 
   return (
-    <SectionContainer id="resultados" spacing="lg">
-      <SectionHeading
-        badge="Resultados comprometidos"
-        title={`Indicador IFCT4C: de ${fmt(ifct4c.baseline)} a ${fmt(ifct4c.target)}`}
-        subtitle={`${ifct4c.fullName}. Compone la suma de tres sub-indicadores que articulan los tres ejes del proyecto.`}
+    <section
+      id="resultados"
+      className="relative isolate scroll-mt-24 overflow-hidden bg-brand-dark dark:bg-transparent px-4 py-16 md:px-6 md:py-24 lg:px-8"
+    >
+      <div
+        className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:6rem_4rem]"
+        aria-hidden="true"
       />
 
-      {/* Indicador principal */}
-      <div className="mt-12 lg:mt-16 grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-8 lg:gap-12 rounded-2xl border border-gray-200 bg-gradient-to-br from-brand-light/40 via-white to-white p-6 lg:p-10">
-        <div className="flex flex-col gap-3">
-          <span className="inline-flex items-center gap-2 self-start rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-dark border border-brand/20">
-            <TrendingUp className="h-3 w-3" aria-hidden="true" />
-            Indicador principal
-          </span>
-          <h3 className="text-3xl lg:text-4xl font-bold tracking-tight text-brand-dark">
-            {ifct4c.name}
-          </h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {ifct4c.formula}
-          </p>
-          <p className="text-xs text-gray-500">
-            Incremento comprometido:{" "}
-            <span className="font-bold text-brand-dark">
-              +{fmt(totalDelta)}
-            </span>{" "}
-            puntos en 60 meses.
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          <div className="max-w-max rounded-lg border border-white/20 px-3 py-1 text-xs lg:text-sm mb-4 flex items-center font-medium text-white/90">
+            <span className="w-1.5 h-1.5 bg-green-400 dark:bg-[#fde047] rounded-full mr-2" aria-hidden="true" />
+            Resultados comprobados
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-balance text-white lg:text-5xl">
+            {`Indicador IFCT4C: de ${fmt(ifct4c.baseline)} a ${fmt(ifct4c.target)}`}
+          </h2>
+          <p className="mt-6 text-pretty text-sm text-white/70 lg:text-base">
+            {ifct4c.fullName}. Compone la suma de tres sub-indicadores que
+            articulan los tres ejes del proyecto.
           </p>
         </div>
 
-        <div className="flex flex-col justify-center">
-          <IndicatorBar
-            baseline={ifct4c.baseline}
-            target={ifct4c.target}
-            axisMin={0}
-            axisMax={12}
-          />
+        {/* Indicador principal */}
+        <div className="mt-12 rounded-lg border border-white/15 bg-white/5 p-6 lg:mt-16 lg:p-8">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+            <span className="text-xl font-bold text-white">{ifct4c.name}</span>
+            <span className="text-xs text-white/70">
+              LÍNEA BASE <strong className="text-white">{fmt(ifct4c.baseline)}</strong>
+              <span className="mx-2">·</span>
+              META <strong className="text-accent dark:text-[#fde047]">{fmt(ifct4c.target)}</strong>
+            </span>
+          </div>
+          <IndicatorBar percent={ifctPercent} variant="primary" />
         </div>
+
+        {/* Sub-indicadores */}
+        <ul
+          role="list"
+          className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-5"
+        >
+          {subIndicators.map((sub) => {
+            const precision =
+              Number.isInteger(sub.baseline) && Number.isInteger(sub.target)
+                ? 0
+                : 2;
+
+            return (
+              <li key={sub.key}>
+                <article className="flex h-full flex-col gap-3 rounded-lg border border-white/15 bg-white/5 p-5">
+                  <h3 className="text-xs text-white/70">{sub.name}</h3>
+                  <IndicatorBar
+                    percent={progressPercent(sub.baseline, sub.target)}
+                  />
+                  <div className="flex items-center justify-between text-xs text-white/70">
+                    <span>base {fmt(sub.baseline, precision)}</span>
+                    <span className="font-bold text-white">
+                      meta {fmt(sub.target, precision)}
+                    </span>
+                  </div>
+                  {sub.description ? (
+                    <p className="mt-auto border-t border-white/10 pt-2 text-[11px] leading-relaxed text-white/50">
+                      {sub.description}
+                    </p>
+                  ) : null}
+                </article>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-
-      {/* Sub-indicadores */}
-      <ul
-        role="list"
-        className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6"
-      >
-        {subIndicators.map((sub) => (
-          <li key={sub.key}>
-            <article className="flex h-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark">
-                  Sub-indicador
-                </span>
-                <h4 className="text-base font-bold tracking-tight text-balance text-brand-dark">
-                  {sub.name}
-                </h4>
-              </div>
-
-              <IndicatorBar
-                baseline={sub.baseline}
-                target={sub.target}
-                axisMin={0}
-                axisMax={Math.max(sub.target * 1.4, sub.target + 1)}
-                precision={
-                  Number.isInteger(sub.baseline) && Number.isInteger(sub.target)
-                    ? 0
-                    : 2
-                }
-              />
-
-              {sub.description ? (
-                <p className="text-xs text-gray-600 leading-relaxed mt-auto pt-2 border-t border-gray-100">
-                  {sub.description}
-                </p>
-              ) : null}
-            </article>
-          </li>
-        ))}
-      </ul>
-    </SectionContainer>
+    </section>
   );
 }
