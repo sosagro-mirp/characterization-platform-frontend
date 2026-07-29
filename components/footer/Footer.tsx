@@ -20,26 +20,23 @@ const platformLinks = [
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-brand-dark text-white">
+    <footer className="w-full bg-brand-dark dark:bg-transparent dark:border-t dark:border-white/10 text-white">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-12 lg:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 lg:gap-12">
           {/* Brand block */}
           <div className="flex flex-col gap-4 max-w-md">
             <Link
               href="/"
-              className="inline-flex items-center gap-3 text-white"
+              className="inline-flex w-fit items-center rounded-lg bg-white px-3 py-1.5"
               aria-label="Inicio — SOS Agro 4C"
             >
               <Image
-                src="/logo-transparent.png"
-                alt=""
-                width={40}
-                height={40}
-                className="h-10 w-10 shrink-0"
+                src="/logo-horizontal.png"
+                alt="Sos Agro 4.C"
+                width={2319}
+                height={663}
+                className="h-12 w-auto shrink-0"
               />
-              <span className="text-xl font-bold tracking-tight">
-                {project.shortName}
-              </span>
             </Link>
             <p className="text-xs text-white/70 leading-relaxed">
               {project.fullName}
