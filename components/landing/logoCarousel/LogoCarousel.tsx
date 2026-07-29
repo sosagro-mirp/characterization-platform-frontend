@@ -15,7 +15,7 @@ export function LogoCarousel() {
   return (
     <div
       aria-label="Entidades aliadas"
-      className="w-full overflow-hidden border-y border-gray-100 bg-white py-8"
+      className="w-full overflow-hidden border-y border-gray-100 dark:border-white/10 bg-white dark:bg-transparent py-5"
     >
       {/*
         Two identical copies of the logo strip, each with symmetric px padding.
@@ -38,7 +38,7 @@ export function LogoCarousel() {
                     src={logo.src}
                     alt={logo.alt}
                     style={logo.scale ? { transform: `scale(${logo.scale})` } : undefined}
-                    className="max-h-full max-w-full object-contain grayscale opacity-60 transition-all duration-300 hover:grayscale-0 hover:opacity-100"
+                    className="max-h-full max-w-full object-contain grayscale opacity-60 dark:invert dark:opacity-70"
                   />
                 </div>
               </div>

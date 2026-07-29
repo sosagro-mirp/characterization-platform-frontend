@@ -20,15 +20,15 @@ export function SectionHeading({
 
   return (
     <div className={`flex flex-col ${alignmentClass} max-w-3xl ${align === "center" ? "mx-auto" : ""}`}>
-      <div className="max-w-max rounded-lg px-3 py-1 text-xs lg:text-sm border border-gray-200 mb-4 flex items-center font-medium">
-        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2" aria-hidden="true" />
+      <div className="max-w-max rounded-lg px-3 py-1 text-xs lg:text-sm border border-gray-200 dark:border-[#334155] mb-4 flex items-center font-medium">
+        <span className="w-1.5 h-1.5 bg-green-400 dark:bg-[#fde047] rounded-full mr-2" aria-hidden="true" />
         {badge}
       </div>
-      <Heading className="text-3xl lg:text-5xl font-bold tracking-tight text-balance text-brand-dark">
+      <Heading className="text-3xl lg:text-5xl font-bold tracking-tight text-balance text-brand-dark dark:text-white">
         {title}
       </Heading>
       {subtitle ? (
-        <p className="mt-6 text-gray-600 text-sm lg:text-base text-pretty">
+        <p className="mt-6 text-gray-600 dark:text-[#94a3b8] text-sm lg:text-base text-pretty">
           {subtitle}
         </p>
       ) : null}

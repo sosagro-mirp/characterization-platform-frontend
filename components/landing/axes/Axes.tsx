@@ -22,7 +22,7 @@ export function Axes() {
       <div
         role="tablist"
         aria-label="Fases del proyecto"
-        className="mt-12 lg:mt-16 flex gap-2 overflow-x-auto border-b border-gray-200"
+        className="mt-12 lg:mt-16 flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-[#334155]"
       >
         {axes.map((axis, index) => {
           const isActive = index === activeIndex;
@@ -35,8 +35,8 @@ export function Axes() {
               onClick={() => setActiveIndex(index)}
               className={`shrink-0 whitespace-nowrap border-b-2 px-5 py-3.5 text-sm font-semibold transition-colors ${
                 isActive
-                  ? "border-brand text-brand-dark"
-                  : "border-transparent text-gray-400 hover:text-gray-600"
+                  ? "border-brand dark:border-[#fde047] text-brand-dark dark:text-[#fde047]"
+                  : "border-transparent text-gray-400 dark:text-[#64748b] hover:text-gray-600 dark:hover:text-[#94a3b8]"
               }`}
             >
               {String(index + 1).padStart(2, "0")} — {axis.title}
@@ -49,19 +49,19 @@ export function Axes() {
         <span className="inline-block rounded-full bg-brand-light px-3 py-1 text-[10.5px] font-bold text-green-800">
           {phaseTag[activeIndex]}
         </span>
-        <h3 className="mt-4 text-2xl lg:text-3xl font-extrabold tracking-tight text-brand-dark">
+        <h3 className="mt-4 text-2xl lg:text-3xl font-extrabold tracking-tight text-brand-dark dark:text-white">
           {current.title}
         </h3>
-        <p className="mt-2.5 max-w-xl text-sm text-gray-600 leading-relaxed">
+        <p className="mt-2.5 max-w-xl text-sm text-gray-600 dark:text-[#94a3b8] leading-relaxed">
           {current.tagline}
         </p>
         <div className="mt-6 grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
           {current.activities.map((activity) => (
             <div
               key={activity}
-              className="flex gap-2.5 text-sm text-gray-700 leading-relaxed"
+              className="flex gap-2.5 text-sm text-gray-700 dark:text-[#f1f5f9] leading-relaxed"
             >
-              <span className="text-brand" aria-hidden="true">
+              <span className="text-brand dark:text-[#fde047]" aria-hidden="true">
                 ▹
               </span>
               {activity}

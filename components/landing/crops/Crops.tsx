@@ -19,7 +19,7 @@ export function Crops() {
         {crops.map((crop) => (
           <li
             key={crop.slug}
-            className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-lg"
+            className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm transition-shadow hover:shadow-lg"
           >
             <div className="relative aspect-[4/3] overflow-hidden">
               <Image
@@ -38,8 +38,8 @@ export function Crops() {
               </span>
             </div>
             <div className="flex flex-1 flex-col gap-2 p-5">
-              <h3 className="text-2xl font-bold tracking-tight text-brand-dark">{crop.name}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <h3 className="text-2xl font-bold tracking-tight text-brand-dark dark:text-white">{crop.name}</h3>
+              <p className="text-sm text-gray-600 dark:text-[#94a3b8] leading-relaxed">
                 {crop.description}
               </p>
             </div>

@@ -26,12 +26,20 @@
   --warning-fg: #92400e;
   --info-bg: #dbeafe;
   --info-fg: #1d4ed8;
+
+  /* Acento interactivo del mapa de Colombia (landing Original) — verde en
+     claro, amarillo en oscuro. Ver DESIGN.md → "Modo oscuro". */
+  --map-active: #15803d;
+  --map-active-hover: #166534;
+  --map-active-pressed: #14532d;
 }
 
 /* Override del modo oscuro: se dispara por la preferencia de tema
    del sistema operativo del usuario, sin selector manual. */
 @media (prefers-color-scheme: dark) {
   :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
     --surface: #0f172a;
     --surface-muted: #1e293b;
     --surface-elevated: #1e293b;
@@ -51,6 +59,10 @@
     --warning-fg: #fbbf24;
     --info-bg: #172554;
     --info-fg: #60a5fa;
+
+    --map-active: #fde047;
+    --map-active-hover: #facc15;
+    --map-active-pressed: #facc15;
   }
 }
 

@@ -6,11 +6,11 @@ import { SectionHeading } from "../shared/SectionHeading";
 import { useResearchGroupsFilter } from "../../../lib/landing-content/hooks/useResearchGroupsFilter";
 
 const categoryStyle: Record<string, string> = {
-  A1: "bg-brand text-white",
-  A: "bg-brand-dark text-white",
+  A1: "bg-brand dark:bg-[#fde047] text-white dark:text-brand-dark",
+  A: "bg-brand-dark dark:bg-[#facc15] text-white dark:text-brand-dark",
   B: "bg-gray-700 text-white",
   C: "bg-gray-500 text-white",
-  Reconocido: "bg-gray-200 text-gray-700",
+  Reconocido: "bg-gray-200 dark:bg-[#334155] text-gray-700 dark:text-[#f1f5f9]",
 };
 
 export function ResearchGroups() {
@@ -34,8 +34,8 @@ export function ResearchGroups() {
             aria-pressed={f.key === activeFilter}
             className={`rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
               f.key === activeFilter
-                ? "bg-brand text-white"
-                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                ? "bg-brand dark:bg-[#fde047] text-white dark:text-brand-dark"
+                : "border border-gray-300 dark:border-[#334155] bg-white dark:bg-[#1e293b] text-gray-700 dark:text-[#f1f5f9] hover:bg-gray-50 dark:hover:bg-white/5"
             }`}
           >
             {f.label}
@@ -49,7 +49,7 @@ export function ResearchGroups() {
       >
         {visibleGroups.map((group) => (
           <li key={group.slug} className="h-full">
-            <article className="flex h-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md">
+            <article className="flex h-full flex-col gap-4 rounded-xl border border-gray-200 dark:border-[#334155] bg-white dark:bg-[#1e293b] p-6 transition-shadow hover:shadow-md">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-light text-brand-dark">
                   <Atom
@@ -68,34 +68,34 @@ export function ResearchGroups() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <h3 className="text-base font-bold tracking-tight text-balance leading-snug text-brand-dark">
+                <h3 className="text-base font-bold tracking-tight text-balance leading-snug text-brand-dark dark:text-white">
                   {group.name}
                 </h3>
-                <p className="text-[10px] font-mono text-gray-500">
+                <p className="text-[10px] font-mono text-gray-500 dark:text-[#94a3b8]">
                   GrupLac · {group.gruplacCode}
                 </p>
-                <p className="text-xs text-brand-dark font-bold mt-1">
+                <p className="text-xs text-brand-dark dark:text-[#fde047] font-bold mt-1">
                   {group.line}
                 </p>
               </div>
 
-              <p className="text-xs text-gray-600 leading-relaxed">
+              <p className="text-xs text-gray-600 dark:text-[#94a3b8] leading-relaxed">
                 {group.description}
               </p>
 
-              <div className="mt-auto pt-3 border-t border-gray-100">
+              <div className="mt-auto pt-3 border-t border-gray-100 dark:border-white/10">
                 {group.url ? (
                   <a
                     href={group.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-dark hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-dark dark:text-[#fde047] hover:text-brand dark:hover:text-[#facc15] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2 rounded"
                   >
                     Ver ficha en GrupLac
                     <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   </a>
                 ) : (
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-gray-400 dark:text-[#64748b]">
                     Ficha GrupLac pendiente de enlazar
                   </span>
                 )}
@@ -105,13 +105,13 @@ export function ResearchGroups() {
         ))}
       </ul>
 
-      <p className="mt-6 text-xs text-gray-500 max-w-3xl">
+      <p className="mt-6 text-xs text-gray-500 dark:text-[#94a3b8] max-w-3xl">
         Las categorías corresponden al{" "}
         <a
           href="https://minciencias.gov.co/convocatorias/medicion-de-grupos-de-investigacion-desarrollo-tecnologico-o-de-innovacion"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-brand-dark hover:text-brand underline-offset-2 hover:underline"
+          className="text-brand-dark dark:text-[#fde047] hover:text-brand dark:hover:text-[#facc15] underline-offset-2 hover:underline"
         >
           modelo de medición de grupos de Minciencias
         </a>

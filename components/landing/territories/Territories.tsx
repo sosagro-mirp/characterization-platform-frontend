@@ -16,15 +16,15 @@ export function Territories() {
         <ColombiaMap />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-600">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-600 dark:text-[#94a3b8]">
         <span className="inline-flex items-center gap-2">
           <span
-            className="inline-block w-3 h-3 rounded-sm bg-brand"
+            className="inline-block w-3 h-3 rounded-sm bg-brand dark:bg-[#fde047]"
             aria-hidden="true"
           />
           Departamento del proyecto ({territories.length} en total)
         </span>
-        <span className="text-gray-400" aria-hidden="true">
+        <span className="text-gray-400 dark:text-[#64748b]" aria-hidden="true">
           ·
         </span>
         <span className="inline-flex items-center gap-2">
@@ -36,7 +36,7 @@ export function Territories() {
         </span>
       </div>
 
-      <p className="mt-4 text-center text-[11px] text-gray-500 max-w-2xl mx-auto">
+      <p className="mt-4 text-center text-[11px] text-gray-500 dark:text-[#94a3b8] max-w-2xl mx-auto">
         PDET: Programas de Desarrollo con Enfoque Territorial · ZOMAC: Zonas
         Más Afectadas por el Conflicto Armado
       </p>
