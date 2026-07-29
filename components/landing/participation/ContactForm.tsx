@@ -44,7 +44,7 @@ export function ContactForm() {
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-light text-brand-dark">
             <Check className="h-6 w-6" aria-hidden="true" />
           </span>
-          <h3 className="text-xl font-bold tracking-tight">
+          <h3 className="text-xl font-bold tracking-tight text-brand-dark">
             ¡Gracias por escribirnos!
           </h3>
           <p className="text-sm text-gray-600">
@@ -59,7 +59,7 @@ export function ContactForm() {
               <Mail className="h-3 w-3" aria-hidden="true" />
               Contáctanos
             </span>
-            <h3 className="text-2xl lg:text-3xl font-bold tracking-tight text-balance">
+            <h3 className="text-2xl lg:text-3xl font-bold tracking-tight text-balance text-brand-dark">
               Cuéntanos cómo te gustaría sumarte
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed">

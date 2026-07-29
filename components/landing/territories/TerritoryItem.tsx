@@ -18,7 +18,7 @@ export function TerritoryItem({ territory }: TerritoryItemProps) {
     <li className="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-brand/40">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-bold tracking-tight">
+          <h3 className="text-lg font-bold tracking-tight text-brand-dark">
             {territory.department}
           </h3>
           <p className="text-xs text-gray-600 mt-0.5">{territory.region}</p>

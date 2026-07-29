@@ -62,7 +62,7 @@ function AudienceCard({
       </span>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-xl font-bold tracking-tight text-balance">
+        <h3 className="text-xl font-bold tracking-tight text-balance text-brand-dark">
           {title}
         </h3>
         <p className="text-sm text-gray-600 leading-relaxed">{description}</p>

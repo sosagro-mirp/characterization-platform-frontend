@@ -38,7 +38,7 @@ export function Crops() {
               </span>
             </div>
             <div className="flex flex-1 flex-col gap-2 p-5">
-              <h3 className="text-2xl font-bold tracking-tight">{crop.name}</h3>
+              <h3 className="text-2xl font-bold tracking-tight text-brand-dark">{crop.name}</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 {crop.description}
               </p>

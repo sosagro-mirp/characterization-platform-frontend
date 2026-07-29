@@ -24,7 +24,7 @@ export function SectionHeading({
         <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2" aria-hidden="true" />
         {badge}
       </div>
-      <Heading className="text-3xl lg:text-5xl font-bold tracking-tight text-balance">
+      <Heading className="text-3xl lg:text-5xl font-bold tracking-tight text-balance text-brand-dark">
         {title}
       </Heading>
       {subtitle ? (

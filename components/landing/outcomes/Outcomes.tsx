@@ -66,7 +66,7 @@ export function Outcomes() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark">
                   Sub-indicador
                 </span>
-                <h4 className="text-base font-bold tracking-tight text-balance">
+                <h4 className="text-base font-bold tracking-tight text-balance text-brand-dark">
                   {sub.name}
                 </h4>
               </div>

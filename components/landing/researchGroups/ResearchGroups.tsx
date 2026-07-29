@@ -68,7 +68,7 @@ export function ResearchGroups() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <h3 className="text-base font-bold tracking-tight text-balance leading-snug">
+                <h3 className="text-base font-bold tracking-tight text-balance leading-snug text-brand-dark">
                   {group.name}
                 </h3>
                 <p className="text-[10px] font-mono text-gray-500">
