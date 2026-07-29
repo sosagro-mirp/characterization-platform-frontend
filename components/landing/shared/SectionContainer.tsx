@@ -12,7 +12,7 @@ interface SectionContainerProps extends HTMLAttributes<HTMLElement> {
 
 const spacingClass = {
   md: "py-12 md:py-16",
-  lg: "py-16 md:py-24 lg:py-32",
+  lg: "py-16 md:py-24",
 } as const;
 
 export function SectionContainer({
@@ -34,9 +34,8 @@ export function SectionContainer({
         aria-hidden="true"
       />
       <div
-        className={`max-w-7xl mx-auto w-full ${
-          centered ? "flex flex-col items-center text-center" : ""
-        }`}
+        className={`max-w-7xl mx-auto w-full ${centered ? "flex flex-col items-center text-center" : ""
+          }`}
       >
         {children}
       </div>
