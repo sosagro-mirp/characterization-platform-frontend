@@ -96,6 +96,20 @@ export default function EditCampaignPage() {
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           {campaign.name}
         </h1>
+        <div className="flex flex-wrap gap-4 text-xs text-[var(--text-muted)] my-2">
+          <div>
+            <span className="font-medium text-[var(--text-primary)]">Creado por:</span>{" "}
+            {campaign.createdBy
+              ? `${campaign.createdBy.name} ${campaign.createdBy.lastName}`
+              : "sin registro (anterior al registro de auditoría)"}
+          </div>
+          {campaign.updatedBy && (
+            <div>
+              <span className="font-medium text-[var(--text-primary)]">Actualizado por:</span>{" "}
+              {`${campaign.updatedBy.name} ${campaign.updatedBy.lastName}`}
+            </div>
+          )}
+        </div>
         <p className="text-sm text-[var(--text-muted)]">
           {campaign.steps.length} paso{campaign.steps.length === 1 ? "" : "s"} configurado
           {campaign.steps.length === 1 ? "" : "s"}.

@@ -5,6 +5,7 @@ import {
   ActorTypeSummary,
   SectionDetail,
   TypeOfQuestionSummary,
+  UserAuditSummary,
 } from "@/app/(admin)/types";
 import {
   useInstrumentEditorStore,
@@ -23,6 +24,8 @@ interface InstrumentEditorLayoutProps {
   publishDate: string;
   isActive: boolean;
   actorTypes: ActorTypeSummary[];
+  createdBy?: UserAuditSummary | null;
+  updatedBy?: UserAuditSummary | null;
   sections: SectionDetail[];
   allActorTypes: ActorTypeSummary[];
   questionTypes: TypeOfQuestionSummary[];
@@ -35,6 +38,8 @@ export default function InstrumentEditorLayout({
   publishDate,
   isActive,
   actorTypes,
+  createdBy,
+  updatedBy,
   sections,
   allActorTypes,
   questionTypes,
@@ -129,9 +134,25 @@ export default function InstrumentEditorLayout({
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)]">
-        <h1 className="font-semibold text-[var(--text-primary)] truncate">{instrumentName}</h1>
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex-1">
+          <h1 className="font-semibold text-[var(--text-primary)] truncate mb-2">{instrumentName}</h1>
+          <div className="flex flex-wrap gap-4 text-xs text-[var(--text-muted)]">
+            <div>
+              <span className="font-medium text-[var(--text-primary)]">Creado por:</span>{" "}
+              {createdBy
+                ? `${createdBy.name} ${createdBy.lastName}`
+                : "sin registro (anterior al registro de auditoría)"}
+            </div>
+            {updatedBy && (
+              <div>
+                <span className="font-medium text-[var(--text-primary)]">Actualizado por:</span>{" "}
+                {`${updatedBy.name} ${updatedBy.lastName}`}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-4 ml-4">
           <SaveStatusIndicator status={saveStatus} errorMessage={saveError} />
         </div>
       </header>
