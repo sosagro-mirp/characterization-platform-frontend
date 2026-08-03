@@ -22,7 +22,7 @@ export function Axes() {
       <div
         role="tablist"
         aria-label="Fases del proyecto"
-        className="mt-12 lg:mt-16 flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-[#334155]"
+        className="mt-12 lg:mt-16 flex flex-wrap gap-2 border-b border-gray-200 dark:border-[#334155]"
       >
         {axes.map((axis, index) => {
           const isActive = index === activeIndex;
@@ -33,7 +33,7 @@ export function Axes() {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveIndex(index)}
-              className={`shrink-0 whitespace-nowrap border-b-2 px-5 py-3.5 text-sm font-semibold transition-colors ${
+              className={`border-b-2 px-5 py-3.5 text-sm font-semibold transition-colors ${
                 isActive
                   ? "border-brand dark:border-[#fde047] text-brand-dark dark:text-[#fde047]"
                   : "border-transparent text-gray-400 dark:text-[#64748b] hover:text-gray-600 dark:hover:text-[#94a3b8]"
