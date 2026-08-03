@@ -250,7 +250,7 @@ export const Navbar = () => {
         id="mobile-menu"
         aria-hidden={!isMenuOpen}
         {...(!isMenuOpen ? { inert: true } : {})}
-        className={`lg:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-[#0f172a] transition-all duration-300 ease-in-out ${isMenuOpen
+        className={`lg:hidden fixed inset-0 top-[5.1rem] z-40 overflow-y-auto bg-white dark:bg-[#0f172a] transition-all duration-300 ease-in-out ${isMenuOpen
           ? "opacity-100 pointer-events-auto translate-y-0"
           : "opacity-0 pointer-events-none -translate-y-2"
           }`}
