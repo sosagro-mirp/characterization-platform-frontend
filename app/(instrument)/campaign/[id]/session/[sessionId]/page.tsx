@@ -211,18 +211,18 @@ export default function CampaignSessionPage() {
   return (
     <main className="mx-auto max-w-xl px-4 py-10 sm:px-6 lg:px-8 text-center">
       {loading && (
-        <p className="text-sm text-neutral-500">Buscando próximo paso…</p>
+        <p className="text-sm text-text-muted">Buscando próximo paso…</p>
       )}
 
       {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <p className="rounded-xl border border-[var(--danger-fg)]/30 bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger-fg)]">
           {error}
         </p>
       )}
 
       {finished && !error && (
         <section className="space-y-6">
-          <div className="mx-auto w-fit rounded-full bg-green-700 p-6 text-white">
+          <div className="mx-auto w-fit rounded-full bg-brand p-6 text-brand-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -239,7 +239,7 @@ export default function CampaignSessionPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold">Campaña completada</h1>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-text-muted">
             Has terminado todas las encuestas del flujo. Gracias.
           </p>
           <CampaignProgress
@@ -249,7 +249,7 @@ export default function CampaignSessionPage() {
           <button
             type="button"
             onClick={() => router.replace("/campaign")}
-            className="rounded-xl bg-green-700 px-5 py-2 text-sm font-medium text-white hover:bg-green-800 transition-colors"
+            className="rounded-xl bg-brand px-5 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover transition-colors"
           >
             Volver al listado
           </button>

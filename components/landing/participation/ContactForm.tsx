@@ -22,7 +22,7 @@ const topicOptions = [
 ] as const;
 
 const inputClass =
-  "w-full rounded-lg border border-gray-300 dark:border-[#334155] bg-white dark:bg-[#0f172a] px-3 py-2.5 text-sm text-gray-900 dark:text-[#f1f5f9] placeholder:text-gray-400 dark:placeholder:text-[#64748b] transition-colors focus:border-brand dark:focus:border-[#fde047] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-50 dark:disabled:bg-white/5";
+  "w-full rounded-lg border border-gray-300 dark:border-[#334155] bg-white dark:bg-[#0f172a] px-3 py-2.5 text-sm text-gray-900 dark:text-[#f1f5f9] placeholder:text-gray-400 dark:placeholder:text-[#64748b] transition-colors focus:border-brand dark:focus:border-[#fde047] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-50 dark:disabled:bg-white/5";
 
 const labelClass =
   "flex flex-col gap-1.5 text-xs font-bold text-gray-700 dark:text-[#f1f5f9]";
@@ -216,7 +216,7 @@ export function ContactForm() {
               <button
                 type="submit"
                 disabled={!isValid}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand dark:bg-[#fde047] px-5 py-2.5 text-sm font-bold text-white dark:text-brand-dark transition-colors hover:bg-brand-dark dark:hover:bg-[#facc15] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-dark dark:hover:bg-[#facc15] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Enviar mensaje
                 <Send className="h-3.5 w-3.5" aria-hidden="true" />

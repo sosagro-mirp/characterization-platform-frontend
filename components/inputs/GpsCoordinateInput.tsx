@@ -100,7 +100,7 @@ export default function GpsCoordinateInput({
                 type="button"
                 onClick={handleGpsClick}
                 disabled={isRequesting}
-                className="inline-flex items-center gap-2 self-start rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 self-start rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
             >
                 {isRequesting ? (
                     <>

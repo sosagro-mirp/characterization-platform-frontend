@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Flag } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import NewRequestModal from "@/components/admin/requests/NewRequestModal";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -66,7 +67,7 @@ export default function AdminShell({ children }: AdminShellProps) {
         )}
         <Link
           href="/campaign"
-          className="rounded-lg mt-4 px-3 py-2 text-sm font-medium  bg-green-700 hover:scale-105 transition-transform uppercase text-center text-white"
+          className="rounded-lg mt-4 px-3 py-2 text-sm font-medium  bg-brand hover:scale-105 transition-transform uppercase text-center text-brand-foreground"
         >
           Campañas
         </Link>
@@ -82,7 +83,12 @@ export default function AdminShell({ children }: AdminShellProps) {
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto p-8">{children}</main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex shrink-0 items-center justify-end border-b border-[var(--border)] bg-[var(--surface)] px-6 py-2">
+          <ThemeToggle className="text-text-muted hover:bg-surface-muted" />
+        </header>
+        <main className="flex-1 overflow-auto p-8">{children}</main>
+      </div>
 
       {showReportModal && (
         <NewRequestModal

@@ -220,7 +220,7 @@ export default function EditFarmerPage() {
                         onClick={() => toggleCrop(crop.cropId)}
                         className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                           selected
-                            ? "bg-[var(--brand)] text-white border-[var(--brand)]"
+                            ? "bg-[var(--brand)] text-[var(--brand-foreground)] border-[var(--brand)]"
                             : "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--brand)]"
                         }`}
                       >
@@ -238,7 +238,7 @@ export default function EditFarmerPage() {
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
             >
               {saving ? "Guardando…" : "Guardar"}
             </button>

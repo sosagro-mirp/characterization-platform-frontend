@@ -189,15 +189,15 @@ export default function InstrumentQuestionRenderer({
         const styleByValue = (value: InstrumentOptionValue): { containerClassName: string; accentClassName: string } => {
             const numeric = value === null || value === undefined ? null : Number(value);
             if (numeric === 2) {
-                return { containerClassName: "border-green-300 bg-green-50", accentClassName: "accent-green-700" };
+                return { containerClassName: "border-[var(--success-fg)]/30 bg-[var(--success-bg)]", accentClassName: "accent-[var(--success-fg)]" };
             }
             if (numeric === 1) {
-                return { containerClassName: "border-amber-300 bg-amber-50", accentClassName: "accent-amber-600" };
+                return { containerClassName: "border-[var(--warning-fg)]/30 bg-[var(--warning-bg)]", accentClassName: "accent-[var(--warning-fg)]" };
             }
             if (numeric === 0) {
-                return { containerClassName: "border-red-300 bg-red-50", accentClassName: "accent-red-700" };
+                return { containerClassName: "border-[var(--danger-fg)]/30 bg-[var(--danger-bg)]", accentClassName: "accent-[var(--danger-fg)]" };
             }
-            return { containerClassName: "border-gray-200 bg-gray-50", accentClassName: "accent-gray-500" };
+            return { containerClassName: "border-[var(--border)] bg-surface-muted", accentClassName: "accent-[var(--text-muted)]" };
         };
 
         return (
@@ -308,7 +308,7 @@ export default function InstrumentQuestionRenderer({
     }
 
     return (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
+        <div className="rounded-xl border border-[var(--warning-fg)]/30 bg-[var(--warning-bg)] px-4 py-3 text-[var(--warning-fg)]">
             Tipo de pregunta no soportado: {question.type.name}
         </div>
     );

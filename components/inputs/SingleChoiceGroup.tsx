@@ -98,11 +98,11 @@ export default function SingleChoiceGroup({
                         aria-expanded
                         aria-controls={`${name}-options`}
                         aria-activedescendant={effectiveHighlightedId ? `option-row-${effectiveHighlightedId}` : undefined}
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:border-green-600 transition-colors"
+                        className="w-full rounded-xl border border-[var(--border)] bg-surface px-4 py-3 text-sm focus:outline-none focus:border-brand transition-colors"
                     />
                 )}
                 {isSearchable && !hasMatches && (
-                    <p className="px-3 py-2 text-sm text-gray-500">
+                    <p className="px-3 py-2 text-sm text-text-muted">
                         Sin resultados{options.some((o) => o.isOther) ? ". Puedes usar la opción \"Otros\"." : "."}
                     </p>
                 )}
@@ -112,8 +112,8 @@ export default function SingleChoiceGroup({
                             <label
                                 id={`option-row-${option.id}`}
                                 htmlFor={option.id}
-                                className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
-                                    isSearchable && effectiveHighlightedId === option.id ? "bg-gray-50 ring-1 ring-green-600" : ""
+                                className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer hover:bg-surface-muted transition-colors ${
+                                    isSearchable && effectiveHighlightedId === option.id ? "bg-surface-muted ring-1 ring-brand" : ""
                                 }`}
                             >
                                 <input
@@ -124,9 +124,9 @@ export default function SingleChoiceGroup({
                                     checked={selectedOptionId === option.id}
                                     onChange={() => onChange?.(option.id)}
                                     onFocus={() => setHighlightedId(option.id)}
-                                    className={`w-4 h-4 shrink-0 cursor-pointer ${option.accentClassName ?? "accent-green-700"}`}
+                                    className={`w-4 h-4 shrink-0 cursor-pointer ${option.accentClassName ?? "accent-[var(--brand)]"}`}
                                 />
-                                <span className="text-sm text-gray-800">{option.label}</span>
+                                <span className="text-sm text-text-primary">{option.label}</span>
                             </label>
                             {option.isOther && selectedOptionId === option.id && (
                                 <input
@@ -134,7 +134,7 @@ export default function SingleChoiceGroup({
                                     placeholder="Escribe el nombre..."
                                     value={otherText ?? ""}
                                     onChange={(e) => onOtherTextChange?.(e.target.value)}
-                                    className="mt-1 ml-10 w-[calc(100%-2.5rem)] border-b border-gray-300 bg-transparent px-0 py-1 text-sm focus:outline-none focus:border-green-600 transition-colors"
+                                    className="mt-1 ml-10 w-[calc(100%-2.5rem)] border-b border-[var(--border-strong)] bg-transparent px-0 py-1 text-sm focus:outline-none focus:border-brand transition-colors"
                                     maxLength={50}
                                 />
                             )}

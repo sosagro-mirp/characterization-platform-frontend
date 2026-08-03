@@ -68,7 +68,7 @@ export default function CampaignIntroPage() {
   if (loadingCampaign) {
     return (
       <main className="mx-auto max-w-xl px-4 py-10 sm:px-6">
-        <p className="text-sm text-neutral-500">Cargando campaña…</p>
+        <p className="text-sm text-text-muted">Cargando campaña…</p>
       </main>
     );
   }
@@ -76,7 +76,7 @@ export default function CampaignIntroPage() {
   if (error && step !== "starting") {
     return (
       <main className="mx-auto max-w-xl px-4 py-10 sm:px-6">
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <p className="rounded-xl border border-[var(--danger-fg)]/30 bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger-fg)]">
           {error}
         </p>
       </main>
@@ -88,11 +88,11 @@ export default function CampaignIntroPage() {
   return (
     <main className="mx-auto max-w-xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">{campaign.name}</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{campaign.name}</h1>
         {campaign.description && (
-          <p className="mt-2 text-sm text-neutral-600">{campaign.description}</p>
+          <p className="mt-2 text-sm text-text-muted">{campaign.description}</p>
         )}
-        <p className="mt-4 text-xs text-neutral-500">
+        <p className="mt-4 text-xs text-text-muted">
           Esta campaña incluye {(campaign.steps ?? []).length} paso
           {(campaign.steps ?? []).length === 1 ? "" : "s"}.
         </p>
@@ -102,7 +102,7 @@ export default function CampaignIntroPage() {
         <button
           type="button"
           onClick={() => setStep("pre-survey")}
-          className="w-full rounded-xl bg-green-700 px-5 py-3 text-sm font-medium text-white hover:bg-green-800 transition-colors"
+          className="w-full rounded-xl bg-brand px-5 py-3 text-sm font-medium text-brand-foreground hover:bg-brand-hover transition-colors"
         >
           Comenzar
         </button>
@@ -110,7 +110,7 @@ export default function CampaignIntroPage() {
 
       {step === "pre-survey" && (
         <section>
-          <h2 className="text-base font-semibold text-neutral-800 mb-4">
+          <h2 className="text-base font-semibold text-text-primary mb-4">
             Identificación del encuestado
           </h2>
           <PreSurveyForm
@@ -123,8 +123,8 @@ export default function CampaignIntroPage() {
 
       {step === "starting" && (
         <div className="flex flex-col items-center gap-3 py-10">
-          <div className="h-8 w-8 rounded-full border-4 border-green-600 border-t-transparent animate-spin" />
-          <p className="text-sm text-neutral-500">Iniciando campaña…</p>
+          <div className="h-8 w-8 rounded-full border-4 border-brand border-t-transparent animate-spin" />
+          <p className="text-sm text-text-muted">Iniciando campaña…</p>
         </div>
       )}
     </main>
