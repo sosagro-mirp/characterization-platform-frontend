@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Flag } from "lucide-react";
-import { useIsAdminDark } from "@/lib/theme/useApplyAdminTheme";
-import ThemeToggle from "@/components/admin/ThemeToggle";
 import { useAuthStore } from "@/store/useAuthStore";
 import NewRequestModal from "@/components/admin/requests/NewRequestModal";
 
@@ -13,15 +11,13 @@ interface AdminShellProps {
 }
 
 export default function AdminShell({ children }: AdminShellProps) {
-  const isDark = useIsAdminDark();
   const role = useAuthStore((s) => s.user?.role ?? null);
   const [showReportModal, setShowReportModal] = useState(false);
 
   return (
     <div
       id="admin-shell"
-      suppressHydrationWarning
-      className={`flex h-screen bg-surface-muted text-text-primary ${isDark ? "dark" : ""}`}
+      className="flex h-screen bg-surface-muted text-text-primary"
     >
 
       <aside className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-4 py-6 flex flex-col gap-1 h-full">
@@ -84,7 +80,6 @@ export default function AdminShell({ children }: AdminShellProps) {
             <Flag className="size-5 shrink-0" />
             Reportar un problema
           </button>
-          <ThemeToggle />
         </div>
       </aside>
       <main className="flex-1 overflow-auto p-8">{children}</main>

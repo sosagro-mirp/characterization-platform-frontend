@@ -56,7 +56,7 @@ export function NewsCard({ entry }: NewsCardProps) {
         {dateLabel}
       </time>
 
-      <h3 className="text-base font-bold tracking-tight text-balance leading-snug">
+      <h3 className="text-base font-bold tracking-tight text-balance leading-snug text-brand-dark">
         {entry.title}
       </h3>
 

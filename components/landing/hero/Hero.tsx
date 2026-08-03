@@ -6,23 +6,14 @@ export function Hero() {
   return (
     <section
       id="inicio"
-      className="relative isolate flex min-h-[90vh] items-center overflow-hidden bg-brand-dark scroll-mt-24"
+      className="relative isolate flex min-h-[75vh] items-center overflow-hidden bg-brand-dark dark:bg-transparent scroll-mt-24"
     >
-      <video
-        src={process.env.NEXT_PUBLIC_HERO_VIDEO_URL || undefined}
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover object-center -z-10"
-      />
       <div
-        className="absolute inset-0 -z-10 bg-linear-to-br from-brand-dark/85 via-brand-dark/75 to-black/70"
+        className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:6rem_4rem]"
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-20 md:py-28 lg:py-32">
+      <div className="relative w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-20 md:pt-28 lg:pt-32 pb-10 md:pb-14 lg:pb-16">
         <div className="flex flex-col gap-6 md:gap-8">
           <div className="max-w-3xl flex flex-col gap-6 md:gap-8">
             <HeroBadge
@@ -51,13 +42,13 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/#participar"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-green-300/60 bg-green-400/95 px-6 py-4 text-sm font-bold tracking-tight text-brand-dark transition-colors hover:bg-green-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-green-300/60 dark:border-[#fde047]/60 bg-green-400/95 dark:bg-[#fde047] px-6 py-4 text-sm font-bold tracking-tight text-brand-dark transition-colors hover:bg-green-300 dark:hover:bg-[#facc15] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark dark:focus-visible:ring-offset-[#0f172a]"
               >
                 Contáctanos
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/5 px-6 py-4 text-sm font-bold tracking-tight text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/5 px-6 py-4 text-sm font-bold tracking-tight text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark dark:focus-visible:ring-offset-[#0f172a]"
               >
                 Soy investigador
               </Link>
