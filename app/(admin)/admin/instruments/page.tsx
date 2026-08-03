@@ -18,7 +18,7 @@ export default async function AdminInstrumentsPage() {
         <AdminOnly>
           <Link
             href="/admin/instruments/new"
-            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors"
+            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors"
           >
             Nuevo instrumento
           </Link>

@@ -178,7 +178,7 @@ export default function InstrumentForm({
             id="isActive"
             checked={isActive}
             onChange={(e) => handleIsActiveChange(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
+            className="h-4 w-4 rounded border-[var(--border)] accent-[var(--brand)]"
           />
           <label htmlFor="isActive" className="text-sm text-[var(--text-primary)]">
             Instrumento activo (visible para encuestadores)
@@ -199,7 +199,7 @@ export default function InstrumentForm({
                 onClick={() => toggleActorType(at.actorTypeId)}
                 className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                   selectedActorTypeIds.includes(at.actorTypeId)
-                    ? "bg-[var(--brand)] border-green-700 text-white"
+                    ? "bg-[var(--brand)] border-[var(--brand)] text-[var(--brand-foreground)]"
                     : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
                 }`}
               >
@@ -219,7 +219,7 @@ export default function InstrumentForm({
           <button
             type="submit"
             disabled={saveStatus === "saving"}
-            className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+            className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
           >
             {submitLabel}
           </button>

@@ -58,7 +58,7 @@ export function Hero() {
             </div>
           </div>
 
-          <figure className="flex flex-col gap-2">
+          <figure className="hidden lg:flex flex-col gap-2">
             <div className="relative min-h-72 overflow-hidden rounded-2xl border border-white/10 shadow-lg lg:min-h-[26rem]">
               <Image
                 src="/campesino.jpg"

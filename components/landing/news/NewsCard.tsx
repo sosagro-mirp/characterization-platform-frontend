@@ -2,7 +2,7 @@ import { ArrowUpRight, CalendarDays } from "lucide-react";
 import type { NewsEntry, NewsTag } from "../../../lib/landing-content";
 
 const tagStyle: Record<NewsTag, string> = {
-  Evento: "bg-brand text-white",
+  Evento: "bg-brand text-brand-foreground",
   Publicación: "bg-brand-dark text-white",
   Convocatoria: "bg-accent text-brand-dark",
   Hito: "bg-gray-900 text-white",

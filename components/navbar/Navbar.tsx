@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { logout } from "@/services/auth.service";
 import { useIsHydrated } from "@/hooks/useIsHydrated";
 import { PANEL_ROLES } from "@/lib/roleRouting";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 const sectionLinks = [
   { href: "/#cultivos", label: "Cultivos" },
@@ -86,7 +87,7 @@ export const Navbar = () => {
     : "bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-sm border-b border-gray-200 dark:border-[#334155]";
 
   const linkBaseClass =
-    "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2 rounded";
+    "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded";
   const linkColorClass = isOverHero
     ? "text-gray-200 hover:text-white"
     : "text-gray-700 dark:text-[#f1f5f9] hover:text-brand-dark dark:hover:text-white";
@@ -143,10 +144,10 @@ export const Navbar = () => {
                   onClick={() => setIsSessionMenuOpen((p) => !p)}
                   aria-haspopup="menu"
                   aria-expanded={isSessionMenuOpen}
-                  className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 2xl:text-sm lg:text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2 ${sessionHoverClass}`}
+                  className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 2xl:text-sm lg:text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${sessionHoverClass}`}
                 >
                   <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand dark:bg-[#fde047] text-sm font-bold uppercase text-white dark:text-brand-dark"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold uppercase text-brand-foreground"
                     aria-hidden="true"
                   >
                     {user.name?.[0]}
@@ -201,11 +202,13 @@ export const Navbar = () => {
             ) : (
               <Link
                 href="/login"
-                className="hidden lg:inline-flex items-center px-4 py-2 rounded-lg bg-brand dark:bg-[#fde047] text-white dark:text-brand-dark text-sm font-bold transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-[#fde047] focus-visible:ring-offset-2"
+                className="hidden lg:inline-flex items-center px-4 py-2 rounded-lg bg-brand text-brand-foreground text-sm font-bold transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
                 Iniciar sesión
               </Link>
             )}
+
+            <ThemeToggle className={`hidden lg:inline-flex ${burgerColorClass}`} />
 
             <button
               type="button"
@@ -247,7 +250,7 @@ export const Navbar = () => {
         id="mobile-menu"
         aria-hidden={!isMenuOpen}
         {...(!isMenuOpen ? { inert: true } : {})}
-        className={`lg:hidden fixed inset-0 top-16 z-40 bg-white dark:bg-[#0f172a] transition-all duration-300 ease-in-out ${isMenuOpen
+        className={`lg:hidden fixed inset-0 top-[5.1rem] z-40 overflow-y-auto bg-white dark:bg-[#0f172a] transition-all duration-300 ease-in-out ${isMenuOpen
           ? "opacity-100 pointer-events-auto translate-y-0"
           : "opacity-0 pointer-events-none -translate-y-2"
           }`}
@@ -273,7 +276,7 @@ export const Navbar = () => {
                 <Link
                   href="/campaign"
                   onClick={closeMenu}
-                  className="block w-full rounded-lg bg-brand dark:bg-[#fde047] py-3 text-center text-sm font-bold text-white dark:text-brand-dark"
+                  className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-brand-foreground"
                 >
                   Campañas
                 </Link>
@@ -298,11 +301,14 @@ export const Navbar = () => {
               <Link
                 href="/login"
                 onClick={closeMenu}
-                className="block w-full rounded-lg bg-brand dark:bg-[#fde047] py-3 text-center text-sm font-bold text-white dark:text-brand-dark"
+                className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-brand-foreground"
               >
                 Iniciar sesión
               </Link>
             )}
+          </li>
+          <li className="mt-2">
+            <ThemeToggle variant="labeled" />
           </li>
         </ul>
       </div>

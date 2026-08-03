@@ -44,7 +44,7 @@ export default function StructureTree() {
         <button
           type="button"
           onClick={handleAddSection}
-          className="w-full rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] hover:border-green-400 hover:text-[var(--success-fg)] transition-colors"
+          className="w-full rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] hover:border-[var(--success-fg)] hover:text-[var(--success-fg)] transition-colors"
         >
           + Agregar sección
         </button>

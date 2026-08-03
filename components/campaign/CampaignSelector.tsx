@@ -10,7 +10,7 @@ interface CampaignSelectorProps {
 export default function CampaignSelector({ campaigns }: CampaignSelectorProps) {
   if (campaigns.length === 0) {
     return (
-      <p className="text-sm text-gray-500 text-center py-10">
+      <p className="text-sm text-text-muted text-center py-10">
         No hay campañas activas en este momento.
       </p>
     );
@@ -21,11 +21,11 @@ export default function CampaignSelector({ campaigns }: CampaignSelectorProps) {
         <li key={c.campaignId}>
           <Link
             href={`/campaign/${c.campaignId}`}
-            className="block rounded-2xl border border-gray-200 bg-white p-5 hover:border-green-600 hover:shadow-sm transition-all"
+            className="block rounded-2xl border border-[var(--border)] bg-surface p-5 hover:border-brand hover:shadow-sm transition-all"
           >
-            <h3 className="text-base font-semibold text-gray-900">{c.name}</h3>
+            <h3 className="text-base font-semibold text-text-primary">{c.name}</h3>
             {c.description && (
-              <p className="mt-1 text-sm text-gray-600 line-clamp-3">
+              <p className="mt-1 text-sm text-text-muted line-clamp-3">
                 {c.description}
               </p>
             )}

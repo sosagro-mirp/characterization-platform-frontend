@@ -49,12 +49,12 @@ function AudienceCard({
         className={`inline-flex items-center gap-2 self-start rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${
           isResearcher
             ? "bg-gray-100 text-gray-700"
-            : "bg-brand text-white"
+            : "bg-brand text-brand-foreground"
         }`}
       >
         <span
           className={`h-1.5 w-1.5 rounded-full ${
-            isResearcher ? "bg-gray-500" : "bg-white"
+            isResearcher ? "bg-gray-500" : "bg-brand-foreground"
           }`}
           aria-hidden="true"
         />

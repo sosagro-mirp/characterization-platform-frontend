@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Dashboard Público",
@@ -15,8 +16,8 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
-      <header className="bg-white">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3">
+      <header className="bg-surface">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
           <Link href="/" className="inline-flex items-center">
             <Image
               src="/logo-horizontal.png"
@@ -27,6 +28,7 @@ export default function DashboardLayout({
               priority
             />
           </Link>
+          <ThemeToggle className="text-text-muted hover:bg-surface-muted" />
         </div>
       </header>
       {children}
