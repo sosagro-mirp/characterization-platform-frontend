@@ -26,9 +26,20 @@ const DEFAULT_PALETTE: ColombiaMapPalette = {
 
 interface ColombiaMapProps {
   palette?: ColombiaMapPalette;
+  /**
+   * Cuando es `true`, el mapa se posiciona en absoluto y llena por completo
+   * a su contenedor (que debe tener una altura ya determinada), escalando
+   * el SVG para ajustarse a esa altura sin deformarse. Se usa quando el
+   * mapa debe igualar el alto de un elemento hermano (ver Territories.tsx
+   * de "/"). Por defecto usa su alto intrínseco (aspect-ratio propio).
+   */
+  fill?: boolean;
 }
 
-export function ColombiaMap({ palette = DEFAULT_PALETTE }: ColombiaMapProps) {
+export function ColombiaMap({
+  palette = DEFAULT_PALETTE,
+  fill = false,
+}: ColombiaMapProps) {
   const {
     hover,
     handleMouseMove,
@@ -45,14 +56,22 @@ export function ColombiaMap({ palette = DEFAULT_PALETTE }: ColombiaMapProps) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={handleContainerClick}
-      className="relative w-full overflow-hidden rounded-2xl border border-gray-200 dark:border-[#334155] bg-linear-to-br from-brand-light/40 via-white to-brand-light/20 dark:from-brand-light/10 dark:via-[#0f172a] dark:to-brand-light/5"
+      className={`overflow-hidden rounded-2xl border border-gray-200 dark:border-[#334155] bg-linear-to-br from-brand-light/40 via-white to-brand-light/20 dark:from-brand-light/10 dark:via-[#0f172a] dark:to-brand-light/5 ${
+        fill
+          ? "absolute inset-0 flex items-center justify-center"
+          : "relative w-full"
+      }`}
     >
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{ scale: 1500, center: [-74, 4] }}
         width={400}
         height={500}
-        style={{ width: "100%", height: "auto", display: "block" }}
+        style={
+          fill
+            ? { width: "100%", height: "100%", display: "block" }
+            : { width: "100%", height: "auto", display: "block" }
+        }
       >
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
