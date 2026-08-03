@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { CampaignSummary } from "@/app/(admin)/types";
 
 interface CampaignsTableProps {
@@ -25,22 +26,19 @@ export default function CampaignsTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
       <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
-            <th className="px-4 py-3 font-medium">Nombre</th>
-            <th className="px-4 py-3 font-medium">Estado</th>
-            <th className="px-4 py-3 font-medium">Creada</th>
-            <th className="px-4 py-3 font-medium text-right">Acciones</th>
+        <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          <tr>
+            <th className="px-4 py-3 text-left">Nombre</th>
+            <th className="px-4 py-3 text-left">Estado</th>
+            <th className="px-4 py-3 text-left">Creada</th>
+            <th className="px-4 py-3 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-[var(--border)]">
           {campaigns.map((c) => (
-            <tr
-              key={c.campaignId}
-              className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--surface-muted)]/40 transition-colors"
-            >
+            <tr key={c.campaignId} className="hover:bg-[var(--surface-muted)] transition-colors">
               <td className="px-4 py-3 text-[var(--text-primary)] font-medium">
                 {c.name}
               </td>
@@ -59,30 +57,35 @@ export default function CampaignsTable({
                 {new Date(c.createdAt).toLocaleDateString()}
               </td>
               <td className="px-4 py-3 text-right">
-                <div className="inline-flex gap-2">
+                <div className="inline-flex items-center gap-2">
                   <Link
                     href={`/campaign/${c.campaignId}/preview`}
                     target="_blank"
                     rel="noopener"
-                    className="rounded-lg border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+                    className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
                     title="Previsualizar la campaña sin enviar datos"
+                    aria-label="Previsualizar la campaña sin enviar datos"
                   >
-                    Vista previa
+                    <Eye className="size-4" aria-hidden="true" />
                   </Link>
                   <button
                     type="button"
                     onClick={() => onEdit(c.campaignId)}
-                    className="rounded-lg border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+                    className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                    title="Editar campaña"
+                    aria-label="Editar campaña"
                   >
-                    Editar
+                    <Pencil className="size-4" aria-hidden="true" />
                   </button>
                   {canDelete && (
                     <button
                       type="button"
                       onClick={() => onDelete(c)}
-                      className="rounded-lg border border-[var(--danger-fg)]/40 px-3 py-1 text-xs font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
+                      className="rounded-md p-1.5 text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors"
+                      title="Eliminar campaña"
+                      aria-label="Eliminar campaña"
                     >
-                      Eliminar
+                      <Trash2 className="size-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>

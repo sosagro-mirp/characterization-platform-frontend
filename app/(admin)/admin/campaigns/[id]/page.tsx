@@ -108,17 +108,21 @@ export default function EditCampaignPage() {
         </p>
       )}
 
-      <section>
-        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-3">
-          Datos generales
-        </h2>
-        <CampaignForm
-          mode="edit"
-          initial={campaign}
-          onSubmit={handleSave}
-          submitLabel="Guardar cambios"
-          canToggleActive={isAdmin}
-        />
+      <section className="w-full overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            Datos generales
+          </h2>
+        </div>
+        <div className="p-6">
+          <CampaignForm
+            mode="edit"
+            initial={campaign}
+            onSubmit={handleSave}
+            submitLabel="Guardar cambios"
+            canToggleActive={isAdmin}
+          />
+        </div>
       </section>
 
       <section>

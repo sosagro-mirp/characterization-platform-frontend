@@ -63,19 +63,41 @@ export default function CampaignForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
-      <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
-          Nombre <span className="text-[var(--danger-fg)]">*</span>
-        </label>
-        <input
-          type="text"
-          required
-          maxLength={255}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
-        />
+    <form onSubmit={handleSubmit} className="space-y-5 w-full">
+      <div className="flex flex-col gap-5 sm:flex-row">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+            Nombre <span className="text-[var(--danger-fg)]">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            maxLength={255}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          />
+        </div>
+
+        {canToggleActive && (
+          <div className="flex-1">
+            <label
+              htmlFor="campaignIsActive"
+              className="block text-sm font-medium text-[var(--text-primary)] mb-1"
+            >
+              Estado
+            </label>
+            <select
+              id="campaignIsActive"
+              value={isActive ? "active" : "inactive"}
+              onChange={(e) => setIsActive(e.target.value === "active")}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            >
+              <option value="active">Activa</option>
+              <option value="inactive">Inactiva</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <div>
@@ -90,24 +112,6 @@ export default function CampaignForm({
         />
       </div>
 
-      {canToggleActive && (
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="campaignIsActive"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-          />
-          <label
-            htmlFor="campaignIsActive"
-            className="text-sm text-[var(--text-primary)]"
-          >
-            Campaña activa (visible para encuestadores)
-          </label>
-        </div>
-      )}
-
       {error && (
         <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
           {error}
@@ -117,7 +121,7 @@ export default function CampaignForm({
       <button
         type="submit"
         disabled={saving}
-        className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+        className="rounded-md bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
       >
         {saving ? "Guardando…" : submitLabel ?? "Guardar"}
       </button>

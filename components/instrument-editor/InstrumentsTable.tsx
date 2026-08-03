@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Eye, Pencil, Power, Search, Trash2 } from "lucide-react";
 import { InstrumentListItem } from "@/app/(admin)/types";
 import { deleteInstrument, updateInstrument } from "@/services/instruments.service";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -51,21 +52,25 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
 
   return (
     <>
-      <div className="mb-4">
+      <div className="relative mb-4">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+          aria-hidden="true"
+        />
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar instrumento por nombre…"
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
       </div>
-      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+      <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             <tr>
               <th className="px-4 py-3 text-left">Nombre</th>
-              <th className="px-4 py-3 text-left">Fecha</th>
+              <th className="px-4 py-3 text-left">Actualizado el</th>
               <th className="px-4 py-3 text-left">Actores</th>
               <th className="px-4 py-3 text-left">Estado</th>
               <th className="px-4 py-3 text-right">Acciones</th>
@@ -78,7 +83,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                   {inst.name}
                 </td>
                 <td className="px-4 py-3 text-[var(--text-muted)]">
-                  {new Date(inst.publishDate).toLocaleDateString("es-CO")}
+                  {new Date(inst.updatedAt).toLocaleDateString("es-CO")}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
@@ -108,16 +113,19 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                       href={`/instrument/${inst.instrumentId}?preview=true`}
                       target="_blank"
                       rel="noopener"
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                      className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
                       title="Previsualizar el instrumento sin enviar datos"
+                      aria-label="Previsualizar el instrumento sin enviar datos"
                     >
-                      Vista previa
+                      <Eye className="size-4" aria-hidden="true" />
                     </Link>
                     <Link
                       href={`/admin/instruments/${inst.instrumentId}`}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                      className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                      title="Editar instrumento"
+                      aria-label="Editar instrumento"
                     >
-                      Editar
+                      <Pencil className="size-4" aria-hidden="true" />
                     </Link>
                     {isAdmin && (
                       <>
@@ -125,17 +133,21 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                           type="button"
                           disabled={loadingId === inst.instrumentId}
                           onClick={() => handleToggleActive(inst)}
-                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
+                          className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
+                          title={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}
+                          aria-label={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}
                         >
-                          {inst.isActive ? "Desactivar" : "Activar"}
+                          <Power className="size-4" aria-hidden="true" />
                         </button>
                         <button
                           type="button"
                           disabled={loadingId === inst.instrumentId}
                           onClick={() => setDeleteTarget(inst)}
-                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
+                          className="rounded-md p-1.5 text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
+                          title="Eliminar instrumento"
+                          aria-label="Eliminar instrumento"
                         >
-                          Eliminar
+                          <Trash2 className="size-4" aria-hidden="true" />
                         </button>
                       </>
                     )}
