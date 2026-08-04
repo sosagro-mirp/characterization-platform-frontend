@@ -57,7 +57,11 @@ export default function CropDonut({ data }: CropDonutProps) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-extrabold text-brand-dark">
+          {/* Fase 9 (WCAG AA): `text-text-primary` reactivo, no `text-brand-dark`
+              fijo — este número se apoya en `--surface` (blanco/oscuro según
+              tema), y el verde institucional fijo pierde contraste en oscuro
+              contra un fondo que también se oscurece. */}
+          <span className="text-xl font-extrabold text-text-primary">
             {total.toLocaleString("es-CO")}
           </span>
           <span className="text-[9px] text-text-muted">productores</span>

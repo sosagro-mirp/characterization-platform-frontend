@@ -9,7 +9,7 @@ import {
   clearDashboardFilters,
   DashboardPageState,
 } from "@/lib/dashboard/filters";
-import { cropColor } from "@/lib/dashboard/palette";
+import { cropColor, cropTint } from "@/lib/dashboard/palette";
 import { fetchDashboardSummary, fetchPublicTowns } from "../api";
 import { DepartmentSummary } from "@/services/departments.service";
 import { TownSummary } from "@/services/towns.service";
@@ -240,6 +240,7 @@ export default function GlobalFilterBar({
           {crops.map((crop) => {
             const active = filters.cropId === crop.cropId;
             const color = cropColor(crop.name);
+            const tint = cropTint(crop.name);
             return (
               <button
                 key={crop.cropId}
@@ -247,9 +248,12 @@ export default function GlobalFilterBar({
                 onClick={() => toggleCrop(crop.cropId)}
                 aria-pressed={active}
                 style={
+                  // Fase 9 (WCAG AA): fondo y texto siempre emparejados y
+                  // fijos (color de cultivo + su tinte, o color + blanco) —
+                  // nunca color fijo sobre la superficie reactiva del tema.
                   active
                     ? { backgroundColor: color, color: "#fff" }
-                    : { color, borderColor: color }
+                    : { backgroundColor: tint, color, borderColor: color }
                 }
                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${
                   active ? "" : "border bg-transparent"

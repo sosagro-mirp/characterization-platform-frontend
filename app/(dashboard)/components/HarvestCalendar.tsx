@@ -44,12 +44,18 @@ export default function HarvestCalendar({ options }: HarvestCalendarProps) {
       {MONTHS.map(({ name, letter }) => {
         const percentage = percentageByMonth.get(name) ?? 0;
         const ratio = percentage / maxPercentage;
+        // Fase 9 (WCAG AA): a intensidad alta el fondo converge al mismo
+        // verde institucional que usaba el texto fijo (`text-brand-dark`) —
+        // texto invisible sobre la celda más oscura. Punto de corte simple
+        // (ratio > 0.5) ya que el degradado interpola linealmente entre un
+        // verde muy claro y uno muy oscuro.
+        const textColorClass = ratio > 0.5 ? "text-white" : "text-brand-dark";
         return (
           <div
             key={name}
             title={`${name}: ${percentage.toFixed(0)}%`}
             style={{ backgroundColor: intensityColor(ratio) }}
-            className="flex aspect-square items-end justify-center rounded pb-1 text-[10px] font-semibold text-brand-dark"
+            className={`flex aspect-square items-end justify-center rounded pb-1 text-[10px] font-semibold ${textColorClass}`}
           >
             {letter}
           </div>
