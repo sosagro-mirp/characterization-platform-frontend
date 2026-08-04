@@ -17,6 +17,7 @@ import DashboardSidebar from "../components/DashboardSidebar";
 import GlobalFilterBar from "../components/GlobalFilterBar";
 import KpiStrip from "../components/KpiStrip";
 import ViewHeader from "../components/ViewHeader";
+import OverviewView from "../components/OverviewView";
 import QuestionsGrid from "../components/QuestionsGrid";
 import SuppressedDataCard from "../components/SuppressedDataCard";
 import EmptyStateCard from "../components/EmptyStateCard";
@@ -94,12 +95,12 @@ async function GlobalFilterBarData({
 }
 
 /**
- * Fase 5 (spec 43): cuerpo de la vista. Reutiliza el grid de preguntas del
- * spec 30 como contenido interino — las vistas curadas propias
- * (`OverviewView`, `CategoryView`, `DigitalDemandView`) llegan en las
- * Fases 6–7. `hasSelection` acepta tanto `categoryId` (navegación nueva,
- * D6) como `instrumentId` (drill-down avanzado que D2 mantiene disponible,
- * aunque `GlobalFilterBar` ya no lo expone como control).
+ * Fase 6 (spec 43): resuelve la vista raíz. Sin `categoryId`/`instrumentId`
+ * (D2: `instrumentId` es un drill-down avanzado que `GlobalFilterBar` ya no
+ * expone como control, pero D6 lo mantiene disponible) → `OverviewView`
+ * curada (layout `1a`). Con selección → el grid de preguntas del spec 30
+ * como contenido interino; `CategoryView`/`DigitalDemandView` llegan en la
+ * Fase 7.
  */
 async function DashboardViewContent({
   state,
@@ -108,27 +109,19 @@ async function DashboardViewContent({
 }) {
   const { filters, categoryId } = state;
   const hasSelection = Boolean(categoryId || filters.instrumentId);
-  const analyticsFilters: DashboardFilters = { ...filters, categoryId };
-
-  const kpis = await fetchKpis(analyticsFilters);
 
   if (!hasSelection) {
-    return (
-      <div className="space-y-4">
-        <ViewHeader title="Resumen general" />
-        <KpiStrip kpis={kpis} />
-        <div className="rounded-lg border border-[var(--border)] bg-surface-muted px-4 py-6 text-center text-text-muted">
-          Selecciona una categoría en el panel lateral para explorar los datos
-          agregados y anonimizados recolectados en campo.
-        </div>
-      </div>
-    );
+    return <OverviewView filters={filters} />;
   }
 
-  // Fase 9 (spec 30): el mapa solo tiene sentido sin un departamento ya seleccionado.
-  const [data, departmentCounts] = await Promise.all([
+  const analyticsFilters: DashboardFilters = { ...filters, categoryId };
+
+  // Fase 6 (spec 43): el mapa se muestra siempre (ver nota en `OverviewView`
+  // sobre por qué `departmentId` activo no cambia la distribución nacional).
+  const [data, departmentCounts, kpis] = await Promise.all([
     fetchDashboardAnalytics(analyticsFilters),
-    filters.departmentId ? Promise.resolve(null) : fetchDepartmentCounts(analyticsFilters),
+    fetchDepartmentCounts(analyticsFilters),
+    fetchKpis(analyticsFilters),
   ]);
 
   return (
@@ -141,11 +134,9 @@ async function DashboardViewContent({
 
       <KpiStrip kpis={kpis} />
 
-      {departmentCounts && (
-        <div className="max-w-md">
-          <ColombiaMap data={departmentCounts} />
-        </div>
-      )}
+      <div className="max-w-md">
+        <ColombiaMap data={departmentCounts} />
+      </div>
 
       {data.suppressed ? (
         // D. de privacidad: 0 encuestas es "sin datos sincronizados" (EmptyStateCard);

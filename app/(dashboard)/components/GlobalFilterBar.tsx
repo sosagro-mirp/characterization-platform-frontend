@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import {
+  AGE_RANGE_BUCKETS,
   buildDashboardQuery,
   clearDashboardFilters,
   DashboardPageState,
@@ -44,7 +45,6 @@ const CONNECTIVITY_OPTIONS = [
   "No usa celular",
 ];
 
-const AGE_RANGE_OPTIONS = ["<30", "30-45", "46-60", ">60"];
 
 const selectClass =
   "rounded-md border border-[var(--border)] bg-surface px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed";
@@ -225,7 +225,7 @@ export default function GlobalFilterBar({
           className={selectClass}
         >
           <option value="">Rango edad</option>
-          {AGE_RANGE_OPTIONS.map((bucket) => (
+          {AGE_RANGE_BUCKETS.map((bucket) => (
             <option key={bucket} value={bucket}>
               {bucket}
             </option>

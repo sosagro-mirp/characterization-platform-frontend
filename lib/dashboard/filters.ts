@@ -1,5 +1,9 @@
 import { DashboardFilters } from "@/app/(dashboard)/types";
 
+/** Buckets fijos de `ageRange` (spec 43, D3) — mismo contrato que
+ * `AGE_RANGE_BUCKETS` en `backend/src/dashboard/dashboard-response-filters.config.ts`. */
+export const AGE_RANGE_BUCKETS = ["<30", "30-45", "46-60", ">60"] as const;
+
 export type DashboardView = "overview" | "category";
 
 export interface DashboardPageState {
