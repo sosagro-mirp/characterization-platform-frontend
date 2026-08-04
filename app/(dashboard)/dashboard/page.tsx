@@ -1,18 +1,22 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { listActiveCampaigns } from "@/services/campaigns.service";
 import {
+  fetchCategories,
   fetchDashboardAnalytics,
   fetchDashboardOverview,
   fetchDepartmentCounts,
+  fetchKpis,
   fetchPublicActorTypes,
   fetchPublicCrops,
   fetchPublicDepartments,
-  fetchPublicInstruments,
 } from "../api";
+import { parseDashboardParams } from "@/lib/dashboard/filters";
 import { DashboardFilters, DashboardQuestion } from "../types";
-import FilterPanel from "../components/FilterPanel";
-import FilterPanelLoading from "../components/FilterPanel.loading";
-import MetadataBar from "../components/MetadataBar";
+import DashboardSidebar from "../components/DashboardSidebar";
+import GlobalFilterBar from "../components/GlobalFilterBar";
+import KpiStrip from "../components/KpiStrip";
+import ViewHeader from "../components/ViewHeader";
 import QuestionsGrid from "../components/QuestionsGrid";
 import SuppressedDataCard from "../components/SuppressedDataCard";
 import EmptyStateCard from "../components/EmptyStateCard";
@@ -27,90 +31,118 @@ export const metadata: Metadata = {
   title: "Explorar datos",
 };
 
-interface DashboardPageProps {
-  searchParams: Promise<{
-    instrumentId?: string;
-    departmentId?: string;
-    townId?: string;
-    cropId?: string;
-    actorTypeId?: string;
-  }>;
+/** Superconjunto de `DashboardFilters` + `view`/`categoryId` (D6) — Next no
+ * valida esta forma en tiempo de ejecución, es solo el contrato asumido.
+ * El índice satisface a `parseDashboardParams` (acepta cualquier clave). */
+interface DashboardSearchParams extends DashboardFilters {
+  view?: string;
+  [key: string]: string | undefined;
 }
 
-function parseFilters(
-  raw: Awaited<DashboardPageProps["searchParams"]>,
-): DashboardFilters {
-  return {
-    instrumentId: raw.instrumentId || undefined,
-    departmentId: raw.departmentId || undefined,
-    townId: raw.townId || undefined,
-    cropId: raw.cropId || undefined,
-    actorTypeId: raw.actorTypeId || undefined,
-  };
+interface DashboardPageProps {
+  searchParams: Promise<DashboardSearchParams>;
 }
 
 export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
-  const filters = parseFilters(await searchParams);
+  const state = parseDashboardParams(await searchParams);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 flex flex-col lg:flex-row gap-8">
-      <Suspense fallback={<FilterPanelLoading />}>
-        <FilterPanelData />
-      </Suspense>
-      <div className="flex-1 min-w-0">
-        <Suspense fallback={<DashboardSkeleton />}>
-          <DashboardContent filters={filters} />
+    <div className="flex flex-col lg:flex-row min-h-full">
+      <DashboardSidebar
+        categories={await fetchCategories()}
+        state={state}
+      />
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <Suspense fallback={<div className="h-[52px] bg-surface border-b border-[var(--border)]" />}>
+          <GlobalFilterBarData state={state} />
         </Suspense>
+
+        <div className="flex-1 p-4 sm:p-6 space-y-4">
+          <Suspense fallback={<DashboardSkeleton />}>
+            <DashboardViewContent state={state} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );
 }
 
-async function FilterPanelData() {
-  const [instruments, departments, crops, actorTypes] = await Promise.all([
-    fetchPublicInstruments(),
+async function GlobalFilterBarData({
+  state,
+}: {
+  state: ReturnType<typeof parseDashboardParams>;
+}) {
+  const [departments, crops, actorTypes, campaigns] = await Promise.all([
     fetchPublicDepartments(),
     fetchPublicCrops(),
     fetchPublicActorTypes(),
+    listActiveCampaigns(),
   ]);
 
   return (
-    <FilterPanel
-      instruments={instruments}
+    <GlobalFilterBar
+      state={state}
       departments={departments}
       crops={crops}
       actorTypes={actorTypes}
+      campaigns={campaigns}
     />
   );
 }
 
-async function DashboardContent({ filters }: { filters: DashboardFilters }) {
-  if (!filters.instrumentId) {
+/**
+ * Fase 5 (spec 43): cuerpo de la vista. Reutiliza el grid de preguntas del
+ * spec 30 como contenido interino — las vistas curadas propias
+ * (`OverviewView`, `CategoryView`, `DigitalDemandView`) llegan en las
+ * Fases 6–7. `hasSelection` acepta tanto `categoryId` (navegación nueva,
+ * D6) como `instrumentId` (drill-down avanzado que D2 mantiene disponible,
+ * aunque `GlobalFilterBar` ya no lo expone como control).
+ */
+async function DashboardViewContent({
+  state,
+}: {
+  state: ReturnType<typeof parseDashboardParams>;
+}) {
+  const { filters, categoryId } = state;
+  const hasSelection = Boolean(categoryId || filters.instrumentId);
+  const analyticsFilters: DashboardFilters = { ...filters, categoryId };
+
+  const kpis = await fetchKpis(analyticsFilters);
+
+  if (!hasSelection) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold text-text-primary mb-2">
-          Dashboard público de encuestas
-        </h1>
-        <QuestionsGrid questions={[]} hasInstrument={false} />
+      <div className="space-y-4">
+        <ViewHeader title="Resumen general" />
+        <KpiStrip kpis={kpis} />
+        <div className="rounded-lg border border-[var(--border)] bg-surface-muted px-4 py-6 text-center text-text-muted">
+          Selecciona una categoría en el panel lateral para explorar los datos
+          agregados y anonimizados recolectados en campo.
+        </div>
       </div>
     );
   }
 
-  // Fase 9: el mapa solo tiene sentido sin un departamento ya seleccionado
-  // (si no, sería un mapa de un solo departamento resaltado).
+  // Fase 9 (spec 30): el mapa solo tiene sentido sin un departamento ya seleccionado.
   const [data, departmentCounts] = await Promise.all([
-    fetchDashboardAnalytics(filters),
-    filters.departmentId ? Promise.resolve(null) : fetchDepartmentCounts(filters),
+    fetchDashboardAnalytics(analyticsFilters),
+    filters.departmentId ? Promise.resolve(null) : fetchDepartmentCounts(analyticsFilters),
   ]);
 
   return (
-    <div>
-      <MetadataBar metadata={data.metadata} />
+    <div className="space-y-4">
+      <ViewHeader
+        title={data.metadata.categoryName ?? data.metadata.instrumentName ?? "Categoría"}
+        badge={categoryId}
+        metadata={data.metadata}
+      />
+
+      <KpiStrip kpis={kpis} />
 
       {departmentCounts && (
-        <div className="mb-6 max-w-md">
+        <div className="max-w-md">
           <ColombiaMap data={departmentCounts} />
         </div>
       )}
@@ -126,7 +158,7 @@ async function DashboardContent({ filters }: { filters: DashboardFilters }) {
       ) : (
         <>
           <QuestionsGrid questions={data.questions} hasInstrument />
-          <AggregateAnalysis questions={data.questions} filters={filters} />
+          <AggregateAnalysis questions={data.questions} filters={analyticsFilters} />
         </>
       )}
     </div>
@@ -147,9 +179,9 @@ function groupYesNoBySection(
 }
 
 /**
- * Fase 12: visualizaciones agregadas que explotan la estructura de los datos
- * (batería likert, "% Sí" por sección, focalización, perfil demográfico) —
- * valor incremental sobre el grid de preguntas individuales de la Fase 7.
+ * Fase 12 (spec 30): visualizaciones agregadas que explotan la estructura de
+ * los datos (batería likert, "% Sí" por sección, focalización, perfil
+ * demográfico) — valor incremental sobre el grid de preguntas individuales.
  */
 function AggregateAnalysis({
   questions,
@@ -171,7 +203,7 @@ function AggregateAnalysis({
       {yesNoBatteries.map(([sectionName, sectionQuestions]) => (
         <div key={sectionName}>
           <p className="text-sm font-medium text-text-primary mb-2">
-            {sectionName} — % de respuestas "Sí"
+            {sectionName} — % de respuestas &quot;Sí&quot;
           </p>
           <YesNoBatteryChart questions={sectionQuestions} />
         </div>
