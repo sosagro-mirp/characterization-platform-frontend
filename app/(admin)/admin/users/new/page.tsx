@@ -51,15 +51,10 @@ export default function NewUserPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Nuevo usuario
-        </h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          Crea un usuario asignándole un rol del sistema.
-        </p>
-      </div>
+    <div className="max-w-2xl space-y-6">
+      <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+        Nuevo usuario
+      </h1>
 
       {topError && (
         <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
@@ -70,13 +65,22 @@ export default function NewUserPage() {
       {loading ? (
         <p className="text-sm text-[var(--text-muted)]">Cargando…</p>
       ) : (
-        <UserForm
-          mode="create"
-          roles={roles}
-          onSubmit={handleSubmit}
-          submitLabel="Crear usuario"
-          emailError={emailError}
-        />
+        <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+              Datos de la cuenta
+            </h2>
+          </div>
+          <div className="p-6">
+            <UserForm
+              mode="create"
+              roles={roles}
+              onSubmit={handleSubmit}
+              submitLabel="Crear usuario"
+              emailError={emailError}
+            />
+          </div>
+        </section>
       )}
     </div>
   );

@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, Pencil, Power, Search, Trash2 } from "lucide-react";
+import { ClipboardList, Eye, Pencil, Power, Search, Trash2 } from "lucide-react";
 import { InstrumentListItem } from "@/app/(admin)/types";
 import { deleteInstrument, updateInstrument } from "@/services/instruments.service";
 import { useAuthStore } from "@/store/useAuthStore";
+import Tooltip from "@/components/common/Tooltip";
 import ConfirmDialog from "./ConfirmDialog";
 
 interface InstrumentsTableProps {
@@ -52,9 +53,9 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
 
   return (
     <>
-      <div className="relative mb-4">
+      <div className="relative mb-4 max-w-sm">
         <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+          className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--text-muted)]"
           aria-hidden="true"
         />
         <input
@@ -62,121 +63,147 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar instrumento por nombre…"
-          className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
       </div>
       <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
-        <table className="w-full text-sm">
-          <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            <tr>
-              <th className="px-4 py-3 text-left">Nombre</th>
-              <th className="px-4 py-3 text-left">Actualizado el</th>
-              <th className="px-4 py-3 text-left">Actores</th>
-              <th className="px-4 py-3 text-left">Estado</th>
-              <th className="px-4 py-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border)]">
-            {filteredInstruments.map((inst) => (
-              <tr key={inst.instrumentId} className="hover:bg-[var(--surface-muted)]">
-                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
-                  {inst.name}
-                </td>
-                <td className="px-4 py-3 text-[var(--text-muted)]">
-                  {new Date(inst.updatedAt).toLocaleDateString("es-CO")}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {inst.actorTypes.map((a) => (
-                      <span
-                        key={a.actorTypeId}
-                        className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-[var(--text-muted)]"
-                      >
-                        {a.name}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${inst.isActive
-                      ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
-                      : "bg-[var(--surface-muted)] text-[var(--text-muted)]"
-                      }`}
-                  >
-                    {inst.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-2">
-                    <Link
-                      href={`/instrument/${inst.instrumentId}?preview=true`}
-                      target="_blank"
-                      rel="noopener"
-                      className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
-                      title="Previsualizar el instrumento sin enviar datos"
-                      aria-label="Previsualizar el instrumento sin enviar datos"
-                    >
-                      <Eye className="size-4" aria-hidden="true" />
-                    </Link>
-                    <Link
-                      href={`/admin/instruments/${inst.instrumentId}`}
-                      className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
-                      title="Editar instrumento"
-                      aria-label="Editar instrumento"
-                    >
-                      <Pencil className="size-4" aria-hidden="true" />
-                    </Link>
-                    {isAdmin && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={loadingId === inst.instrumentId}
-                          onClick={() => handleToggleActive(inst)}
-                          className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
-                          title={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}
-                          aria-label={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}
-                        >
-                          <Power className="size-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={loadingId === inst.instrumentId}
-                          onClick={() => setDeleteTarget(inst)}
-                          className="rounded-md p-1.5 text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
-                          title="Eliminar instrumento"
-                          aria-label="Eliminar instrumento"
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filteredInstruments.length === 0 && searchTerm && (
+        {filteredInstruments.length > 0 && (
+          <table className="w-full text-xs">
+            <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-10 text-center text-sm text-[var(--text-muted)]"
-                >
-                  No se encontraron instrumentos para &ldquo;{searchTerm}&rdquo;.
-                </td>
+                <th className="px-3 py-2.5 text-left">Nombre</th>
+                <th className="px-3 py-2.5 text-left">Actualizado el</th>
+                <th className="px-3 py-2.5 text-left">Actores</th>
+                <th className="px-3 py-2.5 text-left">Estado</th>
+                <th className="px-3 py-2.5 text-right">Acciones</th>
               </tr>
-            )}
-            {filteredInstruments.length === 0 && !searchTerm && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-10 text-center text-sm text-[var(--text-muted)]"
-                >
-                  No hay instrumentos creados aún.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {filteredInstruments.map((inst) => (
+                <tr key={inst.instrumentId} className="hover:bg-[var(--surface-muted)]">
+                  <td className="px-3 py-2.5 font-medium text-[var(--text-primary)]">
+                    {inst.name}
+                  </td>
+                  <td className="px-3 py-2.5 text-[var(--text-muted)]">
+                    {new Date(inst.updatedAt).toLocaleDateString("es-CO")}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-wrap gap-1">
+                      {inst.actorTypes.map((a) => (
+                        <span
+                          key={a.actorTypeId}
+                          className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[10.5px] text-[var(--text-muted)]"
+                        >
+                          {a.name}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10.5px] font-medium ${inst.isActive
+                        ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
+                        : "bg-[var(--surface-muted)] text-[var(--text-muted)]"
+                        }`}
+                    >
+                      {inst.isActive ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    <div className="inline-flex items-center gap-1.5">
+                      <Tooltip label="Previsualizar el instrumento sin enviar datos">
+                        <Link
+                          href={`/instrument/${inst.instrumentId}?preview=true`}
+                          target="_blank"
+                          rel="noopener"
+                          className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                          aria-label="Previsualizar el instrumento sin enviar datos"
+                        >
+                          <Eye className="size-3.5" aria-hidden="true" />
+                        </Link>
+                      </Tooltip>
+                      <Tooltip label="Editar instrumento">
+                        <Link
+                          href={`/admin/instruments/${inst.instrumentId}`}
+                          className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                          aria-label="Editar instrumento"
+                        >
+                          <Pencil className="size-3.5" aria-hidden="true" />
+                        </Link>
+                      </Tooltip>
+                      {isAdmin && (
+                        <>
+                          <Tooltip label={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}>
+                            <button
+                              type="button"
+                              disabled={loadingId === inst.instrumentId}
+                              onClick={() => handleToggleActive(inst)}
+                              className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
+                              aria-label={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}
+                            >
+                              <Power className="size-3.5" aria-hidden="true" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip label="Eliminar instrumento">
+                            <button
+                              type="button"
+                              disabled={loadingId === inst.instrumentId}
+                              onClick={() => setDeleteTarget(inst)}
+                              className="rounded-md p-1.5 text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
+                              aria-label="Eliminar instrumento"
+                            >
+                              <Trash2 className="size-3.5" aria-hidden="true" />
+                            </button>
+                          </Tooltip>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {filteredInstruments.length === 0 && (
+          <div className="flex flex-col items-center px-6 py-16 text-center">
+            <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-[var(--surface-muted)]">
+              <ClipboardList className="size-5 text-[var(--text-muted)]" aria-hidden="true" />
+            </div>
+            <p className="mb-1.5 text-sm font-semibold text-[var(--text-primary)]">
+              {searchTerm ? `Sin resultados para “${searchTerm}”` : "Todavía no hay instrumentos"}
+            </p>
+            <p className="max-w-sm text-xs text-[var(--text-muted)]">
+              {searchTerm
+                ? "Probá con otro término o revisá la ortografía."
+                : "Creá el primer instrumento para empezar a definir secciones y preguntas."}
+            </p>
+          </div>
+        )}
+
+        {filteredInstruments.length > 0 && (
+          <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-[10.5px] text-[var(--text-muted)]">
+            <span>
+              Mostrando {filteredInstruments.length} de {filteredInstruments.length}
+            </span>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                disabled
+                className="rounded px-2.5 py-1 text-[10.5px] text-[var(--text-muted)] border border-[var(--border)] disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                disabled
+                className="rounded px-2.5 py-1 text-[10.5px] text-[var(--text-muted)] border border-[var(--border)] disabled:opacity-50"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

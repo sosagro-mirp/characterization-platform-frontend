@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Settings } from "lucide-react";
 import {
   ActorTypeSummary,
   SectionDetail,
@@ -53,6 +54,10 @@ export default function InstrumentEditorLayout({
     updateInstrumentMeta,
   } = useInstrumentEditorStore();
 
+  const formattedPublishDate = instrumentPublishDate
+    ? new Date(instrumentPublishDate).toLocaleDateString("es-CO")
+    : null;
+
   useEffect(() => {
     initialize({
       instrumentId,
@@ -69,14 +74,20 @@ export default function InstrumentEditorLayout({
   const renderPanel = () => {
     if (!selection || selection.kind === "instrument") {
       return (
-        <div className="space-y-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">
-              Configuración general
-            </p>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-              {instrumentName}
-            </h2>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                <Settings className="size-3.5 shrink-0" aria-hidden="true" />
+                Configuración general
+              </p>
+              <h2 className="truncate text-base font-semibold text-[var(--text-primary)]">
+                {instrumentName}
+              </h2>
+            </div>
+            <span className="shrink-0 whitespace-nowrap text-[10.5px] text-[var(--text-muted)]">
+              Los cambios se guardan solos
+            </span>
           </div>
           <InstrumentForm
             actorTypes={allActorTypes}
@@ -129,15 +140,19 @@ export default function InstrumentEditorLayout({
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)]">
-        <h1 className="font-semibold text-[var(--text-primary)] truncate">{instrumentName}</h1>
-        <div className="flex items-center gap-4">
-          <SaveStatusIndicator status={saveStatus} errorMessage={saveError} />
+      <header className="flex items-center justify-between gap-4 px-5 py-3 border-b border-[var(--border)] bg-[var(--surface-muted)]">
+        <div className="min-w-0">
+          <h1 className="truncate text-sm font-semibold text-[var(--text-primary)]">{instrumentName}</h1>
+          <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
+            v{instrumentVersion}
+            {formattedPublishDate && ` · publicado el ${formattedPublishDate}`}
+          </p>
         </div>
+        <SaveStatusIndicator status={saveStatus} errorMessage={saveError} />
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] overflow-y-auto">
+        <aside className="scrollbar-hide w-[420px] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] overflow-y-auto">
           <StructureTree />
         </aside>
 

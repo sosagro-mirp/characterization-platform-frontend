@@ -52,8 +52,8 @@ export default function StepConditionEditor({
   }
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-[var(--text-primary)]">
+    <div className="space-y-2 border-t border-[var(--border)] pt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         Condiciones de visibilidad
       </p>
 
@@ -99,7 +99,7 @@ export default function StepConditionEditor({
         <button
           type="button"
           onClick={() => setShowNewRow(true)}
-          className="rounded-lg border border-dashed border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-muted)] hover:border-[var(--brand)] hover:text-[var(--brand)] w-full"
+          className="w-full rounded-md border border-dashed border-[var(--border-strong)] px-3 py-2 text-xs font-medium text-[var(--brand)] hover:bg-[var(--brand-subtle-bg)] transition-colors"
         >
           + Agregar condición
         </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp, GitBranch, Plus, Trash2 } from "lucide-react";
 import {
   CampaignStepDetail,
   CropRef,
@@ -164,13 +165,9 @@ export default function StepEditor({
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-        Pasos
-      </h2>
-
+    <div className="space-y-3">
       {error && (
-        <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
+        <p className="text-sm text-[var(--danger-fg)] rounded-md bg-[var(--danger-bg)] px-3 py-2">
           {error}
         </p>
       )}
@@ -183,129 +180,129 @@ export default function StepEditor({
           return (
             <li
               key={step.stepId}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3"
+              className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface-muted)]"
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-[var(--text-muted)] w-6">
-                    #{step.order}
-                  </span>
-                  <select
-                    value={step.instrument.instrumentId}
-                    disabled={pendingStepId === step.stepId}
-                    onChange={(e) =>
-                      handleChangeInstrument(step.stepId, e.target.value)
-                    }
-                    className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
-                  >
-                    {instruments.map((inst) => (
-                      <option key={inst.instrumentId} value={inst.instrumentId}>
-                        {inst.name} (v{inst.version})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="inline-flex gap-1">
+              <div className="flex items-center gap-3 p-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[var(--brand-subtle-bg)] text-xs font-bold text-[var(--brand-subtle-fg)]">
+                  {step.order}
+                </span>
+                <select
+                  value={step.instrument.instrumentId}
+                  disabled={pendingStepId === step.stepId}
+                  onChange={(e) =>
+                    handleChangeInstrument(step.stepId, e.target.value)
+                  }
+                  className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)]"
+                >
+                  {instruments.map((inst) => (
+                    <option key={inst.instrumentId} value={inst.instrumentId}>
+                      {inst.name} (v{inst.version})
+                    </option>
+                  ))}
+                </select>
+                <div className="flex shrink-0 gap-1">
                   <button
                     type="button"
                     disabled={idx === 0 || pendingStepId === step.stepId}
                     onClick={() => handleMove(step.stepId, "up")}
-                    className="rounded-lg border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-30"
-                    title="Subir"
+                    className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-30"
+                    title="Subir paso"
+                    aria-label="Subir paso"
                   >
-                    ↑
+                    <ChevronUp className="size-3.5" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     disabled={idx === steps.length - 1 || pendingStepId === step.stepId}
                     onClick={() => handleMove(step.stepId, "down")}
-                    className="rounded-lg border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-30"
-                    title="Bajar"
+                    className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-30"
+                    title="Bajar paso"
+                    aria-label="Bajar paso"
                   >
-                    ↓
+                    <ChevronDown className="size-3.5" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     disabled={pendingStepId === step.stepId}
                     onClick={() => handleRemove(step.stepId)}
-                    className="rounded-lg border border-[var(--danger-fg)]/40 px-2 py-1 text-xs text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] disabled:opacity-50"
+                    className="rounded-md border border-[var(--danger-fg)]/40 bg-[var(--surface)] p-1.5 text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors disabled:opacity-50"
+                    title="Eliminar paso"
+                    aria-label="Eliminar paso"
                   >
-                    Eliminar
+                    <Trash2 className="size-3.5" aria-hidden="true" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">
-                {condCount > 0 ? (
-                  <>
-                    <span className="font-medium text-[var(--text-primary)]">
-                      {condCount} {condCount === 1 ? "condición" : "condiciones"}
-                    </span>
-                    {conditionsSummary && (
-                      <span className="truncate max-w-xs" title={conditionsSummary}>
-                        · {conditionsSummary}
-                      </span>
+              <div className="px-3 pb-3">
+                <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-muted)]">
+                  <GitBranch className="size-3.5 shrink-0 text-[var(--info-fg)]" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate" title={conditionsSummary ?? undefined}>
+                    {condCount > 0 ? (
+                      <>
+                        <span className="font-medium text-[var(--text-primary)]">
+                          {condCount} {condCount === 1 ? "condición" : "condiciones"}
+                        </span>
+                        {conditionsSummary && ` · ${conditionsSummary}`}
+                      </>
+                    ) : (
+                      "Sin condición (siempre se aplica)"
                     )}
-                  </>
-                ) : (
-                  <span>Sin condición (siempre se aplica)</span>
-                )}
-                <span className="text-[var(--border)]">·</span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEditingConditionStepId(
-                      editingConditionStepId === step.stepId ? null : step.stepId,
-                    )
-                  }
-                  className="text-[var(--brand)] underline"
-                >
-                  {editingConditionStepId === step.stepId ? "Cerrar" : "Configurar"}
-                </button>
-              </div>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingConditionStepId(
+                        editingConditionStepId === step.stepId ? null : step.stepId,
+                      )
+                    }
+                    className="shrink-0 font-semibold text-[var(--brand)] hover:underline"
+                  >
+                    {editingConditionStepId === step.stepId ? "Cerrar" : "Configurar"}
+                  </button>
+                </div>
 
-              {editingConditionStepId === step.stepId && (
-                <StepConditionEditor
-                  campaignId={campaignId}
-                  stepId={step.stepId}
-                  initialConditions={step.conditions ?? []}
-                  questionGroups={buildQuestionGroups(step)}
-                  loadingQuestions={loadingQuestions}
-                  availableCrops={availableCrops}
-                  onChanged={onChanged}
-                />
-              )}
+                {editingConditionStepId === step.stepId && (
+                  <div className="mt-3">
+                    <StepConditionEditor
+                      campaignId={campaignId}
+                      stepId={step.stepId}
+                      initialConditions={step.conditions ?? []}
+                      questionGroups={buildQuestionGroups(step)}
+                      loadingQuestions={loadingQuestions}
+                      availableCrops={availableCrops}
+                      onChanged={onChanged}
+                    />
+                  </div>
+                )}
+              </div>
             </li>
           );
         })}
       </ul>
 
-      <div className="rounded-xl border border-dashed border-[var(--border)] p-4 space-y-3">
-        <p className="text-sm font-medium text-[var(--text-primary)]">
+      <div className="flex gap-2 rounded-md border border-dashed border-[var(--border-strong)] p-3">
+        <select
+          value={newInstrumentId}
+          onChange={(e) => setNewInstrumentId(e.target.value)}
+          className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)]"
+        >
+          <option value="">Seleccionar instrumento…</option>
+          {instruments.map((inst) => (
+            <option key={inst.instrumentId} value={inst.instrumentId}>
+              {inst.name} (v{inst.version})
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={!newInstrumentId}
+          onClick={handleAdd}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+        >
+          <Plus className="size-4" aria-hidden="true" />
           Agregar paso
-        </p>
-        <div className="flex gap-2">
-          <select
-            value={newInstrumentId}
-            onChange={(e) => setNewInstrumentId(e.target.value)}
-            className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm bg-[var(--surface)]"
-          >
-            <option value="">Seleccionar instrumento…</option>
-            {instruments.map((inst) => (
-              <option key={inst.instrumentId} value={inst.instrumentId}>
-                {inst.name} (v{inst.version})
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            disabled={!newInstrumentId}
-            onClick={handleAdd}
-            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50"
-          >
-            Agregar
-          </button>
-        </div>
+        </button>
       </div>
     </div>
   );

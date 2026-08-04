@@ -91,16 +91,10 @@ export default function EditCampaignPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          {campaign.name}
-        </h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {campaign.steps.length} paso{campaign.steps.length === 1 ? "" : "s"} configurado
-          {campaign.steps.length === 1 ? "" : "s"}.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+        {campaign.name}
+      </h1>
 
       {error && (
         <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
@@ -125,14 +119,22 @@ export default function EditCampaignPage() {
         </div>
       </section>
 
-      <section>
-        <StepEditor
-          campaignId={campaignId}
-          steps={campaign.steps}
-          instruments={instruments}
-          availableCrops={crops}
-          onChanged={refresh}
-        />
+      <section className="w-full overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            Pasos de la campaña
+          </h2>
+          <span className="text-xs text-[var(--text-muted)]">Se guardan automáticamente</span>
+        </div>
+        <div className="p-6">
+          <StepEditor
+            campaignId={campaignId}
+            steps={campaign.steps}
+            instruments={instruments}
+            availableCrops={crops}
+            onChanged={refresh}
+          />
+        </div>
       </section>
     </div>
   );

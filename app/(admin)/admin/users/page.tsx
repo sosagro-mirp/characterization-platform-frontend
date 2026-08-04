@@ -3,18 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { UserListItem } from "@/app/(admin)/types";
-import { deleteUser, listUsers } from "@/services/users.service";
+import { listUsers } from "@/services/users.service";
 import UsersTable from "@/components/admin/users/UsersTable";
-import ConfirmDialog from "@/components/instrument-editor/ConfirmDialog";
 
 export default function UsersListPage() {
   const router = useRouter();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toDelete, setToDelete] = useState<UserListItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -32,20 +30,6 @@ export default function UsersListPage() {
     refresh();
   }, []);
 
-  async function handleConfirmDelete() {
-    if (!toDelete) return;
-    setDeleting(true);
-    try {
-      await deleteUser(toDelete.userId);
-      setToDelete(null);
-      await refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al eliminar usuario.");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -54,13 +38,16 @@ export default function UsersListPage() {
             Usuarios
           </h1>
           <p className="text-sm text-[var(--text-muted)]">
-            Gestiona usuarios y sus roles.
+            {loading
+              ? "Gestiona usuarios y sus roles."
+              : `${users.length} usuario${users.length === 1 ? "" : "s"} con acceso al panel`}
           </p>
         </div>
         <Link
           href="/admin/users/new"
-          className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors"
+          className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold bg-brand text-brand-foreground hover:bg-brand-hover transition-colors"
         >
+          <Plus className="size-5 shrink-0" />
           Nuevo usuario
         </Link>
       </div>
@@ -77,23 +64,8 @@ export default function UsersListPage() {
         <UsersTable
           users={users}
           onEdit={(userId) => router.push(`/admin/users/${userId}`)}
-          onDelete={(user) => setToDelete(user)}
         />
       )}
-
-      <ConfirmDialog
-        open={!!toDelete}
-        title="Eliminar usuario"
-        description={
-          toDelete
-            ? `¿Eliminar a ${toDelete.name} ${toDelete.lastName} (${toDelete.email})? Esta acción no se puede deshacer.`
-            : ""
-        }
-        confirmLabel={deleting ? "Eliminando…" : "Sí, eliminar"}
-        destructive
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setToDelete(null)}
-      />
     </div>
   );
 }

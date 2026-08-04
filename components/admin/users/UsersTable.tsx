@@ -1,5 +1,6 @@
 "use client";
 
+import { UsersRound } from "lucide-react";
 import { UserListItem } from "@/app/(admin)/types";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -8,66 +9,83 @@ const ROLE_LABELS: Record<string, string> = {
   pollster: "Encuestador",
 };
 
+const ROLE_BADGE: Record<string, string> = {
+  admin: "bg-[var(--danger-bg)] text-[var(--danger-fg)]",
+  researcher: "bg-[var(--info-bg)] text-[var(--info-fg)]",
+  pollster: "bg-[var(--warning-bg)] text-[var(--warning-fg)]",
+};
+
+function initials(name: string, lastName: string): string {
+  return `${name[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "—";
+}
+
 interface UsersTableProps {
   users: UserListItem[];
   onEdit: (userId: string) => void;
-  onDelete: (user: UserListItem) => void;
 }
 
-export default function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
+export default function UsersTable({ users, onEdit }: UsersTableProps) {
   if (users.length === 0) {
     return (
-      <p className="text-sm text-[var(--text-muted)] py-12 text-center">
-        No hay usuarios todavía.
-      </p>
+      <div className="flex flex-col items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
+        <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-[var(--surface-muted)]">
+          <UsersRound className="size-5 text-[var(--text-muted)]" aria-hidden="true" />
+        </div>
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          No hay usuarios todavía
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
-            <th className="px-4 py-3 font-medium">Nombre</th>
-            <th className="px-4 py-3 font-medium">Correo</th>
-            <th className="px-4 py-3 font-medium">Rol</th>
-            <th className="px-4 py-3 font-medium">Creado</th>
-            <th className="px-4 py-3 font-medium text-right">Acciones</th>
+    <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+      <table className="w-full text-xs">
+        <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          <tr>
+            <th className="px-3 py-2.5 text-left">Nombre</th>
+            <th className="px-3 py-2.5 text-left">Correo</th>
+            <th className="px-3 py-2.5 text-left">Rol</th>
+            <th className="px-3 py-2.5 text-left">Creado</th>
+            <th className="px-3 py-2.5 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-[var(--border)]">
           {users.map((u) => (
-            <tr
-              key={u.userId}
-              className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--surface-muted)]/40 transition-colors"
-            >
-              <td className="px-4 py-3 text-[var(--text-primary)]">
-                {u.name} {u.lastName}
+            <tr key={u.userId} className="hover:bg-[var(--surface-muted)] transition-colors">
+              <td className="px-3 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-[var(--surface-muted)] text-[10px] font-bold text-[var(--text-muted)]">
+                    {initials(u.name, u.lastName)}
+                  </span>
+                  <span className="font-medium text-[var(--text-primary)]">
+                    {u.name} {u.lastName}
+                  </span>
+                </div>
               </td>
-              <td className="px-4 py-3 text-[var(--text-primary)]">{u.email}</td>
-              <td className="px-4 py-3 text-[var(--text-primary)]">
-                {u.role ? ROLE_LABELS[u.role.name] ?? u.role.name : "—"}
+              <td className="px-3 py-2.5 truncate text-[var(--text-muted)]">{u.email}</td>
+              <td className="px-3 py-2.5">
+                {u.role ? (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap ${ROLE_BADGE[u.role.name] ?? "bg-[var(--surface-muted)] text-[var(--text-muted)]"}`}
+                  >
+                    {ROLE_LABELS[u.role.name] ?? u.role.name}
+                  </span>
+                ) : (
+                  <span className="text-[var(--text-muted)]">—</span>
+                )}
               </td>
-              <td className="px-4 py-3 text-[var(--text-muted)]">
+              <td className="px-3 py-2.5 text-[var(--text-muted)]">
                 {new Date(u.createdAt).toLocaleDateString()}
               </td>
-              <td className="px-4 py-3 text-right">
-                <div className="inline-flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onEdit(u.userId)}
-                    className="rounded-lg border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDelete(u)}
-                    className="rounded-lg border border-[var(--danger-fg)]/40 px-3 py-1 text-xs font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
-                  >
-                    Eliminar
-                  </button>
-                </div>
+              <td className="px-3 py-2.5 text-right">
+                <button
+                  type="button"
+                  onClick={() => onEdit(u.userId)}
+                  className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+                >
+                  Editar
+                </button>
               </td>
             </tr>
           ))}
