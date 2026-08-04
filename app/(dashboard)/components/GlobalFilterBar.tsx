@@ -10,7 +10,13 @@ import {
   DashboardPageState,
 } from "@/lib/dashboard/filters";
 import { cropColor, cropTint } from "@/lib/dashboard/palette";
-import { fetchDashboardSummary, fetchPublicTowns } from "../api";
+import { downloadCsv, kpisToCsv, questionsToCsv } from "@/lib/dashboard/csv";
+import {
+  fetchDashboardAnalytics,
+  fetchDashboardSummary,
+  fetchKpis,
+  fetchPublicTowns,
+} from "../api";
 import { DepartmentSummary } from "@/services/departments.service";
 import { TownSummary } from "@/services/towns.service";
 import { CampaignActiveSummary, CropSummary } from "@/app/(instrument)/types";
@@ -165,6 +171,33 @@ export default function GlobalFilterBar({
 
   const hasActiveFilters = Object.values(filters).some(Boolean);
 
+  /**
+   * Fase 10 (spec 43): CSV client-side de la vista actual, sin endpoint
+   * nuevo — re-pide los mismos datos que ya renderiza la vista (`/kpis`
+   * para "Resumen general", que no tiene un `questions[]` propio;
+   * `/analytics` para categoría/instrumento) y los serializa en el navegador.
+   */
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const exportFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
+      const stamp = new Date().toISOString().slice(0, 10);
+
+      if (!state.categoryId && !filters.instrumentId) {
+        const kpis = await fetchKpis(exportFilters);
+        downloadCsv(`sosagro-resumen-general-${stamp}.csv`, kpisToCsv(kpis));
+      } else {
+        const data = await fetchDashboardAnalytics(exportFilters);
+        const slug = state.categoryId ?? "instrumento";
+        downloadCsv(`sosagro-${slug}-${stamp}.csv`, questionsToCsv(data.questions));
+      }
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="bg-surface border-b border-[var(--border)] px-4 sm:px-6 py-3 space-y-2.5">
       <div className="flex items-center justify-between gap-2">
@@ -178,16 +211,16 @@ export default function GlobalFilterBar({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled
-            title="Disponible en una fase posterior del spec 43"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-text-muted opacity-60 cursor-not-allowed"
+            onClick={handleExport}
+            disabled={exporting}
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-muted disabled:opacity-60 disabled:cursor-wait transition-colors"
           >
-            Exportar
+            {exporting ? "Exportando…" : "Exportar CSV"}
           </button>
           <button
             type="button"
             disabled
-            title="Disponible en una fase posterior del spec 43"
+            title="Reporte en PDF: pendiente de un spec posterior (requiere maquetación de reporte imprimible, fuera de alcance del spec 43)"
             className="rounded-md bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground opacity-60 cursor-not-allowed"
           >
             Descargar reporte
