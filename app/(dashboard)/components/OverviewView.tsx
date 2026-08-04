@@ -14,6 +14,8 @@ import { SingleChoiceChart, MultipleChoiceChart, NumericChart } from "./charts";
 import LikertDivergingMatrix from "./LikertDivergingMatrix";
 import IndexBars from "./IndexBars";
 import HarvestCalendar from "./HarvestCalendar";
+import EmptyStateCard from "./EmptyStateCard";
+import SuppressedDataCard from "./SuppressedDataCard";
 
 interface OverviewViewProps {
   filters: DashboardFilters;
@@ -116,6 +118,24 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
     distribution: item.bands.map((band) => band.count),
     meanScore: item.meanScore,
   }));
+
+  // Fase 8: si la muestra global (sin restringir a categoría) está por
+  // debajo del umbral, ninguna fila curada tendría datos reales que mostrar
+  // — un solo mensaje es más claro que 7 tarjetas diciendo "Sin datos" cada
+  // una por separado.
+  if (overview.suppressed) {
+    return (
+      <div className="space-y-4">
+        <ViewHeader title="Resumen general" />
+        <KpiStrip kpis={kpis} />
+        {overview.totalCount === 0 ? (
+          <EmptyStateCard />
+        ) : (
+          <SuppressedDataCard reason={`La muestra global con estos filtros es insuficiente para mostrar datos (${overview.totalCount} encuestas, se requieren al menos 5).`} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

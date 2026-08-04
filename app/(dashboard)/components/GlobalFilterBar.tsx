@@ -10,12 +10,15 @@ import {
   DashboardPageState,
 } from "@/lib/dashboard/filters";
 import { cropColor } from "@/lib/dashboard/palette";
-import { fetchPublicTowns } from "../api";
+import { fetchDashboardSummary, fetchPublicTowns } from "../api";
 import { DepartmentSummary } from "@/services/departments.service";
 import { TownSummary } from "@/services/towns.service";
 import { CampaignActiveSummary, CropSummary } from "@/app/(instrument)/types";
 import { ActorTypeSummary } from "@/app/(admin)/types";
-import { DashboardFilters } from "../types";
+import { DashboardFilters, DashboardSummary } from "../types";
+
+/** `farmer.gender` (S1a·15) — opciones sembradas. */
+const GENDER_OPTIONS = ["Hombre", "Mujer", "Prefiere no responder"];
 
 interface GlobalFilterBarProps {
   state: DashboardPageState;
@@ -104,6 +107,37 @@ export default function GlobalFilterBar({
       ? townsData.towns
       : [];
 
+  /**
+   * Fase 8 (spec 43): indicador reactivo de tamaño de muestra. Mismo patrón
+   * de estado derivado que `townsData` — la clave (`query`) identifica a qué
+   * combinación de filtros pertenece la última respuesta cargada, en vez de
+   * un booleano `loading` seteado sincrónicamente en el efecto.
+   */
+  const summaryFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
+  const summaryQuery = buildDashboardQuery({
+    view: state.view,
+    categoryId: state.categoryId,
+    filters,
+  });
+  const [summaryData, setSummaryData] = useState<{
+    query: string;
+    summary: DashboardSummary;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchDashboardSummary(summaryFilters).then((result) => {
+      if (!cancelled) setSummaryData({ query: summaryQuery, summary: result });
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [summaryQuery]);
+
+  const summaryLoading = summaryData?.query !== summaryQuery;
+  const summary = summaryLoading ? null : summaryData!.summary;
+
   function navigate(nextFilters: DashboardFilters) {
     const query = buildDashboardQuery({
       view: state.view,
@@ -133,23 +167,32 @@ export default function GlobalFilterBar({
 
   return (
     <div className="bg-surface border-b border-[var(--border)] px-4 sm:px-6 py-3 space-y-2.5">
-      <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          disabled
-          title="Disponible en una fase posterior del spec 43"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-text-muted opacity-60 cursor-not-allowed"
-        >
-          Exportar
-        </button>
-        <button
-          type="button"
-          disabled
-          title="Disponible en una fase posterior del spec 43"
-          className="rounded-md bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground opacity-60 cursor-not-allowed"
-        >
-          Descargar reporte
-        </button>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-text-muted" role="status" aria-live="polite">
+          {summaryLoading
+            ? "Calculando tamaño de la muestra…"
+            : summary!.suppressed
+              ? `Muestra insuficiente (${summary!.count} encuestas)`
+              : `${summary!.count} encuestas en la muestra`}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled
+            title="Disponible en una fase posterior del spec 43"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-text-muted opacity-60 cursor-not-allowed"
+          >
+            Exportar
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Disponible en una fase posterior del spec 43"
+            className="rounded-md bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground opacity-60 cursor-not-allowed"
+          >
+            Descargar reporte
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -217,6 +260,20 @@ export default function GlobalFilterBar({
             );
           })}
         </div>
+
+        <select
+          aria-label="Género"
+          value={filters.gender ?? ""}
+          onChange={(e) => updateFilter("gender", e.target.value)}
+          className={selectClass}
+        >
+          <option value="">Género</option>
+          {GENDER_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
 
         <select
           aria-label="Rango de edad"
