@@ -113,6 +113,10 @@ export interface DashboardQuestion {
   questionText: string;
   questionType: string;
   sectionName: string;
+  /** Procedencia por pregunta (spec 43, D9) — necesaria en vistas de
+   * categoría, que agregan varios instrumentos en un solo grid. */
+  instrumentId?: string;
+  instrumentName?: string;
   systemField: string | null;
   isInverted: boolean;
   answeredCount: number;
