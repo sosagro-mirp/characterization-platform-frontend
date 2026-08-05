@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { listActiveCampaigns } from "@/services/campaigns.service";
 import {
   fetchCategories,
   fetchPublicActorTypes,
@@ -43,9 +42,12 @@ export default async function DashboardPage({
     <div className="flex flex-col lg:flex-row min-h-full">
       <DashboardSidebar categories={categories} state={state} />
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <Suspense fallback={<div className="h-[52px] bg-surface border-b border-[var(--border)]" />}>
-          <GlobalFilterBarData state={state} />
+      {/* El sidebar es `lg:fixed` (no se mueve con el scroll, igual que el
+          navbar) — este `lg:pl-80` compensa su ancho (`lg:w-80`) ya que al
+          quedar fuera del flujo deja de empujar el contenido por sí solo. */}
+      <div className="flex-1 min-w-0 flex flex-col lg:pl-80">
+        <Suspense fallback={<div className="h-[68px] bg-surface border-b border-[var(--border)]" />}>
+          <GlobalFilterBarData state={state} categories={categories} />
         </Suspense>
 
         <div className="flex-1 p-4 sm:p-6 space-y-4">
@@ -60,23 +62,28 @@ export default async function DashboardPage({
 
 async function GlobalFilterBarData({
   state,
+  categories,
 }: {
   state: ReturnType<typeof parseDashboardParams>;
+  categories: DashboardCategory[];
 }) {
-  const [departments, crops, actorTypes, campaigns] = await Promise.all([
+  const [departments, crops, actorTypes] = await Promise.all([
     fetchPublicDepartments(),
     fetchPublicCrops(),
     fetchPublicActorTypes(),
-    listActiveCampaigns(),
   ]);
+
+  const categoryTitle = state.categoryId
+    ? (categories.find((c) => c.code === state.categoryId)?.name ?? "Categoría")
+    : "Resumen general";
 
   return (
     <GlobalFilterBar
       state={state}
+      categoryTitle={categoryTitle}
       departments={departments}
       crops={crops}
       actorTypes={actorTypes}
-      campaigns={campaigns}
     />
   );
 }
@@ -122,5 +129,5 @@ async function DashboardViewContent({
     ? { ...filters, categoryId }
     : filters;
 
-  return <CategoryView filters={analyticsFilters} badge={categoryId} />;
+  return <CategoryView filters={analyticsFilters} />;
 }
