@@ -16,25 +16,9 @@ export const CROP_COLORS = {
   canamo: "#2E8B77",
 } as const;
 
-/**
- * Tinte claro por cultivo (fondo de pill inactivo), tomado literal del
- * diseño — no derivado programáticamente. Fase 9 (WCAG AA): un pill
- * "cultivo + su color" necesita fondo y texto **fijos y emparejados**, como
- * ya hace `bg-brand-dark`/`text-brand-light` en el sidebar; usar la
- * superficie reactiva del tema (`--surface-muted`) detrás de un texto de
- * color fijo (ej. Café `#6B4226`, oscuro) pierde contraste en modo oscuro.
- */
-export const CROP_TINTS = {
-  cacao: "#faf1de",
-  cafe: "#f0e8e2",
-  cannabis: "#eef6e5",
-  canamo: "#e3f2ee",
-} as const;
-
 export type CropColorKey = keyof typeof CROP_COLORS;
 
 const FALLBACK_CROP_COLOR = "#737373";
-const FALLBACK_CROP_TINT = "#f1f0ec";
 
 /** Combining diacritical marks (U+0300–U+036F) tras normalizar a NFD. */
 const DIACRITICS_PATTERN = /\p{Diacritic}/gu;
@@ -54,12 +38,6 @@ function matchCropKey(name: string): CropColorKey | undefined {
 export function cropColor(name: string): string {
   const match = matchCropKey(name);
   return match ? CROP_COLORS[match] : FALLBACK_CROP_COLOR;
-}
-
-/** Tinte claro emparejado con `cropColor` — mismo criterio de resolución. */
-export function cropTint(name: string): string {
-  const match = matchCropKey(name);
-  return match ? CROP_TINTS[match] : FALLBACK_CROP_TINT;
 }
 
 /**
