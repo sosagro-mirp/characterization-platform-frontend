@@ -2,7 +2,10 @@ import { DashboardKpi } from "../types";
 
 interface KpiCardProps {
   kpi: DashboardKpi;
-  /** El diseño destaca el primer KPI de cada tira (verde institucional fijo). */
+  /** El diseño destaca el primer KPI de cada tira con verde institucional
+   * fijo (independiente del tema) — "Regla de oro" de DESIGN.md: un badge/
+   * KPI destacado es un bloque autocontenido, no navegación real, así que
+   * no sigue la superficie reactiva del sidebar (`dark:bg-surface`). */
   featured?: boolean;
 }
 
