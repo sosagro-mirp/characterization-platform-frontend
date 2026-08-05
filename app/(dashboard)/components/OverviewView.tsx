@@ -119,11 +119,13 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
   // Fase 8: si la muestra global (sin restringir a categoría) está por
   // debajo del umbral, ninguna fila curada tendría datos reales que mostrar
   // — un solo mensaje es más claro que 7 tarjetas diciendo "Sin datos" cada
-  // una por separado.
+  // una por separado. Sin `<KpiStrip />` aquí (corregido 2026-08-05, hallazgo
+  // de `@reviewer`): mientras dure la excepción de D5, mostraría 4 cifras
+  // concretas de juguete justo al lado del aviso de "muestra insuficiente" —
+  // peor que el caso que D5 buscaba evitar.
   if (overview.suppressed) {
     return (
       <div className="space-y-4">
-        <KpiStrip />
         {overview.totalCount === 0 ? (
           <EmptyStateCard />
         ) : (
