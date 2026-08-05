@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { Navbar } from "@/components/navbar/Navbar";
 
 export const metadata: Metadata = {
   title: "Dashboard Público",
@@ -16,28 +14,22 @@ export default function DashboardLayout({
 }>) {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Fase 5 (spec 43): el diseño no tiene navbar propio — su sidebar aloja
-          logo + navegación + perfil. Se conserva esta barra superior liviana
-          (en vez de duplicar el logo en dos lugares) porque DESIGN.md exige
-          el ThemeToggle en el header del dashboard público y es el único
-          punto de retorno al sitio principal — mismo criterio que AdminShell
-          ("Barra superior nueva... que aloja el ThemeToggle global"). */}
-      <header className="bg-surface border-b border-[var(--border)] shrink-0">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
-          <Link href="/" className="inline-flex items-center">
-            <Image
-              src="/logo-horizontal.png"
-              alt="SOSAgro 4C"
-              width={140}
-              height={40}
-              className="h-8 w-auto"
-              priority
-            />
-          </Link>
-          <ThemeToggle className="text-text-muted hover:bg-surface-muted" />
-        </div>
-      </header>
-      <div className="flex-1 bg-surface-muted min-h-0">{children}</div>
+      {/* Ajuste post-Fase-5: se reemplaza la barra superior propia del
+          dashboard por el mismo `<Navbar />` de "/" (fixed top-0 + padding
+          de compensación en el contenido, mismo patrón que login/register).
+          El dashboard no tiene `#inicio`, así que `isOverHero` cae en su
+          fallback (`false`) y el navbar renderiza siempre en su estado
+          sólido — ya trae el ThemeToggle que DESIGN.md exige en este header.
+
+          Altura real del navbar (no la de login/register, que quedaba corta
+          12px porque no contaba el padding propio del link del logo):
+          outer `py-3 lg:py-4` (12px / 16px por lado) + link del logo
+          `py-1.5` (6px por lado) + imagen `h-12` (48px) =
+          84px en mobile, 92px en lg. */}
+      <Navbar />
+      <div className="flex-1 bg-surface-muted min-h-0 pt-[84px] lg:pt-[92px]">
+        {children}
+      </div>
     </div>
   );
 }
