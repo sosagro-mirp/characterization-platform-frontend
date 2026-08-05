@@ -25,9 +25,12 @@ export default function DashboardLayout({
           12px porque no contaba el padding propio del link del logo):
           outer `py-3 lg:py-4` (12px / 16px por lado) + link del logo
           `py-1.5` (6px por lado) + imagen `h-12` (48px) =
-          84px en mobile, 92px en lg. */}
+          84px en mobile, 92px en lg — centralizado en la variable CSS
+          `--dashboard-navbar-h` (`globals.css`) para no repetir el número en
+          `DashboardSidebar.tsx`; ver el hallazgo de `@reviewer` que motivó
+          este cambio (2026-08-05). */}
       <Navbar />
-      <div className="flex-1 bg-surface-muted min-h-0 pt-[84px] lg:pt-[92px]">
+      <div className="flex-1 bg-surface-muted min-h-0 pt-[var(--dashboard-navbar-h)]">
         {children}
       </div>
     </div>
