@@ -125,7 +125,7 @@ export const Navbar = () => {
           </Link>
 
           <ul
-            className={`hidden lg:flex gap-7 lg:text-sm  tracking-tight font-semibold transition-colors duration-300 ${linkColorClass}`}
+            className={`hidden lg:flex gap-7 lg:text-xs 2xl:text-base tracking-tight font-semibold transition-colors duration-300 ${linkColorClass}`}
           >
             {sectionLinks.map((l) => (
               <li key={l.href}>
@@ -144,7 +144,7 @@ export const Navbar = () => {
                   onClick={() => setIsSessionMenuOpen((p) => !p)}
                   aria-haspopup="menu"
                   aria-expanded={isSessionMenuOpen}
-                  className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 2xl:text-sm lg:text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${sessionHoverClass}`}
+                  className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 lg:text-[11px] 2xl:text-base font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${sessionHoverClass}`}
                 >
                   <span
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold uppercase text-brand-foreground"
@@ -153,7 +153,7 @@ export const Navbar = () => {
                     {user.name?.[0]}
                   </span>
                   <span
-                    className={`transition-colors duration-300 ${sessionTextClass} text-sm`}
+                    className={`transition-colors duration-300 ${sessionTextClass} text-sm lg:text-xs 2xl:text-base`}
                     title={user.email}
                   >
                     {user.name} {user.lastName}
@@ -202,7 +202,7 @@ export const Navbar = () => {
             ) : (
               <Link
                 href="/login"
-                className="hidden lg:inline-flex items-center px-4 py-2 rounded-lg bg-brand text-brand-foreground text-sm font-bold transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                className="hidden lg:inline-flex items-center px-4 py-2 rounded-lg bg-brand text-brand-foreground text-sm lg:text-xs 2xl:text-base font-bold transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
                 Iniciar sesión
               </Link>
