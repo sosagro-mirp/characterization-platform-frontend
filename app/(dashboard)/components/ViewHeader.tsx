@@ -5,9 +5,6 @@ import { X } from "lucide-react";
 import { DashboardMetadata } from "../types";
 
 interface ViewHeaderProps {
-  title: string;
-  /** Código de categoría (C1–C15) para el badge; omitido en la vista de resumen general. */
-  badge?: string;
   subtitle?: string;
   metadata?: DashboardMetadata;
 }
@@ -50,14 +47,13 @@ function formatDate(iso: string): string {
 }
 
 /**
- * Encabezado de vista (spec 43, D9): sustituye a `MetadataBar`. A diferencia
- * de esta, titula por categoría o por instrumento según cuál esté activo
- * (`MetadataBar` asumía siempre instrumento y quedaba vacío al navegar por
- * categoría), y agrega el badge `Cx`.
+ * Encabezado de vista (spec 43, D9): sustituye a `MetadataBar`. Ya no titula
+ * por categoría/instrumento — ese título vive en `GlobalFilterBar` (ajuste
+ * post-Fase-5) y duplicarlo aquí debajo era redundante. Conserva el tamaño
+ * de muestra + rango de fechas (dato que la barra de filtros no expone) y
+ * los chips de filtros activos removibles.
  */
 export default function ViewHeader({
-  title,
-  badge,
   subtitle,
   metadata,
 }: ViewHeaderProps) {
@@ -97,28 +93,18 @@ export default function ViewHeader({
 
   return (
     <div className="rounded-lg border border-[var(--border)] bg-surface px-4 py-3 space-y-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {badge && (
-            <span className="rounded px-1.5 py-0.5 text-[10px] font-bold bg-brand-subtle-bg text-brand-subtle-fg">
-              {badge}
-            </span>
+      {metadata && (
+        <p className="text-sm text-text-muted">
+          {metadata.totalCount} encuestas en la muestra
+          {metadata.dateRange && (
+            <>
+              {" "}
+              · {formatDate(metadata.dateRange.from)} –{" "}
+              {formatDate(metadata.dateRange.to)}
+            </>
           )}
-          <h1 className="text-xl font-semibold text-text-primary">{title}</h1>
-        </div>
-        {metadata && (
-          <p className="text-sm text-text-muted">
-            {metadata.totalCount} encuestas en la muestra
-            {metadata.dateRange && (
-              <>
-                {" "}
-                · {formatDate(metadata.dateRange.from)} –{" "}
-                {formatDate(metadata.dateRange.to)}
-              </>
-            )}
-          </p>
-        )}
-      </div>
+        </p>
+      )}
 
       {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
 

@@ -1,4 +1,4 @@
-import { fetchDashboardAnalytics, fetchDigitalDemand, fetchKpis } from "../api";
+import { fetchDashboardAnalytics, fetchDigitalDemand } from "../api";
 import { DashboardFilters, IndexByCutBucket } from "../types";
 import ViewHeader from "./ViewHeader";
 import KpiStrip from "./KpiStrip";
@@ -52,10 +52,9 @@ export default async function DigitalDemandView({
 }: DigitalDemandViewProps) {
   const analyticsFilters: DashboardFilters = { ...filters, categoryId: "C15" };
 
-  const [digitalDemand, data, kpis] = await Promise.all([
+  const [digitalDemand, data] = await Promise.all([
     fetchDigitalDemand(filters),
     fetchDashboardAnalytics(analyticsFilters),
-    fetchKpis(analyticsFilters),
   ]);
 
   const likertBatteryItems = digitalDemand.likertRanking.map((item) => ({
@@ -74,13 +73,9 @@ export default async function DigitalDemandView({
 
   return (
     <div className="space-y-4">
-      <ViewHeader
-        title={data.metadata.categoryName ?? "Adopción tecnológica e interés digital"}
-        badge="C15"
-        metadata={data.metadata}
-      />
+      <ViewHeader metadata={data.metadata} />
 
-      <KpiStrip kpis={kpis} />
+      <KpiStrip />
 
       {digitalDemand.suppressed ? (
         <div className="rounded-lg border border-[var(--border)] bg-surface-muted px-4 py-6 text-center text-text-muted">

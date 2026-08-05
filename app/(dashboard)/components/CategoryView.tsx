@@ -1,4 +1,4 @@
-import { fetchDashboardAnalytics, fetchKpis } from "../api";
+import { fetchDashboardAnalytics } from "../api";
 import { DashboardFilters } from "../types";
 import ViewHeader from "./ViewHeader";
 import KpiStrip from "./KpiStrip";
@@ -8,8 +8,6 @@ interface CategoryViewProps {
   /** Ya debe incluir `categoryId` (o `instrumentId` en el drill-down
    * avanzado de D2) — el llamador decide la fusión, no este componente. */
   filters: DashboardFilters;
-  /** Código `Cx` para el badge; `undefined` en el drill-down por `instrumentId`. */
-  badge?: string;
 }
 
 /**
@@ -24,22 +22,14 @@ interface CategoryViewProps {
  */
 export default async function CategoryView({
   filters,
-  badge,
 }: CategoryViewProps) {
-  const [data, kpis] = await Promise.all([
-    fetchDashboardAnalytics(filters),
-    fetchKpis(filters),
-  ]);
+  const data = await fetchDashboardAnalytics(filters);
 
   return (
     <div className="space-y-4">
-      <ViewHeader
-        title={data.metadata.categoryName ?? data.metadata.instrumentName ?? "Categoría"}
-        badge={badge}
-        metadata={data.metadata}
-      />
+      <ViewHeader metadata={data.metadata} />
 
-      <KpiStrip kpis={kpis} />
+      <KpiStrip />
 
       <QuestionsAnalysisSection data={data} filters={filters} />
     </div>

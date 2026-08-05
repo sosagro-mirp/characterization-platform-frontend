@@ -2,11 +2,9 @@ import {
   fetchDashboardAnalytics,
   fetchDashboardOverview,
   fetchDigitalDemand,
-  fetchKpis,
 } from "../api";
 import { AGE_RANGE_BUCKETS } from "@/lib/dashboard/filters";
 import { DashboardFilters, DashboardQuestion } from "../types";
-import ViewHeader from "./ViewHeader";
 import KpiStrip from "./KpiStrip";
 import CropDonut from "./CropDonut";
 import ColombiaMap from "./ColombiaMap";
@@ -80,8 +78,7 @@ function wrapNumericAggregation(
  * un campo nuevo en el backend, fuera de alcance de una fase de frontend.
  */
 export default async function OverviewView({ filters }: OverviewViewProps) {
-  const [kpis, overview, c1, c3, c4, digitalDemand] = await Promise.all([
-    fetchKpis(filters),
+  const [overview, c1, c3, c4, digitalDemand] = await Promise.all([
     fetchDashboardOverview(filters),
     fetchDashboardAnalytics({ ...filters, categoryId: "C1" }),
     fetchDashboardAnalytics({ ...filters, categoryId: "C3" }),
@@ -126,8 +123,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
   if (overview.suppressed) {
     return (
       <div className="space-y-4">
-        <ViewHeader title="Resumen general" />
-        <KpiStrip kpis={kpis} />
+        <KpiStrip />
         {overview.totalCount === 0 ? (
           <EmptyStateCard />
         ) : (
@@ -139,9 +135,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
 
   return (
     <div className="space-y-4">
-      <ViewHeader title="Resumen general" />
-
-      <KpiStrip kpis={kpis} />
+      <KpiStrip />
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
         <div className={CARD_CLASS}>
