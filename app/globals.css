@@ -6,15 +6,6 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Fuente única de la altura real del `<Navbar />` (dashboard público, spec
-     43): `layout.tsx` la usa para el padding de compensación del contenido y
-     `DashboardSidebar.tsx` para su `top`/`height` en `lg:fixed`. Antes eran
-     dos números mágicos (`84px`/`92px`) repetidos en ambos archivos — ver el
-     cálculo completo (outer `py-3 lg:py-4` + link del logo `py-1.5` + imagen
-     `h-12`) en el comentario de `layout.tsx`. El breakpoint de la media query
-     replica el `lg` de Tailwind (1024px, sin overrides en este proyecto). */
-  --dashboard-navbar-h: 84px;
-
   --background: #ffffff;
   --foreground: #171717;
 
@@ -173,13 +164,4 @@ h3 {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome/Safari/Edge Chromium */
-}
-
-/* Ver `--dashboard-navbar-h` en `:root` arriba — el `<Navbar />` compartido
-   crece 8px en `lg` (`py-3` -> `py-4`), así que la altura real cambia en el
-   mismo breakpoint. */
-@media (min-width: 1024px) {
-  :root {
-    --dashboard-navbar-h: 92px;
-  }
 }
