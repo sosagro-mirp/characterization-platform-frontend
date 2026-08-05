@@ -33,8 +33,15 @@ function summarizeAggregation(question: DashboardQuestion): string {
     case "single_choice":
     case "multiple_choice":
     case "compliance":
+      // D2 (spec 66): una opción suprimida (< 5 respuestas) nunca exporta un
+      // porcentaje — el CSV debe reflejar exactamente lo que muestra la
+      // pantalla (criterio de aceptación 4), incluida la supresión.
       return aggregation.options
-        .map((option) => `${option.text} (${option.percentage.toFixed(0)}%)`)
+        .map((option) =>
+          option.suppressed
+            ? `${option.text} (oculto por privacidad)`
+            : `${option.text} (${option.percentage?.toFixed(0)}%)`,
+        )
         .join("; ");
     case "likert":
       return aggregation.meanScore !== null

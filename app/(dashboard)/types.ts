@@ -64,9 +64,17 @@ export interface DashboardKpi {
 export interface AggregationOption {
   optionId: string;
   text: string;
-  count: number;
-  percentage: number;
+  /** null si suppressed=true (spec 66, D2): la celda tiene menos de
+   * MIN_CELL_SIZE respondientes y no se expone, aunque la muestra total
+   * supere el umbral global de privacidad. */
+  count: number | null;
+  /** null si suppressed=true, mismo criterio que count. */
+  percentage: number | null;
   value: number | null;
+  /** true si esta opción tiene menos de MIN_CELL_SIZE respondientes. Nunca
+   * se representa como 0 ni se omite del listado en silencio — los
+   * componentes de gráfica deben mostrarla como oculta por privacidad. */
+  suppressed: boolean;
 }
 
 export interface AggregationYesNo {

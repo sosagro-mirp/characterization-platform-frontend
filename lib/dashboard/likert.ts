@@ -3,8 +3,10 @@ import { LIKERT_SCALE_COLORS } from "./palette";
 export interface LikertBatteryItem {
   questionId: string;
   label: string;
-  /** Conteos crudos o porcentajes, en los 5 niveles de la escala, en orden. */
-  distribution: number[];
+  /** Conteos crudos o porcentajes, en los 5 niveles de la escala, en orden.
+   * `null` en una posición (spec 66, D2) es una celda suprimida por privacidad
+   * — se trata como 0 al sumar el total, nunca se inventa un valor. */
+  distribution: (number | null)[];
   meanScore: number | null;
 }
 
@@ -35,10 +37,19 @@ export function buildDivergingRows(
       item.meanScore !== null,
     )
     .map((item) => {
-      const total = item.distribution.reduce((sum, value) => sum + value, 0);
+      // DEBT (spec 66, D2): una celda `null` (suprimida por privacidad) se
+      // trata como 0 al sumar — evita NaN sin inventar un valor real, pero
+      // el segmento queda visualmente indistinguible de "cero respuestas
+      // reales". El tratamiento visual explícito (igual al de los charts de
+      // `lib/dashboard/suppressedOption.ts`) queda para la fase de spec 66
+      // que cure esta matriz (Overview/C15), no se resuelve acá.
+      const total = item.distribution.reduce<number>(
+        (sum, value) => sum + (value ?? 0),
+        0,
+      );
       const segments: LikertDivergingSegment[] = item.distribution.map(
         (value, index) => ({
-          percentage: total > 0 ? (value / total) * 100 : 0,
+          percentage: total > 0 && value !== null ? (value / total) * 100 : 0,
           color: LIKERT_SCALE_COLORS[index % LIKERT_SCALE_COLORS.length],
         }),
       );

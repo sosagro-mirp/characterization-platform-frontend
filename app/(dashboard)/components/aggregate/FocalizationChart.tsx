@@ -4,12 +4,14 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { DashboardQuestion } from "../../types";
+import { BarDatum, formatBarTooltip, toBarDatum } from "@/lib/dashboard/suppressedOption";
 
 interface FocalizationChartProps {
   questions: DashboardQuestion[];
@@ -30,9 +32,11 @@ export default function FocalizationChart({ questions }: FocalizationChartProps)
 
   if (!question || question.aggregation?.type !== "multiple_choice") return null;
 
-  const data = [...question.aggregation.options]
-    .sort((a, b) => b.count - a.count)
-    .map((opt) => ({ name: opt.text, percentage: opt.percentage, count: opt.count }));
+  // D2 (spec 66): orden sobre el conteo real antes de aplicar el
+  // placeholder de celdas suprimidas.
+  const data: BarDatum[] = [...question.aggregation.options]
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
+    .map(toBarDatum);
 
   const height = Math.max(120, data.length * 36);
 
@@ -46,13 +50,16 @@ export default function FocalizationChart({ questions }: FocalizationChartProps)
           <CartesianGrid horizontal={false} stroke="var(--border)" />
           <XAxis type="number" tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
           <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11 }} />
-          <Tooltip
-            formatter={(value, _name, item) => [
-              `${Number(value).toFixed(1)}% (${(item.payload as { count: number }).count})`,
-              "Respuestas",
-            ]}
-          />
-          <Bar dataKey="percentage" fill="#facc15" radius={[0, 4, 4, 0]} />
+          <Tooltip formatter={(_value, _name, item) => [formatBarTooltip(item.payload as BarDatum), "Respuestas"]} />
+          <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
+            {data.map((entry) => (
+              <Cell
+                key={entry.name}
+                fill={entry.suppressed ? "var(--warning-fg)" : "#facc15"}
+                fillOpacity={entry.suppressed ? 0.5 : 1}
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
       <p className="text-xs text-text-muted mt-1">

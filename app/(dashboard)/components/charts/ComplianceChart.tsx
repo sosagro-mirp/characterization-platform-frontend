@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { DashboardQuestion } from "../../types";
+import { BarDatum, formatBarTooltip, toBarDatum } from "@/lib/dashboard/suppressedOption";
 
 /**
  * No hay preguntas `compliance` en producción hoy (ver spec 30, sección
@@ -33,14 +34,11 @@ interface ComplianceChartProps {
 export default function ComplianceChart({ question }: ComplianceChartProps) {
   if (question.aggregation?.type !== "compliance") return null;
 
-  const data = [...question.aggregation.options]
-    .sort((a, b) => b.count - a.count)
-    .map((opt) => ({
-      name: opt.text,
-      percentage: opt.percentage,
-      count: opt.count,
-      color: semaphoreColor(opt.text),
-    }));
+  // D2 (spec 66): orden sobre el conteo real antes de aplicar el
+  // placeholder de celdas suprimidas.
+  const data: (BarDatum & { color: string })[] = [...question.aggregation.options]
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
+    .map((opt) => ({ ...toBarDatum(opt), color: semaphoreColor(opt.text) }));
 
   const height = Math.max(120, data.length * 36);
 
@@ -55,15 +53,14 @@ export default function ComplianceChart({ question }: ComplianceChartProps) {
           tick={{ fontSize: 11 }}
         />
         <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-        <Tooltip
-          formatter={(value, _name, item) => [
-            `${Number(value).toFixed(1)}% (${(item.payload as { count: number }).count})`,
-            "Respuestas",
-          ]}
-        />
+        <Tooltip formatter={(_value, _name, item) => [formatBarTooltip(item.payload as BarDatum), "Respuestas"]} />
         <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
           {data.map((entry) => (
-            <Cell key={entry.name} fill={entry.color} />
+            <Cell
+              key={entry.name}
+              fill={entry.suppressed ? "var(--warning-fg)" : entry.color}
+              fillOpacity={entry.suppressed ? 0.5 : 1}
+            />
           ))}
         </Bar>
       </BarChart>

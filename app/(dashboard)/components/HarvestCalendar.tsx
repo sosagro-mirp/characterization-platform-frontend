@@ -34,8 +34,13 @@ interface HarvestCalendarProps {
  * mayor % de menciones se pintan más oscuros. "No aplica" y cualquier texto
  * que no coincida con un mes se ignoran silenciosamente. */
 export default function HarvestCalendar({ options }: HarvestCalendarProps) {
+  // DEBT (spec 66, D2): un mes suprimido por privacidad (`option.suppressed`,
+  // `percentage: null`) cae a 0 acá — igual de invisible que "no mencionado".
+  // El tratamiento visual explícito de celdas suprimidas en este heatmap
+  // queda para la fase de spec 66 que cure C4 (Bloque Cacao), no se resuelve
+  // acá; hoy solo se evita el `NaN`/crash de `option.percentage` nullable.
   const percentageByMonth = new Map(
-    options.map((option) => [option.text, option.percentage]),
+    options.map((option) => [option.text, option.percentage ?? 0]),
   );
   const maxPercentage = Math.max(1, ...Array.from(percentageByMonth.values()));
 
