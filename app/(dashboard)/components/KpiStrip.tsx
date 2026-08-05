@@ -8,8 +8,10 @@ import KpiCard from "./KpiCard";
  * el mismo componente `KpiStrip` se reutiliza en Resumen general, categorías
  * y Demanda digital, así que el cambio aplica a las tres vistas.
  *
- * DEBT: reconectar con `fetchKpis` (ver `../api`) cuando el diseño de esta
- * tira quede aprobado — por ahora es puramente ilustrativo.
+ * DEBT: reconectar con `fetchKpis` (ver `../api`) — tratado como su propio
+ * spec, `spec/65_tira_kpis_resumen_general.md` (`[NOT STARTED]`), tras la
+ * segunda revisión de `@reviewer` sobre spec 43. Por ahora es puramente
+ * ilustrativo.
  */
 const PLACEHOLDER_KPIS: DashboardKpi[] = [
   { key: "sample-size", label: "Encuestas en la muestra", value: 482, suppressed: false },
