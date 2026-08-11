@@ -31,7 +31,7 @@ export default async function CategoryView({
 
       <KpiStrip />
 
-      <QuestionsAnalysisSection data={data} filters={filters} />
+      <QuestionsAnalysisSection data={data} />
     </div>
   );
 }
