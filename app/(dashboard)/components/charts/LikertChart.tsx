@@ -62,7 +62,7 @@ export default function LikertChart({ question }: LikertChartProps) {
   });
 
   return (
-    <div>
+    <div className="w-full">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-text-muted">Desacuerdo ← → Acuerdo</span>
         {aggregation.isInverted && (
