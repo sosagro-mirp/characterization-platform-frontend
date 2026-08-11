@@ -126,6 +126,9 @@ export interface DashboardQuestion {
   instrumentId?: string;
   instrumentName?: string;
   systemField: string | null;
+  /** Gráfica curada explícitamente (spec 66, D3), o null si no se curó
+   * ninguna — ver `lib/dashboard/chartHint.ts`. */
+  chartHint: string | null;
   isInverted: boolean;
   answeredCount: number;
   suppressed: boolean;
