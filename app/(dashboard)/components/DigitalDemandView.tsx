@@ -38,9 +38,10 @@ function cardHeader(title: string, source: string) {
 }
 
 /**
- * Vista consolidada "Demanda digital" — caso especial de C15 (spec 43, D4,
- * Fase 7). Fila curada (`/digital-demand`, Fase 4) + el mismo grid de
- * preguntas genérico que `CategoryView` (`/analytics?categoryId=C15`) al
+ * Vista consolidada "Demanda digital" — caso especial de C14 (spec 43, D4,
+ * Fase 7; era C15 antes de la fusión C1+C3 y renumeración en cascada, spec
+ * 66 Fase 3 D7). Fila curada (`/digital-demand`, Fase 4) + el mismo grid de
+ * preguntas genérico que `CategoryView` (`/analytics?categoryId=C14`) al
  * final: "modo de interacción preferido" y "disposición a pagar" del
  * mockup no tienen campo propio en el DTO de `/digital-demand` (decisión
  * documentada en la Fase 4 — el primero no estaba en el contrato original
@@ -50,7 +51,7 @@ function cardHeader(title: string, source: string) {
 export default async function DigitalDemandView({
   filters,
 }: DigitalDemandViewProps) {
-  const analyticsFilters: DashboardFilters = { ...filters, categoryId: "C15" };
+  const analyticsFilters: DashboardFilters = { ...filters, categoryId: "C14" };
 
   const [digitalDemand, data] = await Promise.all([
     fetchDigitalDemand(filters),
@@ -150,7 +151,7 @@ export default async function DigitalDemandView({
         </>
       )}
 
-      <QuestionsAnalysisSection data={data} filters={analyticsFilters} />
+      <QuestionsAnalysisSection data={data} />
     </div>
   );
 }

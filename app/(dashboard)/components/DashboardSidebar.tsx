@@ -8,7 +8,9 @@ interface DashboardSidebarProps {
 }
 
 /**
- * Sidebar de navegación (spec 43, Fase 5): "Resumen general" + C1–C15.
+ * Sidebar de navegación (spec 43, Fase 5): "Resumen general" + C1–C14 (era
+ * C1–C15 antes de la fusión C1+C3 y renumeración en cascada, spec 66 Fase 3
+ * D7).
  * Server Component — el estado activo se deriva de `state` (ya resuelto en
  * `page.tsx` desde `searchParams`), sin hooks de cliente. Cambiar de vista
  * conserva los filtros activos (D6): cada enlace reusa `state.filters`.
@@ -64,7 +66,7 @@ export default function DashboardSidebar({
             filters: state.filters,
           })}`;
           const active = state.view === "category" && state.categoryId === category.code;
-          const isDigitalDemand = category.code === "C15";
+          const isDigitalDemand = category.code === "C14";
 
           return (
             <SidebarLink key={category.id} href={href} active={active}>

@@ -91,7 +91,8 @@ async function GlobalFilterBarData({
 /**
  * Fase 7 (spec 43): enruta a la vista curada correspondiente. Sin
  * `categoryId`/`instrumentId` → `OverviewView` (layout `1a`). Con
- * `categoryId=C15` → `DigitalDemandView` (D4, caso especial). Cualquier
+ * `categoryId=C14` → `DigitalDemandView` (D4, caso especial — era C15 antes
+ * de la fusión C1+C3 y renumeración en cascada, spec 66 Fase 3 D7). Cualquier
  * otra categoría, o el drill-down avanzado por `instrumentId` (D2, sin
  * control propio en `GlobalFilterBar` pero disponible por URL) →
  * `CategoryView` genérica.
@@ -121,7 +122,7 @@ async function DashboardViewContent({
     }
   }
 
-  if (categoryId === "C15") {
+  if (categoryId === "C14") {
     return <DigitalDemandView filters={filters} />;
   }
 

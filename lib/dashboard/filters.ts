@@ -12,7 +12,9 @@ export interface DashboardPageState {
   filters: DashboardFilters;
 }
 
-const CATEGORY_ID_PATTERN = /^C([1-9]|1[0-5])$/;
+// Spec 66 (Fase 3, D7, 2026-08-10): C1..C14, no C1..C15 — fusión de C1+C3 y
+// renumeración en cascada de las categorías siguientes.
+const CATEGORY_ID_PATTERN = /^C([1-9]|1[0-4])$/;
 
 /** Mismas claves que `DashboardFilters` — mantener sincronizado al agregar un filtro nuevo. */
 const FILTER_KEYS: (keyof DashboardFilters)[] = [
@@ -40,7 +42,7 @@ type RawParams = Record<string, string | undefined>;
  * D6 (spec 43): resuelve el estado de la página (vista + categoría + filtros)
  * desde `searchParams`. `view` es puramente derivado de `categoryId` — un
  * `categoryId` válido implica `view=category`; su ausencia o un valor fuera
- * de C1..C15 implica `view=overview`. D2: `instrumentId` y `categoryId` son
+ * de C1..C14 implica `view=overview`. D2: `instrumentId` y `categoryId` son
  * mutuamente excluyentes — un `categoryId` válido descarta `instrumentId`
  * (la navegación por categoría es la vía principal; el filtro por
  * instrumento queda disponible solo cuando no hay categoría activa).

@@ -50,6 +50,7 @@ function wrapNumericAggregation(
     questionType: "numeric",
     sectionName: "",
     systemField: null,
+    chartHint: null,
     isInverted: false,
     answeredCount: aggregation?.type === "numeric" ? aggregation.count : 0,
     suppressed: aggregation === null,
@@ -64,25 +65,27 @@ function wrapNumericAggregation(
  * - Donut de cultivo + mapa → `/overview` (`byCrop`, `byDepartment`).
  * - Género + edad → `/analytics?categoryId=C1` (S1a: única fuente real de
  *   `farmer.gender`; `/overview` no expone género, a diferencia de edad).
- * - Etapas de la cadena → `/analytics?categoryId=C3` (S1b·10).
+ * - Etapas de la cadena → `/analytics?categoryId=C1` (S1b·10 — S1b se
+ *   fusionó dentro de C1 junto con "Perfil del productor", spec 66 Fase 3
+ *   D7, 2026-08-10; antes vivía en la categoría separada C3).
  * - Batería Likert ★ consolidada + índice por edad → `/digital-demand`
  *   (D4) — **no** `/analytics` sin más: ningún endpoint de Fase 1-2 agrega
  *   los 130 ítems ★ cruzando instrumentos salvo `/digital-demand`; llamarlo
  *   aquí es una extensión deliberada del alcance original de esta fase
  *   (que solo listaba `/overview`, `/kpis` y `/analytics`), documentada en
  *   el spec junto a esta decisión.
- * - Calendario de cosecha → `/analytics?categoryId=C4` (S2.4·23).
+ * - Calendario de cosecha → `/analytics?categoryId=C3` (S2.4·23 — era C4
+ *   antes de la renumeración en cascada, spec 66 Fase 3 D7).
  *
  * "Internet por departamento" del mockup se omite: no existe ese desglose
  * en ningún endpoint (`/kpis` solo da el % global) y agregarlo requeriría
  * un campo nuevo en el backend, fuera de alcance de una fase de frontend.
  */
 export default async function OverviewView({ filters }: OverviewViewProps) {
-  const [overview, c1, c3, c4, digitalDemand] = await Promise.all([
+  const [overview, c1, cropsCategory, digitalDemand] = await Promise.all([
     fetchDashboardOverview(filters),
     fetchDashboardAnalytics({ ...filters, categoryId: "C1" }),
     fetchDashboardAnalytics({ ...filters, categoryId: "C3" }),
-    fetchDashboardAnalytics({ ...filters, categoryId: "C4" }),
     fetchDigitalDemand(filters),
   ]);
 
@@ -90,10 +93,10 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
     c1.questions,
     (q) => q.systemField === "farmer.gender",
   );
-  const chainStageQuestion = findQuestion(c3.questions, (q) =>
+  const chainStageQuestion = findQuestion(c1.questions, (q) =>
     q.questionText.startsWith("¿En qué etapas de la cadena productiva"),
   );
-  const harvestQuestion = findQuestion(c4.questions, (q) =>
+  const harvestQuestion = findQuestion(cropsCategory.questions, (q) =>
     q.questionText.startsWith("¿En qué meses se presenta la cosecha principal"),
   );
 
