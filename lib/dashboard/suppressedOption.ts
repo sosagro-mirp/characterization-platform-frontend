@@ -12,14 +12,14 @@
  * (spec 66, Fases 3–17). El estilo final por tipo de gráfica lo define el
  * usuario categoría a categoría (ver bitácora de ajustes de estilo del spec).
  */
-import { AggregationOption } from "@/app/(dashboard)/types";
+import { AggregationOption, DashboardQuestion } from "@/app/(dashboard)/types";
 
 export const SUPPRESSED_TOOLTIP_LABEL =
   "Oculto por privacidad (menos de 5 respuestas)";
 
 /** Altura mínima de barra para que la celda suprimida sea visible en el
  * listado sin insinuar un valor real — nunca 0, nunca ausente. */
-const SUPPRESSED_BAR_PLACEHOLDER = 2;
+export const SUPPRESSED_BAR_PLACEHOLDER = 2;
 
 export interface BarDatum {
   name: string;
@@ -46,4 +46,21 @@ export function toBarDatum(option: AggregationOption): BarDatum {
 export function formatBarTooltip(datum: BarDatum): string {
   if (datum.suppressed) return SUPPRESSED_TOOLTIP_LABEL;
   return `${datum.percentage.toFixed(1)}% (${datum.count})`;
+}
+
+/** Mapea una pregunta `yes_no` a un `BarDatum` ("% Sí") con una etiqueta de
+ * categoría explícita — usado para combinar varias preguntas `yes_no`
+ * relacionadas en una sola `HorizontalBarChart` (ej. "¿Cultiva
+ * actualmente X?" × 4 cultivos → una barra por cultivo). La supresión es a
+ * nivel de pregunta completa (`question.suppressed`), no de opción. */
+export function yesNoToBarDatum(question: DashboardQuestion, label: string): BarDatum {
+  if (question.suppressed || question.aggregation?.type !== "yes_no") {
+    return { name: label, percentage: SUPPRESSED_BAR_PLACEHOLDER, count: null, suppressed: true };
+  }
+  return {
+    name: label,
+    percentage: question.aggregation.yesPercentage,
+    count: question.aggregation.yesCount,
+    suppressed: false,
+  };
 }
