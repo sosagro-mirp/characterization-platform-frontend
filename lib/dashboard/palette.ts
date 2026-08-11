@@ -54,3 +54,33 @@ export const LIKERT_SCALE_COLORS = [
   "#86c08d",
   "#15803d",
 ] as const;
+
+/**
+ * Spec 66 (Fase 3, ajuste de estilo 2026-08-05): paleta categórica para
+ * `MultipleChoiceChart` (BarrasH) — un color por barra según su posición
+ * (mayor a menor conteo), en vez del verde único anterior. Cicla con
+ * módulo si hay más opciones que colores. Tomada del mockup que trajo el
+ * usuario para "Etapas de la cadena" (S1b·10), aplicada de forma genérica
+ * a toda pregunta de selección múltiple, no solo a esa.
+ */
+export const CATEGORICAL_BAR_COLORS = [
+  "#9CAF3E",
+  "#7CB342",
+  "#2E7D32",
+  "#1B5E20",
+  "#7A9E85",
+  "#F2C230",
+] as const;
+
+/**
+ * Spec 66 (Fase 3, ajuste de estilo 2026-08-05): colores fijos para la
+ * torta de "Género del productor(a)" (mockup del usuario), específicos de
+ * esta pregunta — no una paleta genérica para cualquier `DonutChart` futuro
+ * (decisión explícita: cada pregunta curada a torta define la suya si hace
+ * falta). Clave = texto exacto de la opción.
+ */
+export const GENDER_DONUT_COLORS: Record<string, string> = {
+  Hombre: "#14532d",
+  Mujer: "#65a30d",
+  "Prefiere no responder": "#d4d4d4",
+};

@@ -43,27 +43,29 @@ export default function ComplianceChart({ question }: ComplianceChartProps) {
   const height = Math.max(120, data.length * 36);
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-        <CartesianGrid horizontal={false} stroke="var(--border)" />
-        <XAxis
-          type="number"
-          domain={[0, 100]}
-          tickFormatter={(v) => `${v}%`}
-          tick={{ fontSize: 11 }}
-        />
-        <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-        <Tooltip formatter={(_value, _name, item) => [formatBarTooltip(item.payload as BarDatum), "Respuestas"]} />
-        <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
-          {data.map((entry) => (
-            <Cell
-              key={entry.name}
-              fill={entry.suppressed ? "var(--warning-fg)" : entry.color}
-              fillOpacity={entry.suppressed ? 0.5 : 1}
-            />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="w-full">
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
+          <CartesianGrid horizontal={false} stroke="var(--border)" />
+          <XAxis
+            type="number"
+            domain={[0, 100]}
+            tickFormatter={(v) => `${v}%`}
+            tick={{ fontSize: 11 }}
+          />
+          <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
+          <Tooltip formatter={(_value, _name, item) => [formatBarTooltip(item.payload as BarDatum), "Respuestas"]} />
+          <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
+            {data.map((entry) => (
+              <Cell
+                key={entry.name}
+                fill={entry.suppressed ? "var(--warning-fg)" : entry.color}
+                fillOpacity={entry.suppressed ? 0.5 : 1}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
