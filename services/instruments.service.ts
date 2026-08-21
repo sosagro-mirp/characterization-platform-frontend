@@ -61,6 +61,8 @@ export async function getInstrumentForEditor(id: string): Promise<{
   publishDate: string;
   isActive: boolean;
   actorTypes: import("@/app/(admin)/types").ActorTypeSummary[];
+  createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
+  updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   sections: import("@/app/(admin)/types").SectionDetail[];
 }> {
   const [meta, render] = await Promise.all([
@@ -78,6 +80,8 @@ export async function getInstrumentForEditor(id: string): Promise<{
     publishDate: meta.publishDate,
     isActive: meta.isActive,
     actorTypes: meta.actorTypes ?? [],
+    createdBy: meta.createdBy,
+    updatedBy: meta.updatedBy,
     sections: (render.sections ?? []).map((sec) => ({
       sectionId: sec.sectionId,
       name: sec.name,
