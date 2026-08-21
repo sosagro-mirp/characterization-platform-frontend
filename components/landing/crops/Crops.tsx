@@ -19,27 +19,27 @@ export function Crops() {
         {crops.map((crop) => (
           <li
             key={crop.slug}
-            className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-lg"
+            className="group relative flex h-full min-h-80 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 dark:border-[#334155] shadow-sm transition-shadow hover:shadow-lg"
           >
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <Image
-                src={crop.image}
-                alt={`Cultivo de ${crop.name}`}
-                fill
-                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-brand-dark backdrop-blur-sm">
+            <Image
+              src={crop.image}
+              alt={`Cultivo de ${crop.name}`}
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/30 to-transparent dark:from-[#0f172a]/95 dark:via-[#0f172a]/40 dark:to-transparent" />
+
+            <div className="relative flex flex-col gap-2 p-5 text-white">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
                 <span
-                  className="w-1.5 h-1.5 rounded-full bg-brand"
+                  className="w-1.5 h-1.5 rounded-full bg-green-400 dark:bg-[#fde047]"
                   aria-hidden="true"
                 />
                 {crop.productiveUnits} unidades
               </span>
-            </div>
-            <div className="flex flex-1 flex-col gap-2 p-5">
               <h3 className="text-2xl font-bold tracking-tight">{crop.name}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-white/85 leading-relaxed">
                 {crop.description}
               </p>
             </div>

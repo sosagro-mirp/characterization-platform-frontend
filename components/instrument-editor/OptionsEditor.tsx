@@ -89,7 +89,7 @@ export default function OptionsEditor({
           type="button"
           onClick={handleAdd}
           disabled={!newText.trim()}
-          className="rounded-lg bg-[var(--brand)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-40"
+          className="rounded-lg bg-[var(--brand)] px-3 py-1.5 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-40"
         >
           Agregar
         </button>

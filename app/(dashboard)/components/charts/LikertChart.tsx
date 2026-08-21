@@ -1,10 +1,13 @@
 "use client";
 
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { LIKERT_SCALE_COLORS } from "@/lib/dashboard/palette";
 import { DashboardQuestion } from "../../types";
 
-/** Rojo (desacuerdo) → amarillo (neutro) → verde (acuerdo), escala 1-5. */
-const LEVEL_COLORS = ["#dc2626", "#f87171", "#eab308", "#4ade80", "#16a34a"];
+/** D8 (spec 43, Fase 6): escala unificada con la matriz divergente del
+ * rediseño — antes duplicaba su propia rampa semáforo (rojo→amarillo→verde),
+ * distinta de la que ya usa `LikertDivergingMatrix`. */
+const LEVEL_COLORS = LIKERT_SCALE_COLORS;
 
 interface LikertChartProps {
   question: DashboardQuestion;

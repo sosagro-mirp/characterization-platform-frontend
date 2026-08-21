@@ -51,7 +51,7 @@ export default function NewRequestModal({ onClose, onCreated }: Props) {
 
         {submitted ? (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
-            <CheckCircle className="size-12 text-green-600" strokeWidth={1.5} />
+            <CheckCircle className="size-12 text-[var(--success-fg)]" strokeWidth={1.5} />
             <div>
               <p className="text-base font-semibold text-[var(--text-primary)]">
                 Solicitud enviada
@@ -120,7 +120,7 @@ export default function NewRequestModal({ onClose, onCreated }: Props) {
                 <button
                   type="submit"
                   disabled={saving || description.trim().length < 10}
-                  className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+                  className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
                 >
                   {saving ? "Enviando…" : "Enviar reporte"}
                 </button>

@@ -9,7 +9,7 @@ export function HeroBadge({ parts }: HeroBadgeProps) {
       className="max-w-max inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] lg:text-xs font-medium text-white/90 backdrop-blur-sm"
     >
       <span
-        className="w-1.5 h-1.5 rounded-full bg-green-400"
+        className="w-1.5 h-1.5 rounded-full bg-green-400 dark:bg-[#fde047]"
         aria-hidden="true"
       />
       {parts.map((part, i) => (
