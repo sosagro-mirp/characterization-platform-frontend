@@ -166,18 +166,21 @@ export default function CampaignSessionPage() {
     if (!duplicatePending) return;
     setDuplicateActionLoading(true);
     try {
-      const { surveyId: newSurveyId } = await overwriteSurvey({
+      // Spec 70: overwrite ahora solo descarta el duplicado — no crea un
+      // survey de reemplazo (evita dejar una fila vacía huérfana si el
+      // encuestador abandona después de sobrescribir). Por eso NO se pasa
+      // existingSurveyId acá: el flujo normal de creación diferida de
+      // useInstrumentSurveyStore.submitResponses() crea el survey recién
+      // al enviar la primera respuesta, igual que cualquier encuesta nueva.
+      await overwriteSurvey({
         surveyId: duplicatePending.duplicateSurveyId,
         sessionId,
-        instrumentId: duplicatePending.instrument.instrumentId,
-        stepOrder: duplicatePending.stepOrder,
       });
       setDuplicatePending(null);
       router.replace(
         `/instrument/${duplicatePending.instrument.instrumentId}` +
         `?campaignSessionId=${sessionId}` +
-        `&stepOrder=${duplicatePending.stepOrder}` +
-        `&existingSurveyId=${newSurveyId}`,
+        `&stepOrder=${duplicatePending.stepOrder}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al sobrescribir respuestas.");
