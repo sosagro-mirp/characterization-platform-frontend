@@ -21,6 +21,9 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         <div>
           <p className="text-xs text-text-muted uppercase tracking-wide">
             {question.sectionName}
+            {question.instrumentName && (
+              <span className="text-[var(--border-strong)]"> · {question.instrumentName}</span>
+            )}
           </p>
           <h3 className="font-medium text-text-primary mt-0.5">
             {question.questionText}

@@ -92,9 +92,25 @@ export default function EditCampaignPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-        {campaign.name}
-      </h1>
+      <div>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+          {campaign.name}
+        </h1>
+        <div className="mt-2 flex flex-wrap gap-4 text-xs text-[var(--text-muted)]">
+          <div>
+            <span className="font-medium text-[var(--text-primary)]">Creado por:</span>{" "}
+            {campaign.createdBy
+              ? `${campaign.createdBy.name} ${campaign.createdBy.lastName}`
+              : "sin registro (anterior al registro de auditoría)"}
+          </div>
+          {campaign.updatedBy && (
+            <div>
+              <span className="font-medium text-[var(--text-primary)]">Actualizado por:</span>{" "}
+              {`${campaign.updatedBy.name} ${campaign.updatedBy.lastName}`}
+            </div>
+          )}
+        </div>
+      </div>
 
       {error && (
         <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">

@@ -6,6 +6,7 @@ import {
   ActorTypeSummary,
   SectionDetail,
   TypeOfQuestionSummary,
+  UserAuditSummary,
 } from "@/app/(admin)/types";
 import {
   useInstrumentEditorStore,
@@ -24,6 +25,8 @@ interface InstrumentEditorLayoutProps {
   publishDate: string;
   isActive: boolean;
   actorTypes: ActorTypeSummary[];
+  createdBy?: UserAuditSummary | null;
+  updatedBy?: UserAuditSummary | null;
   sections: SectionDetail[];
   allActorTypes: ActorTypeSummary[];
   questionTypes: TypeOfQuestionSummary[];
@@ -36,6 +39,8 @@ export default function InstrumentEditorLayout({
   publishDate,
   isActive,
   actorTypes,
+  createdBy,
+  updatedBy,
   sections,
   allActorTypes,
   questionTypes,
@@ -147,6 +152,20 @@ export default function InstrumentEditorLayout({
             v{instrumentVersion}
             {formattedPublishDate && ` · publicado el ${formattedPublishDate}`}
           </p>
+          <div className="mt-1 flex flex-wrap gap-4 text-[10.5px] text-[var(--text-muted)]">
+            <div>
+              <span className="font-medium text-[var(--text-primary)]">Creado por:</span>{" "}
+              {createdBy
+                ? `${createdBy.name} ${createdBy.lastName}`
+                : "sin registro (anterior al registro de auditoría)"}
+            </div>
+            {updatedBy && (
+              <div>
+                <span className="font-medium text-[var(--text-primary)]">Actualizado por:</span>{" "}
+                {`${updatedBy.name} ${updatedBy.lastName}`}
+              </div>
+            )}
+          </div>
         </div>
         <SaveStatusIndicator status={saveStatus} errorMessage={saveError} />
       </header>
