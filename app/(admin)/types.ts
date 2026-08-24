@@ -313,6 +313,32 @@ export interface UpdateFarmRequest {
   cropIds?: string[];
 }
 
+// Spec 73 — borrado en cascada de un agricultor.
+export interface FarmerDeletionCounts {
+  farms: number;
+  campaignSessions: number;
+  surveys: number;
+  responses: number;
+  documentCollisions: number;
+  relations: number;
+}
+
+export interface FarmerDeletionFarmInfo {
+  farmId: string;
+  name: string;
+  shared: boolean;
+  willBeDeleted: boolean;
+}
+
+export interface FarmerDeletionPreview {
+  farmerId: string;
+  name: string;
+  documentId: string | null;
+  counts: FarmerDeletionCounts;
+  farm: FarmerDeletionFarmInfo | null;
+  preserved: { changeRequests: number };
+}
+
 // ── Change Requests ───────────────────────────────────────────────────────────
 
 export type ChangeRequestSource = "mobile" | "web";
