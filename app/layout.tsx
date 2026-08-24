@@ -22,6 +22,33 @@ export const viewport: Viewport = {
   themeColor: "#14532d",
 };
 
+/**
+ * Anti-FOUC (spec 63): lee la preferencia de tema de localStorage y aplica la
+ * clase `dark` en <html> antes del primer paint. No puede importar
+ * lib/theme/resolveTheme.ts porque corre como script inline sin bundlear;
+ * replica su lógica mínima a propósito.
+ */
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var raw = localStorage.getItem("sosagro.theme");
+    var preference = "system";
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      var stored = parsed && parsed.state && parsed.state.preference;
+      if (stored === "light" || stored === "dark" || stored === "system") {
+        preference = stored;
+      }
+    }
+    var systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var effective = preference === "system" ? (systemPrefersDark ? "dark" : "light") : preference;
+    if (effective === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,9 +56,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body
         className={`${jetbrainsMono.variable} ${jetbrainsMono.className} antialiased`}
-        suppressHydrationWarning
       >
         {children}
       </body>

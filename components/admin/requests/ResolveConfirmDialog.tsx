@@ -35,7 +35,7 @@ export default function ResolveConfirmDialog({ item, onConfirm, onCancel, loadin
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+            className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
           >
             {loading ? "Guardando…" : "Confirmar"}
           </button>

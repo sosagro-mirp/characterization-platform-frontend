@@ -3,11 +3,17 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FarmerDetail, UpdateFarmerRequest, UpdateFarmRequest } from "@/app/(admin)/types";
-import { getFarmer, updateFarmer } from "@/services/farmers.service";
+import {
+  deleteFarmerCascade,
+  getFarmer,
+  updateFarmer,
+} from "@/services/farmers.service";
 import { updateFarm } from "@/services/farms.service";
 import { listCrops } from "@/services/types-of-crops.service";
 import { CropSummary } from "@/app/(instrument)/types";
 import { SurveysTab } from "./SurveysTab";
+import DeleteFarmerDialog from "./DeleteFarmerDialog";
+import AdminOnly from "@/components/admin/AdminOnly";
 
 type Tab = "datos" | "encuestas";
 
@@ -22,6 +28,9 @@ export default function EditFarmerPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Farmer fields
   const [name, setName] = useState("");
@@ -99,6 +108,20 @@ export default function EditFarmerPage() {
       setError(err instanceof Error ? err.message : "Error al guardar.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteCascade() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteFarmerCascade(id);
+      router.push("/admin/farmers");
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Error al eliminar el agricultor.",
+      );
+      setDeleting(false);
     }
   }
 
@@ -220,7 +243,7 @@ export default function EditFarmerPage() {
                         onClick={() => toggleCrop(crop.cropId)}
                         className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                           selected
-                            ? "bg-[var(--brand)] text-white border-[var(--brand)]"
+                            ? "bg-[var(--brand)] text-[var(--brand-foreground)] border-[var(--brand)]"
                             : "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--brand)]"
                         }`}
                       >
@@ -238,7 +261,7 @@ export default function EditFarmerPage() {
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
             >
               {saving ? "Guardando…" : "Guardar"}
             </button>
@@ -248,12 +271,34 @@ export default function EditFarmerPage() {
             >
               Cancelar
             </button>
+            <AdminOnly>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="ml-auto rounded-xl border border-[var(--danger-fg)]/40 px-4 py-2 text-sm font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
+              >
+                Eliminar agricultor
+              </button>
+            </AdminOnly>
           </div>
         </div>
       )}
 
       {/* Tab: Encuestas */}
       {activeTab === "encuestas" && <SurveysTab farmerId={id} />}
+
+      {confirmDelete && (
+        <DeleteFarmerDialog
+          farmerId={id}
+          deleting={deleting}
+          error={deleteError}
+          onConfirm={handleDeleteCascade}
+          onCancel={() => {
+            setConfirmDelete(false);
+            setDeleteError(null);
+          }}
+        />
+      )}
     </div>
   );
 }

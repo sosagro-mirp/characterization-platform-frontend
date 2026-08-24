@@ -71,7 +71,7 @@ export default function RequestsPage() {
               onClick={() => setStatusFilter(s)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 statusFilter === s
-                  ? "bg-[var(--brand)] text-white"
+                  ? "bg-[var(--brand)] text-[var(--brand-foreground)]"
                   : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               }`}
             >
@@ -88,7 +88,7 @@ export default function RequestsPage() {
               onClick={() => setSourceFilter(s)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 sourceFilter === s
-                  ? "bg-[var(--brand)] text-white"
+                  ? "bg-[var(--brand)] text-[var(--brand-foreground)]"
                   : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               }`}
             >

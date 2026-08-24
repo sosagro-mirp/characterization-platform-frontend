@@ -17,7 +17,7 @@ export const partners: readonly Partner[] = [
     role: "aliado",
     axis: "academia",
     order: 1,
-    logo: "/logos-institucionales/logo-ufps.jpg",
+    logo: "/logos-institucionales/logo-ufps.png",
   },
   {
     slug: "udla",
@@ -62,6 +62,7 @@ export const partners: readonly Partner[] = [
     role: "aliado",
     axis: "empresa",
     order: 6,
+    logo: "/logos-institucionales/logo-natucafe.png",
   },
   {
     slug: "terra-cann",
@@ -69,6 +70,7 @@ export const partners: readonly Partner[] = [
     role: "aliado",
     axis: "empresa",
     order: 7,
+    logo: "/logos-institucionales/logo-terracan-colombia.png",
   },
   {
     slug: "gentech",

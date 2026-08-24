@@ -55,10 +55,11 @@ export function checkDuplicate(
 export function overwriteSurvey(payload: {
   surveyId: string;
   sessionId: string;
-  instrumentId: string;
-  stepOrder: number;
-}): Promise<{ surveyId: string }> {
-  return apiClient.post<{ surveyId: string }>("/api/surveys/overwrite", payload);
+}): Promise<{ discardedSurveyId: string }> {
+  return apiClient.post<{ discardedSurveyId: string }>(
+    "/api/surveys/overwrite",
+    payload,
+  );
 }
 
 export function skipStep(payload: {

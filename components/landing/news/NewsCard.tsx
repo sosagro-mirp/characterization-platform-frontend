@@ -2,7 +2,7 @@ import { ArrowUpRight, CalendarDays } from "lucide-react";
 import type { NewsEntry, NewsTag } from "../../../lib/landing-content";
 
 const tagStyle: Record<NewsTag, string> = {
-  Evento: "bg-brand text-white",
+  Evento: "bg-brand text-brand-foreground",
   Publicación: "bg-brand-dark text-white",
   Convocatoria: "bg-accent text-brand-dark",
   Hito: "bg-gray-900 text-white",
@@ -56,7 +56,7 @@ export function NewsCard({ entry }: NewsCardProps) {
         {dateLabel}
       </time>
 
-      <h3 className="text-base font-bold tracking-tight text-balance leading-snug">
+      <h3 className="text-base font-bold tracking-tight text-balance leading-snug text-brand-dark">
         {entry.title}
       </h3>
 

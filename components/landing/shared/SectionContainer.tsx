@@ -12,7 +12,7 @@ interface SectionContainerProps extends HTMLAttributes<HTMLElement> {
 
 const spacingClass = {
   md: "py-12 md:py-16",
-  lg: "py-16 md:py-24 lg:py-32",
+  lg: "py-16 md:py-24",
 } as const;
 
 export function SectionContainer({
@@ -26,13 +26,16 @@ export function SectionContainer({
   return (
     <section
       id={id}
-      className={`scroll-mt-24 px-4 md:px-6 lg:px-8 ${spacingClass[spacing]} ${className}`}
+      className={`relative isolate scroll-mt-24 px-4 md:px-6 lg:px-8 ${spacingClass[spacing]} ${className}`}
       {...rest}
     >
       <div
-        className={`max-w-7xl mx-auto w-full ${
-          centered ? "flex flex-col items-center text-center" : ""
-        }`}
+        className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)]"
+        aria-hidden="true"
+      />
+      <div
+        className={`max-w-7xl mx-auto w-full ${centered ? "flex flex-col items-center text-center" : ""
+          }`}
       >
         {children}
       </div>

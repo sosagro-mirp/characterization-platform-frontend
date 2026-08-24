@@ -64,34 +64,34 @@ export default function PreSurveyForm({
     <div className="space-y-5">
       {/* Search */}
       <div className="space-y-3">
-        <p className="text-sm font-medium text-gray-700">Buscar encuestado</p>
+        <p className="text-sm font-medium text-text-primary">Buscar encuestado</p>
         <div className="relative">
           <input
             type="text"
             placeholder="Buscar por nombre o documento…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:border-green-600 transition-colors"
+            className="w-full rounded-xl border border-[var(--border)] bg-surface px-4 py-3 text-sm focus:outline-none focus:border-brand transition-colors"
           />
           {searching && (
-            <span className="absolute right-3 top-3 text-xs text-gray-400">
+            <span className="absolute right-3 top-3 text-xs text-text-muted">
               Buscando…
             </span>
           )}
         </div>
 
         {searchResults.length > 0 && (
-          <ul className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+          <ul className="rounded-xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
             {searchResults.map((farmer) => (
               <li key={farmer.id}>
                 <button
                   onClick={() => onSearchSelect(farmer.id)}
-                  className="w-full text-left px-4 py-3 hover:bg-green-50 transition-colors"
+                  className="w-full text-left px-4 py-3 hover:bg-brand-subtle-bg transition-colors"
                 >
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-text-primary">
                     {farmer.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-text-muted">
                     Doc: {farmer.documentId}
                     {farmer.farm?.name && ` · Finca: ${farmer.farm.name}`}
                   </p>
@@ -102,22 +102,22 @@ export default function PreSurveyForm({
         )}
 
         {searchQuery.trim() && !searching && searchResults.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-2">
+          <p className="text-sm text-text-muted text-center py-2">
             Sin resultados.
           </p>
         )}
       </div>
 
       <div className="relative flex items-center gap-3">
-        <div className="flex-1 border-t border-gray-200" />
-        <span className="text-xs text-gray-400">o</span>
-        <div className="flex-1 border-t border-gray-200" />
+        <div className="flex-1 border-t border-[var(--border)]" />
+        <span className="text-xs text-text-muted">o</span>
+        <div className="flex-1 border-t border-[var(--border)]" />
       </div>
 
       {/* New farmer */}
       <button
         onClick={onNewFarmer}
-        className="w-full rounded-xl border border-green-600 px-4 py-3 text-sm font-semibold text-green-700 hover:bg-green-50 transition-colors"
+        className="w-full rounded-xl border border-brand px-4 py-3 text-sm font-semibold text-brand hover:bg-brand-subtle-bg transition-colors"
       >
         Nuevo encuestado
       </button>
@@ -126,7 +126,7 @@ export default function PreSurveyForm({
       {lastFarmer && (
         <button
           onClick={() => onContinueLast(lastFarmer.farmerId)}
-          className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+          className="w-full rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-brand-foreground hover:bg-brand-hover transition-colors"
         >
           Continuar con {farmerLabel}
           {lastFarmer.farm?.name && (

@@ -7,6 +7,7 @@ export const researchGroups: readonly ResearchGroup[] = [
     shortName: "Ciencias Computacionales",
     gruplacCode: "COL0053581",
     category: "A1",
+    area: "datos",
     line: "Sistemas de control, robótica e IoT",
     description:
       "Diseño e integración de sistemas embebidos, redes de sensores y arquitecturas de captura de datos en finca.",
@@ -18,6 +19,7 @@ export const researchGroups: readonly ResearchGroup[] = [
     shortName: "Máquinas Inteligentes",
     gruplacCode: "COL0123729",
     category: "A",
+    area: "datos",
     line: "Procesamiento de datos de alta dimensión",
     description:
       "Modelos de aprendizaje de máquina aplicados a imágenes multiespectrales, firmas espectrales y series agroclimáticas.",
@@ -28,6 +30,7 @@ export const researchGroups: readonly ResearchGroup[] = [
     name: "Sistemas de Control y Robótica",
     gruplacCode: "COL0123701",
     category: "A1",
+    area: "robotica",
     line: "Internet de las Cosas",
     description:
       "Plataformas de adquisición y control para monitoreo automático de variables de cultivo, cosecha y postcosecha.",
@@ -39,6 +42,7 @@ export const researchGroups: readonly ResearchGroup[] = [
     shortName: "GI2B",
     gruplacCode: "COL0056476",
     category: "A1",
+    area: "biomedica",
     line: "Ciencias Ingenieriles Biomédicas",
     description:
       "Métodos de procesamiento de señales e imagen aplicados al análisis de calidad y trazabilidad de productos agrícolas.",
@@ -50,6 +54,7 @@ export const researchGroups: readonly ResearchGroup[] = [
     shortName: "Alquimia",
     gruplacCode: "COL0095769",
     category: "A",
+    area: "quimica",
     line: "Tecnologías ambientales y desarrollo de materiales",
     description:
       "Creación y asesoría en tecnologías ambientales, energéticas y desarrollo de materiales que aporten al avance de la ciencia básica y se adapten al sector industrial productivo.",

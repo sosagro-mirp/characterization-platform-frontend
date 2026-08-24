@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
+/* Modo oscuro por clase (spec 63): la clase `.dark` la aplica
+   lib/theme/applyTheme.ts sobre <html> según la preferencia del usuario
+   (claro/oscuro/sistema), no la media query del navegador directamente. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Tokens semánticos — modo claro (default). Solo se consumen
-     dentro del subárbol del panel admin. */
+  /* Tokens semánticos — modo claro (default). */
   --surface: #ffffff;
   --surface-muted: #fafafa;
   --surface-elevated: #ffffff;
@@ -16,8 +18,17 @@
   --text-inverse: #fafafa;
   --border: #e5e5e5;
   --border-strong: #a3a3a3;
+
+  /* Acento interactivo primario. Verde en claro, amarillo en oscuro
+     (spec 63) — antes esta sustitución solo ocurría en la landing Original
+     vía overrides `dark:` puntuales; ahora vive en el token y alcanza a
+     toda la app (admin, runner de encuesta, dashboard). */
   --brand: #15803d;
   --brand-hover: #166534;
+  --brand-foreground: #ffffff;
+  --brand-subtle-bg: #dcfce7;
+  --brand-subtle-fg: #15803d;
+
   --accent: #facc15;
   --success-bg: #dcfce7;
   --success-fg: #15803d;
@@ -27,12 +38,17 @@
   --warning-fg: #92400e;
   --info-bg: #dbeafe;
   --info-fg: #1d4ed8;
+
+  /* Acento interactivo del mapa de Colombia (landing Original) — verde en
+     claro, amarillo en oscuro. Ver DESIGN.md → "Modo oscuro". */
+  --map-active: #15803d;
+  --map-active-hover: #166534;
+  --map-active-pressed: #14532d;
 }
 
-/* Override del modo oscuro: solo aplica cuando algún ancestro
-   lleva la clase `.dark`. La clase vive en el wrapper del layout
-   admin, nunca en <html>, para no afectar rutas públicas. */
 .dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
   --surface: #0f172a;
   --surface-muted: #1e293b;
   --surface-elevated: #1e293b;
@@ -41,8 +57,13 @@
   --text-inverse: #0f172a;
   --border: #334155;
   --border-strong: #64748b;
-  --brand: #15803d;
-  --brand-hover: #166534;
+
+  --brand: #fde047;
+  --brand-hover: #facc15;
+  --brand-foreground: #0f172a;
+  --brand-subtle-bg: #422006;
+  --brand-subtle-fg: #fde047;
+
   --accent: #fde047;
   --success-bg: #052e16;
   --success-fg: #4ade80;
@@ -52,15 +73,32 @@
   --warning-fg: #fbbf24;
   --info-bg: #172554;
   --info-fg: #60a5fa;
+
+  --map-active: #fde047;
+  --map-active-hover: #facc15;
+  --map-active-pressed: #facc15;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand: #15803d;
+
+  /* --brand ya resuelve a amarillo en .dark (ver arriba); a diferencia del
+     valor fijo anterior, bg-brand/text-brand/border-brand/ring-brand ahora
+     reaccionan al tema sin necesidad de overrides `dark:` por componente. */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-subtle-bg: var(--brand-subtle-bg);
+  --color-brand-subtle-fg: var(--brand-subtle-fg);
+
+  /* --color-brand-dark / --color-brand-light son tonos de verde FIJOS
+     (no reactivos al tema) usados como color institucional en bloques que
+     se mantienen en verde en ambos modos — ver DESIGN.md → "Modo oscuro —
+     tokens" → "Regla de oro". No confundir con --brand: ese sí cambia. */
   --color-brand-dark: #14532d;
   --color-brand-light: #dcfce7;
-  --color-accent: #facc15;
+  --color-accent: var(--accent);
 
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
@@ -70,9 +108,6 @@
   --color-text-inverse: var(--text-inverse);
   --color-border-token: var(--border);
   --color-border-strong: var(--border-strong);
-  --color-brand-token: var(--brand);
-  --color-brand-hover: var(--brand-hover);
-  --color-accent-token: var(--accent);
   --color-success-bg: var(--success-bg);
   --color-success-fg: var(--success-fg);
   --color-danger-bg: var(--danger-bg);
@@ -117,4 +152,16 @@ h3 {
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
+}
+
+/* Oculta la barra de scroll visualmente sin deshabilitar el scroll en sí
+   (ej. sidebar del dashboard, spec 43) — no existe utilidad equivalente en
+   Tailwind v4 core. */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge Chromium */
 }

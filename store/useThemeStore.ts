@@ -1,44 +1,27 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-
-export type ThemeMode = "light" | "dark" | "system";
+import { noopStorage } from "@/lib/noopStorage";
+import { nextPreference, THEME_STORAGE_KEY, type ThemePreference } from "@/lib/theme/resolveTheme";
 
 interface ThemeState {
-  mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
-}
-
-const STORAGE_KEY = "sosagro.theme";
-
-export function resolveEffectiveTheme(
-  mode: ThemeMode,
-  systemPrefersDark: boolean,
-): "light" | "dark" {
-  if (mode === "system") return systemPrefersDark ? "dark" : "light";
-  return mode;
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
+  cyclePreference: () => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set) => ({
-      mode: "system",
-      setMode: (mode) => set({ mode }),
+    (set, get) => ({
+      preference: "system",
+      setPreference: (preference) => set({ preference }),
+      cyclePreference: () => set({ preference: nextPreference(get().preference) }),
     }),
     {
-      name: STORAGE_KEY,
+      name: THEME_STORAGE_KEY,
       storage: createJSONStorage(() =>
-        typeof window === "undefined" ? noopStorage : window.localStorage,
+        typeof window === "undefined" ? noopStorage : window.localStorage
       ),
-      partialize: (state) => ({ mode: state.mode }),
-    },
-  ),
+      partialize: (state) => ({ preference: state.preference }),
+    }
+  )
 );
-
-const noopStorage: Storage = {
-  length: 0,
-  clear: () => {},
-  getItem: () => null,
-  key: () => null,
-  removeItem: () => {},
-  setItem: () => {},
-};

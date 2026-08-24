@@ -301,7 +301,7 @@ export default function StepEditor({
             type="button"
             disabled={!newInstrumentId}
             onClick={handleAdd}
-            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50"
           >
             Agregar
           </button>

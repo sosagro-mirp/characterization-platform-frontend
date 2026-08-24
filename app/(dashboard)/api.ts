@@ -4,8 +4,11 @@ import { TownSummary } from "@/services/towns.service";
 import { CropSummary } from "@/app/(instrument)/types";
 import { ActorTypeSummary } from "@/app/(admin)/types";
 import {
+  DashboardCategory,
   DashboardDepartmentCount,
+  DashboardDigitalDemand,
   DashboardFilters,
+  DashboardKpi,
   DashboardOverview,
   DashboardResponse,
   DashboardSummary,
@@ -16,14 +19,37 @@ import {
 const ANALYTICS_REVALIDATE_SECONDS = 300;
 /** D4: catálogos estables (departamentos, cultivos, instrumentos, tipos de actor). */
 const CATALOG_REVALIDATE_SECONDS = 3600;
+/** Categorías C1–C15: catálogo estático, cache de una hora (mismo TTL que el backend). */
+const CATEGORIES_REVALIDATE_SECONDS = 3600;
+
+/** Mismas claves que `DashboardFilters` — mantener sincronizado con
+ * `lib/dashboard/filters.ts` (FILTER_KEYS) al agregar un filtro nuevo. */
+const FILTER_QUERY_KEYS: (keyof DashboardFilters)[] = [
+  "instrumentId",
+  "categoryId",
+  "departmentId",
+  "townId",
+  "cropId",
+  "actorTypeId",
+  "gender",
+  "ageRange",
+  "educationLevel",
+  "connectivity",
+  "populationGroup",
+  "profile",
+  "tenure",
+  "chainStage",
+  "campaignId",
+  "dateFrom",
+  "dateTo",
+];
 
 function buildQuery(filters: DashboardFilters): string {
   const params = new URLSearchParams();
-  if (filters.instrumentId) params.set("instrumentId", filters.instrumentId);
-  if (filters.departmentId) params.set("departmentId", filters.departmentId);
-  if (filters.townId) params.set("townId", filters.townId);
-  if (filters.cropId) params.set("cropId", filters.cropId);
-  if (filters.actorTypeId) params.set("actorTypeId", filters.actorTypeId);
+  for (const key of FILTER_QUERY_KEYS) {
+    const value = filters[key];
+    if (value) params.set(key, value);
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 }
@@ -100,6 +126,29 @@ export function fetchDashboardOverview(
 ): Promise<DashboardOverview> {
   return apiClient.get<DashboardOverview>(
     `/api/dashboard/overview${buildQuery(filters)}`,
+    { withAuth: false, next: { revalidate: ANALYTICS_REVALIDATE_SECONDS } },
+  );
+}
+
+export function fetchCategories(): Promise<DashboardCategory[]> {
+  return apiClient.get<DashboardCategory[]>("/api/dashboard/categories", {
+    withAuth: false,
+    next: { revalidate: CATEGORIES_REVALIDATE_SECONDS },
+  });
+}
+
+export function fetchKpis(filters: DashboardFilters): Promise<DashboardKpi[]> {
+  return apiClient.get<DashboardKpi[]>(
+    `/api/dashboard/kpis${buildQuery(filters)}`,
+    { withAuth: false, next: { revalidate: ANALYTICS_REVALIDATE_SECONDS } },
+  );
+}
+
+export function fetchDigitalDemand(
+  filters: DashboardFilters,
+): Promise<DashboardDigitalDemand> {
+  return apiClient.get<DashboardDigitalDemand>(
+    `/api/dashboard/digital-demand${buildQuery(filters)}`,
     { withAuth: false, next: { revalidate: ANALYTICS_REVALIDATE_SECONDS } },
   );
 }

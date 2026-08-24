@@ -27,20 +27,20 @@ export default function CampaignListPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold text-neutral-900">Campañas</h1>
-        <p className="mt-1 md:mt-6 text-sm text-neutral-500">
+        <h1 className="text-2xl font-bold text-text-primary">Campañas</h1>
+        <p className="mt-1 md:mt-6 text-sm text-text-muted">
           Selecciona una campaña para aplicarla en campo.
         </p>
       </header>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-[var(--danger-fg)]/30 bg-[var(--danger-bg)] p-4 text-sm text-[var(--danger-fg)]">
           {error}
         </div>
       )}
 
       {loading ? (
-        <p className="text-sm text-neutral-500">Cargando…</p>
+        <p className="text-sm text-text-muted">Cargando…</p>
       ) : (
         <CampaignSelector campaigns={campaigns} />
       )}

@@ -22,16 +22,16 @@ export default function DuplicateDialog({
       aria-modal="true"
       aria-labelledby="duplicate-dialog-title"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
         <div className="mb-4 flex items-start gap-3">
-          <div className="mt-0.5 shrink-0 rounded-full bg-amber-100 p-2">
+          <div className="mt-0.5 shrink-0 rounded-full bg-[var(--warning-bg)] p-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="1.5"
               stroke="currentColor"
-              className="size-5 text-amber-600"
+              className="size-5 text-[var(--warning-fg)]"
             >
               <path
                 strokeLinecap="round"
@@ -43,11 +43,11 @@ export default function DuplicateDialog({
           <div>
             <h3
               id="duplicate-dialog-title"
-              className="text-base font-semibold text-gray-900"
+              className="text-base font-semibold text-text-primary"
             >
               Respuestas existentes
             </h3>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-text-muted">
               Este encuestado ya tiene respuestas asociadas a{" "}
               <span className="font-medium">{instrumentName}</span>.
               ¿Desea sobrescribirlas o pasar a la siguiente encuesta?
@@ -60,7 +60,7 @@ export default function DuplicateDialog({
             type="button"
             onClick={onOverwrite}
             disabled={loading}
-            className="w-full rounded-xl bg-green-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50 transition-colors"
+            className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground hover:bg-brand-hover disabled:opacity-50 transition-colors"
           >
             {loading ? "Procesando…" : "Sobrescribir respuestas"}
           </button>
@@ -68,7 +68,7 @@ export default function DuplicateDialog({
             type="button"
             onClick={onSkip}
             disabled={loading}
-            className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="w-full rounded-xl border border-[var(--border-strong)] px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-muted disabled:opacity-50 transition-colors"
           >
             Pasar a la siguiente encuesta
           </button>
@@ -77,7 +77,7 @@ export default function DuplicateDialog({
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="w-full px-4 py-2 text-sm text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-colors"
+              className="w-full px-4 py-2 text-sm text-text-muted hover:text-text-muted disabled:opacity-50 transition-colors"
             >
               Cancelar
             </button>
