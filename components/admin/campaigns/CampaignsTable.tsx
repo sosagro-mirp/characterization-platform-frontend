@@ -106,27 +106,6 @@ export default function CampaignsTable({
           ))}
         </tbody>
       </table>
-      <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-[10.5px] text-[var(--text-muted)]">
-        <span>
-          Mostrando {campaigns.length} de {campaigns.length}
-        </span>
-        <div className="flex gap-1.5">
-          <button
-            type="button"
-            disabled
-            className="rounded px-2.5 py-1 text-[10.5px] text-[var(--text-muted)] border border-[var(--border)] disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          <button
-            type="button"
-            disabled
-            className="rounded px-2.5 py-1 text-[10.5px] text-[var(--text-muted)] border border-[var(--border)] disabled:opacity-50"
-          >
-            Siguiente
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

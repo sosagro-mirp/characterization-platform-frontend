@@ -180,30 +180,6 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
             </p>
           </div>
         )}
-
-        {filteredInstruments.length > 0 && (
-          <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-[10.5px] text-[var(--text-muted)]">
-            <span>
-              Mostrando {filteredInstruments.length} de {filteredInstruments.length}
-            </span>
-            <div className="flex gap-1.5">
-              <button
-                type="button"
-                disabled
-                className="rounded px-2.5 py-1 text-[10.5px] text-[var(--text-muted)] border border-[var(--border)] disabled:opacity-50"
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                disabled
-                className="rounded px-2.5 py-1 text-[10.5px] text-[var(--text-muted)] border border-[var(--border)] disabled:opacity-50"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <ConfirmDialog

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Eye } from "lucide-react";
 import { ChangeRequestListItem } from "@/app/(admin)/types";
+import Tooltip from "@/components/common/Tooltip";
 import RequestDetailModal from "./RequestDetailModal";
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -43,16 +45,17 @@ export default function ChangeRequestsTable({ requests, onResolve }: Props) {
               <th className="px-3 py-2.5 text-left">Origen</th>
               <th className="px-3 py-2.5 text-left">Categoría</th>
               <th className="px-3 py-2.5 text-left">Descripción</th>
+              <th className="px-3 py-2.5 text-left">Creado por</th>
+              <th className="px-3 py-2.5 text-left">Fecha</th>
               <th className="px-3 py-2.5 text-left">Estado</th>
-              <th className="px-3 py-2.5 text-right">Fecha</th>
+              <th className="px-3 py-2.5 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {requests.map((r) => (
               <tr
                 key={r.changeRequestId}
-                onClick={() => setDetail(r)}
-                className="cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
+                className="hover:bg-[var(--surface-muted)] transition-colors"
               >
                 <td className="px-3 py-2.5">
                   <span
@@ -71,6 +74,12 @@ export default function ChangeRequestsTable({ requests, onResolve }: Props) {
                 <td className="max-w-xs truncate px-3 py-2.5 text-[var(--text-primary)]">
                   {r.description}
                 </td>
+                <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap">
+                  {r.createdBy.name} {r.createdBy.lastName}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2.5 text-[var(--text-muted)]">
+                  {new Date(r.createdAt).toLocaleDateString("es-CO")}
+                </td>
                 <td className="px-3 py-2.5">
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap ${
@@ -82,8 +91,31 @@ export default function ChangeRequestsTable({ requests, onResolve }: Props) {
                     {r.status === "resolved" ? "Resuelta" : "Abierta"}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-right text-[var(--text-muted)]">
-                  {new Date(r.createdAt).toLocaleDateString("es-CO")}
+                <td className="px-3 py-2.5 text-right">
+                  <div className="inline-flex items-center gap-1.5">
+                    <Tooltip label="Ver detalle de la solicitud">
+                      <button
+                        type="button"
+                        onClick={() => setDetail(r)}
+                        className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                        aria-label="Ver detalle de la solicitud"
+                      >
+                        <Eye className="size-3.5" aria-hidden="true" />
+                      </button>
+                    </Tooltip>
+                    {r.status === "open" && (
+                      <Tooltip label="Resolver solicitud">
+                        <button
+                          type="button"
+                          onClick={() => onResolve(r)}
+                          className="rounded-md p-1.5 text-[var(--brand)] border border-[var(--brand)]/40 hover:bg-[var(--success-bg)] transition-colors"
+                          aria-label="Resolver solicitud"
+                        >
+                          <Check className="size-3.5" aria-hidden="true" />
+                        </button>
+                      </Tooltip>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

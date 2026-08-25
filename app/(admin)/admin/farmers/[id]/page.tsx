@@ -193,7 +193,7 @@ export default function EditFarmerPage() {
               </div>
               <div className="flex flex-col gap-4 p-4">
                 <Field label="Nombre completo" required>
-                  <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} required />
+                  <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
                 </Field>
                 <Field label="Número de documento">
                   <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} className={inputClass} />

@@ -1,7 +1,8 @@
 "use client";
 
-import { UsersRound } from "lucide-react";
+import { Trash2, UsersRound } from "lucide-react";
 import { UserListItem } from "@/app/(admin)/types";
+import Tooltip from "@/components/common/Tooltip";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Administrador",
@@ -22,9 +23,10 @@ function initials(name: string, lastName: string): string {
 interface UsersTableProps {
   users: UserListItem[];
   onEdit: (userId: string) => void;
+  onDelete: (user: UserListItem) => void;
 }
 
-export default function UsersTable({ users, onEdit }: UsersTableProps) {
+export default function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
   if (users.length === 0) {
     return (
       <div className="flex flex-col items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
@@ -79,13 +81,25 @@ export default function UsersTable({ users, onEdit }: UsersTableProps) {
                 {new Date(u.createdAt).toLocaleDateString()}
               </td>
               <td className="px-3 py-2.5 text-right">
-                <button
-                  type="button"
-                  onClick={() => onEdit(u.userId)}
-                  className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
-                >
-                  Editar
-                </button>
+                <div className="inline-flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(u.userId)}
+                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+                  >
+                    Editar
+                  </button>
+                  <Tooltip label="Eliminar usuario">
+                    <button
+                      type="button"
+                      onClick={() => onDelete(u)}
+                      className="rounded-md p-1.5 text-[var(--danger-fg)] border border-[var(--danger-fg)]/40 hover:bg-[var(--danger-bg)] transition-colors"
+                      aria-label="Eliminar usuario"
+                    >
+                      <Trash2 className="size-3.5" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                </div>
               </td>
             </tr>
           ))}
