@@ -110,15 +110,10 @@ export default function EditUserPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Editar usuario
-        </h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {user.name} {user.lastName} — {user.email}
-        </p>
-      </div>
+    <div className="max-w-2xl space-y-6">
+      <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+        Editar usuario
+      </h1>
 
       {topError && (
         <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
@@ -126,24 +121,43 @@ export default function EditUserPage() {
         </p>
       )}
 
-      <UserForm
-        mode="edit"
-        roles={roles}
-        initial={user}
-        onSubmit={handleSubmit}
-        submitLabel="Guardar cambios"
-        emailError={emailError}
-      />
+      <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+            Datos de la cuenta
+          </h2>
+        </div>
+        <div className="p-6">
+          <UserForm
+            mode="edit"
+            roles={roles}
+            initial={user}
+            onSubmit={handleSubmit}
+            submitLabel="Guardar cambios"
+            emailError={emailError}
+          />
+        </div>
+      </section>
 
-      <div className="pt-6 border-t border-[var(--border)]">
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="rounded-xl border border-[var(--danger-fg)]/40 px-4 py-2 text-sm font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
-        >
-          Eliminar usuario
-        </button>
-      </div>
+      <section className="overflow-hidden rounded-md border border-[var(--danger-fg)]/40 bg-[var(--surface)]">
+        <div className="border-b border-[var(--danger-fg)]/40 bg-[var(--danger-bg)] px-6 py-3">
+          <h2 className="text-sm font-semibold text-[var(--danger-fg)]">
+            Zona de peligro
+          </h2>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 p-6">
+          <p className="max-w-sm text-xs text-[var(--text-muted)] leading-relaxed">
+            Eliminar este usuario revoca su acceso de forma permanente. Las encuestas que aplicó se conservan.
+          </p>
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="shrink-0 rounded-md bg-[var(--danger-fg)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          >
+            Eliminar usuario
+          </button>
+        </div>
+      </section>
 
       <ConfirmDialog
         open={confirmDelete}

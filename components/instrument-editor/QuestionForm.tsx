@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { GitBranch } from "lucide-react";
 import { QuestionDetail, TypeOfQuestionSummary } from "@/app/(admin)/types";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import OptionsEditor from "./OptionsEditor";
@@ -126,13 +127,18 @@ export default function QuestionForm({
 
   return (
     <div className="space-y-5">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">
-          Pregunta
-        </p>
-        <h2 className="text-base font-semibold text-[var(--text-primary)] truncate">
-          {question.text}
-        </h2>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">
+            Pregunta
+          </p>
+          <h2 className="text-base font-semibold text-[var(--text-primary)] truncate">
+            {question.text}
+          </h2>
+        </div>
+        <span className="shrink-0 text-[10.5px] text-[var(--text-muted)] whitespace-nowrap">
+          Los cambios se guardan solos
+        </span>
       </div>
 
       <div>
@@ -145,7 +151,7 @@ export default function QuestionForm({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onBlur={handleBlurText}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
         />
       </div>
 
@@ -156,7 +162,7 @@ export default function QuestionForm({
         <select
           value={typeId}
           onChange={(e) => handleTypeChange(e.target.value)}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
         >
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
@@ -167,56 +173,65 @@ export default function QuestionForm({
         </select>
       </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="isRequired"
-          checked={isRequired}
-          onChange={(e) => handleRequiredChange(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label htmlFor="isRequired" className="text-sm text-[var(--text-primary)]">
-          Pregunta obligatoria
+      <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
+        <label htmlFor="isRequired" className="flex items-start gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+          <input
+            type="checkbox"
+            id="isRequired"
+            checked={isRequired}
+            onChange={(e) => handleRequiredChange(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+          />
+          <span>
+            Pregunta obligatoria
+            <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+              No se puede continuar sin responderla.
+            </span>
+          </span>
         </label>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="isSelectionCriteria"
-          checked={isSelectionCriteria}
-          onChange={(e) => handleSelectionCriteriaChange(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label
-          htmlFor="isSelectionCriteria"
-          className="text-sm text-[var(--text-primary)]"
-        >
-          Criterio de selección de unidades productivas
+        <label htmlFor="isSelectionCriteria" className="flex items-start gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+          <input
+            type="checkbox"
+            id="isSelectionCriteria"
+            checked={isSelectionCriteria}
+            onChange={(e) => handleSelectionCriteriaChange(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+          />
+          <span>
+            Criterio de selección de unidades productivas
+            <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+              Su respuesta define qué unidad productiva se está caracterizando.
+            </span>
+          </span>
         </label>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="isKeyQuestion"
-          checked={isKeyQuestion}
-          onChange={(e) => handleKeyQuestionChange(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label
-          htmlFor="isKeyQuestion"
-          className="text-sm text-[var(--text-primary)]"
-        >
-          Pregunta estratégica de caracterización tecnológica
+        <label htmlFor="isKeyQuestion" className="flex items-start gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+          <input
+            type="checkbox"
+            id="isKeyQuestion"
+            checked={isKeyQuestion}
+            onChange={(e) => handleKeyQuestionChange(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+          />
+          <span>
+            Pregunta estratégica de caracterización tecnológica
+            <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+              Se incluye en los indicadores agregados del proyecto.
+            </span>
+          </span>
         </label>
       </div>
 
       {precedingQuestions.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
-          <p className="text-sm font-medium text-[var(--text-primary)]">
-            Condición de visibilidad (opcional)
-          </p>
+        <div className="overflow-hidden rounded-md border border-[var(--info-fg)]/40">
+          <div className="flex items-center gap-2 border-b border-[var(--info-fg)]/40 bg-[var(--info-bg)] px-3.5 py-2.5">
+            <GitBranch className="size-3.5 shrink-0 text-[var(--info-fg)]" aria-hidden="true" />
+            <span className="text-xs font-semibold text-[var(--info-fg)]">
+              Visibilidad condicional
+            </span>
+          </div>
+          <div className="space-y-3 p-3.5">
           <div>
             <label className="block text-xs text-[var(--text-muted)] mb-1">
               Mostrar solo si la respuesta a…
@@ -229,7 +244,7 @@ export default function QuestionForm({
                 setConditionValue("");
                 saveCondition(newId, "");
               }}
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+              className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
             >
               <option value="">Siempre visible</option>
               {precedingQuestions.map((q) => (
@@ -262,7 +277,7 @@ export default function QuestionForm({
                           setConditionValue(opt.value);
                           saveCondition(conditionQuestionId, opt.value);
                         }}
-                        className="accent-green-700"
+                        className="accent-[var(--brand)]"
                       />
                       {opt.label}
                     </label>
@@ -278,7 +293,7 @@ export default function QuestionForm({
                     setConditionValue(newVal);
                     saveCondition(conditionQuestionId, newVal);
                   }}
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+                  className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
                 >
                   <option value="">Seleccionar opción…</option>
                   {conditionQuestion?.options.map((opt) => (
@@ -295,7 +310,7 @@ export default function QuestionForm({
                   value={conditionValue}
                   onChange={(e) => setConditionValue(e.target.value)}
                   onBlur={(e) => saveCondition(conditionQuestionId, e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                  className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                 />
               )}
 
@@ -307,11 +322,12 @@ export default function QuestionForm({
                   onChange={(e) => setConditionValue(e.target.value)}
                   onBlur={(e) => saveCondition(conditionQuestionId, e.target.value)}
                   placeholder="Valor esperado…"
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                  className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                 />
               )}
             </div>
           )}
+          </div>
         </div>
       )}
 

@@ -120,7 +120,7 @@ export default function InstrumentEditorPage({ params }: PageProps) {
         <span className="text-[var(--text-primary)] font-medium">{editor.name}</span>
       </div>
 
-      <div className="flex-1 rounded-2xl border border-[var(--border)] overflow-hidden">
+      <div className="flex-1 rounded-md border border-[var(--border)] overflow-hidden">
         <InstrumentEditorLayout
           instrumentId={editor.instrumentId}
           name={editor.name}

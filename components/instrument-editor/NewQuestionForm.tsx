@@ -78,7 +78,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Escribe la pregunta aquí…"
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
         />
       </div>
 
@@ -90,7 +90,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           required
           value={typeId}
           onChange={(e) => setTypeId(e.target.value)}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
         >
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
@@ -101,67 +101,57 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         </select>
       </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="newIsRequired"
-          checked={isRequired}
-          onChange={(e) => setIsRequired(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label htmlFor="newIsRequired" className="text-sm text-[var(--text-primary)]">
+      <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
+        <label htmlFor="newIsRequired" className="flex items-center gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+          <input
+            type="checkbox"
+            id="newIsRequired"
+            checked={isRequired}
+            onChange={(e) => setIsRequired(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+          />
           Pregunta obligatoria
         </label>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="newIsSelectionCriteria"
-          checked={isSelectionCriteria}
-          onChange={(e) => setIsSelectionCriteria(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label
-          htmlFor="newIsSelectionCriteria"
-          className="text-sm text-[var(--text-primary)]"
-        >
+        <label htmlFor="newIsSelectionCriteria" className="flex items-center gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+          <input
+            type="checkbox"
+            id="newIsSelectionCriteria"
+            checked={isSelectionCriteria}
+            onChange={(e) => setIsSelectionCriteria(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+          />
           Criterio de selección de unidades productivas
         </label>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="newIsKeyQuestion"
-          checked={isKeyQuestion}
-          onChange={(e) => setIsKeyQuestion(e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)] accent-green-700"
-        />
-        <label
-          htmlFor="newIsKeyQuestion"
-          className="text-sm text-[var(--text-primary)]"
-        >
+        <label htmlFor="newIsKeyQuestion" className="flex items-center gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+          <input
+            type="checkbox"
+            id="newIsKeyQuestion"
+            checked={isKeyQuestion}
+            onChange={(e) => setIsKeyQuestion(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+          />
           Pregunta estratégica de caracterización tecnológica
         </label>
       </div>
 
       {error && (
-        <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">{error}</p>
+        <p className="text-sm text-[var(--danger-fg)] rounded-md bg-[var(--danger-bg)] px-3 py-2">{error}</p>
       )}
 
       <div className="flex gap-3">
         <button
           type="submit"
           disabled={saving || !text.trim() || !typeId}
-          className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+          className="rounded-md bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
         >
           {saving ? "Creando…" : "Crear pregunta"}
         </button>
         <button
           type="button"
           onClick={() => setSelection({ kind: "section", sectionId })}
-          className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+          className="rounded-md border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
         >
           Cancelar
         </button>

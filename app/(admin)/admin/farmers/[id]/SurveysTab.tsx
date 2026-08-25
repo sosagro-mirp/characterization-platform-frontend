@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronRight, ClipboardList } from "lucide-react";
 import type { SurveyListItem, SurveyResponsesResult } from "@/app/(admin)/types";
 import { getSurveysByFarmer, getSurveyResponses } from "@/services/surveys.service";
 import { ResponsesAccordion } from "./ResponsesAccordion";
@@ -65,16 +66,19 @@ export function SurveysTab({ farmerId }: { farmerId: string }) {
 
   if (surveys.length === 0) {
     return (
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-6 py-10 text-center">
-        <p className="text-sm text-[var(--text-muted)]">
-          Este agricultor no tiene encuestas registradas.
+      <div className="flex flex-col items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
+        <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-[var(--surface-muted)]">
+          <ClipboardList className="size-5 text-[var(--text-muted)]" aria-hidden="true" />
+        </div>
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          Este agricultor no tiene encuestas registradas
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2.5">
       {surveys.map((survey) => {
         const instrumentName = survey.instruments?.[0]?.name ?? "Sin instrumento";
         const isExpanded = expandedId === survey.surveyId;
@@ -84,39 +88,38 @@ export function SurveysTab({ farmerId }: { farmerId: string }) {
         return (
           <div
             key={survey.surveyId}
-            className="overflow-hidden rounded-xl border border-[var(--border)]"
+            className="overflow-hidden rounded-md border border-[var(--border)]"
           >
             <button
               type="button"
               onClick={() => handleExpand(survey.surveyId)}
-              className="flex w-full items-center justify-between bg-[var(--surface)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface-muted)]"
+              className="flex w-full items-center gap-3 bg-[var(--surface-muted)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface)]"
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    survey.sincronized
-                      ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
-                      : "bg-[var(--warning-bg)] text-[var(--warning-fg)]"
-                  }`}
-                >
-                  {survey.sincronized ? "Sincronizada" : "Pendiente"}
-                </span>
-                <span className="truncate text-sm font-medium text-[var(--text-primary)]">
+              <ChevronRight
+                className={`size-3.5 shrink-0 text-[var(--text-muted)] transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                aria-hidden="true"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
                   {instrumentName}
-                </span>
+                </p>
+                <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
+                  Aplicada el {formatDate(survey.createdAt)}
+                </p>
               </div>
-              <div className="ml-3 flex shrink-0 items-center gap-3">
-                <span className="text-xs text-[var(--text-muted)]">
-                  {formatDate(survey.createdAt)}
-                </span>
-                <span className="text-xs text-[var(--text-muted)]">
-                  {isExpanded ? "▲" : "▼"}
-                </span>
-              </div>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap ${
+                  survey.sincronized
+                    ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
+                    : "bg-[var(--warning-bg)] text-[var(--warning-fg)]"
+                }`}
+              >
+                {survey.sincronized ? "Sincronizada" : "Pendiente"}
+              </span>
             </button>
 
             {isExpanded && (
-              <div className="border-t border-[var(--border)] bg-[var(--surface-muted)] px-4 py-4">
+              <div className="border-t border-[var(--border)] bg-[var(--surface)] px-4 py-4">
                 {isLoadingThis ? (
                   <p className="text-sm text-[var(--text-muted)]">
                     Cargando respuestas…

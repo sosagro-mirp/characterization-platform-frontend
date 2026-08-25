@@ -96,7 +96,7 @@ export default function StepConditionRow({
   }
 
   return (
-    <div className="rounded-lg border border-[var(--border)] p-3 bg-[var(--surface-muted)]/30 space-y-3">
+    <div className="rounded-md border border-[var(--border)] p-3 bg-[var(--surface-muted)]/30 space-y-3">
       {!isFirst && (
         <div>
           <label className="block text-xs text-[var(--text-muted)] mb-1">
@@ -105,7 +105,7 @@ export default function StepConditionRow({
           <select
             value={logicalOperator}
             onChange={(e) => setLogicalOperator(e.target.value as LogicalOperator)}
-            className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
           >
             <option value="AND">AND</option>
             <option value="OR">OR</option>
@@ -120,7 +120,7 @@ export default function StepConditionRow({
         <select
           value={conditionType}
           onChange={(e) => setConditionType(e.target.value as ConditionType)}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
         >
           <option value="question">Respuesta a pregunta</option>
           <option value="crop">Tipo de cultivo</option>
@@ -136,7 +136,7 @@ export default function StepConditionRow({
             <select
               value={questionId}
               onChange={(e) => { setQuestionId(e.target.value); setConditionValue(""); }}
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
+              className="w-full rounded-md border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
             >
               <option value="">Seleccionar pregunta…</option>
               {questionGroups.map((group) =>
@@ -165,7 +165,7 @@ export default function StepConditionRow({
                 <select
                   value={conditionValue}
                   onChange={(e) => setConditionValue(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
+                  className="w-full rounded-md border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
                 >
                   <option value="">Seleccionar…</option>
                   <option value="true">Sí</option>
@@ -175,7 +175,7 @@ export default function StepConditionRow({
                 <select
                   value={conditionValue}
                   onChange={(e) => setConditionValue(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
+                  className="w-full rounded-md border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
                 >
                   <option value="">Seleccionar opción…</option>
                   {(selectedQuestion?.options ?? []).map((opt) => (
@@ -191,7 +191,7 @@ export default function StepConditionRow({
                   maxLength={50}
                   onChange={(e) => setConditionValue(e.target.value)}
                   placeholder={typeName === "numeric" ? "Ej: 3" : "Valor esperado"}
-                  className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm"
+                  className="w-full rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
                 />
               )}
             </div>
@@ -207,7 +207,7 @@ export default function StepConditionRow({
           <select
             value={cropId}
             onChange={(e) => setCropId(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
+            className="w-full rounded-md border border-[var(--border)] px-3 py-1.5 text-sm bg-[var(--surface)]"
           >
             <option value="">Seleccionar cultivo…</option>
             {availableCrops.map((c) => (
@@ -224,7 +224,7 @@ export default function StepConditionRow({
           type="button"
           onClick={handleSave}
           disabled={saving || removing}
-          className="rounded-lg bg-[var(--brand)] px-3 py-1.5 text-xs font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50"
+          className="rounded-md bg-[var(--brand)] px-3 py-1.5 text-xs font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50"
         >
           {saving ? "Guardando…" : "Guardar"}
         </button>
@@ -232,7 +232,7 @@ export default function StepConditionRow({
           type="button"
           onClick={handleRemove}
           disabled={saving || removing}
-          className="rounded-lg border border-[var(--danger-fg)]/40 px-3 py-1.5 text-xs font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] disabled:opacity-50"
+          className="rounded-md border border-[var(--danger-fg)]/40 px-3 py-1.5 text-xs font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] disabled:opacity-50"
         >
           {removing ? "Eliminando…" : "Eliminar"}
         </button>

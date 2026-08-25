@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { SectionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import QuestionNode from "./QuestionNode";
@@ -36,8 +37,8 @@ export default function SectionNode({
   return (
     <div>
       <div
-        className={`group flex items-center gap-1.5 rounded-lg px-2 py-2 cursor-pointer transition-colors ${
-          isSelected ? "bg-[var(--success-bg)] text-[var(--success-fg)]" : "hover:bg-[var(--surface-muted)]"
+        className={`group flex items-center gap-2 border-b border-[var(--border)] px-3 py-2.5 cursor-pointer transition-colors ${
+          isSelected ? "bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]" : "hover:bg-[var(--surface-muted)]"
         }`}
         onClick={() =>
           setSelection({ kind: "section", sectionId: section.sectionId })
@@ -49,19 +50,16 @@ export default function SectionNode({
             e.stopPropagation();
             setExpanded((v) => !v);
           }}
-          className="p-0.5 rounded hover:bg-[var(--border)] shrink-0"
+          className="shrink-0 rounded p-0.5 text-[var(--text-muted)] hover:bg-[var(--border)]"
         >
-          <svg
-            className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`}
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path d="M6 4l5 4-5 4V4z" />
-          </svg>
+          <ChevronRight
+            className={`size-3.5 transition-transform ${expanded ? "rotate-90" : ""}`}
+            aria-hidden="true"
+          />
         </button>
-        <span className="flex-1 text-sm font-medium truncate">{section.name}</span>
-        <span className="text-xs text-[var(--text-muted)] shrink-0">
-          {section.questions.length}p
+        <span className="flex-1 truncate text-sm font-medium">{section.name}</span>
+        <span className="shrink-0 rounded-full border border-[var(--border)] px-1.5 py-0.5 text-[9.5px] text-[var(--text-muted)]">
+          {section.questions.length}
         </span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button
@@ -71,12 +69,11 @@ export default function SectionNode({
               e.stopPropagation();
               reorderSection(section.sectionId, "up");
             }}
-            className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
+            className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--border)] disabled:opacity-30"
             title="Subir sección"
+            aria-label="Subir sección"
           >
-            <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 4l5 6H3l5-6z" />
-            </svg>
+            <ChevronUp className="size-3.5" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -85,12 +82,11 @@ export default function SectionNode({
               e.stopPropagation();
               reorderSection(section.sectionId, "down");
             }}
-            className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
+            className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--border)] disabled:opacity-30"
             title="Bajar sección"
+            aria-label="Bajar sección"
           >
-            <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 12L3 6h10l-5 6z" />
-            </svg>
+            <ChevronDown className="size-3.5" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -98,18 +94,17 @@ export default function SectionNode({
               e.stopPropagation();
               removeSectionFromStore(section.sectionId);
             }}
-            className="p-1 rounded hover:bg-[var(--danger-bg)] text-[var(--danger-fg)]"
+            className="rounded p-1 text-[var(--danger-fg)] hover:bg-[var(--danger-bg)]"
             title="Eliminar sección"
+            aria-label="Eliminar sección"
           >
-            <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M6 2h4a1 1 0 0 1 0 2H6a1 1 0 0 1 0-2zM3 5h10l-1 9H4L3 5zm3 2v5h1V7H6zm3 0v5h1V7H9z" />
-            </svg>
+            <Trash2 className="size-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div className="ml-4 mt-0.5 space-y-0.5">
+        <div>
           {section.questions.map((q, qi) => (
             <QuestionNode
               key={q.questionId}
@@ -123,9 +118,10 @@ export default function SectionNode({
           <button
             type="button"
             onClick={handleAddQuestion}
-            className="w-full text-left px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--success-fg)] hover:bg-[var(--surface-muted)] rounded-lg transition-colors"
+            className="flex w-full items-center gap-1.5 border-b border-[var(--border)] py-2 pl-9 pr-3 text-left text-xs font-medium text-[var(--brand)] hover:bg-[var(--brand-subtle-bg)] transition-colors"
           >
-            + Agregar pregunta
+            <Plus className="size-3" aria-hidden="true" />
+            Agregar pregunta
           </button>
         </div>
       )}

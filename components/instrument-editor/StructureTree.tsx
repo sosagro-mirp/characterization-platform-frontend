@@ -1,5 +1,6 @@
 "use client";
 
+import { Plus, Settings } from "lucide-react";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import SectionNode from "./SectionNode";
 
@@ -14,21 +15,22 @@ export default function StructureTree() {
 
   return (
     <nav className="flex flex-col h-full">
-      <div className="px-3 py-3 border-b border-[var(--border)]">
+      <div className="border-b border-[var(--border)] px-2 py-2">
         <button
           type="button"
           onClick={() => setSelection({ kind: "instrument" })}
-          className={`w-full text-left rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors ${
+          className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs font-medium transition-colors ${
             selection?.kind === "instrument"
-              ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
-              : "text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
+              ? "bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]"
+              : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
           }`}
         >
+          <Settings className="size-3.5 shrink-0" aria-hidden="true" />
           Configuración general
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
+      <div className="scrollbar-hide flex-1 overflow-y-auto">
         {sections.map((section, si) => (
           <SectionNode
             key={section.sectionId}
@@ -40,13 +42,14 @@ export default function StructureTree() {
         ))}
       </div>
 
-      <div className="px-3 py-3 border-t border-[var(--border)]">
+      <div className="px-2 py-2 border-t border-[var(--border)]">
         <button
           type="button"
           onClick={handleAddSection}
-          className="w-full rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] hover:border-[var(--success-fg)] hover:text-[var(--success-fg)] transition-colors"
+          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-xs font-semibold text-[var(--brand)] hover:bg-[var(--brand-subtle-bg)] transition-colors"
         >
-          + Agregar sección
+          <Plus className="size-3.5 shrink-0" aria-hidden="true" />
+          Agregar sección
         </button>
       </div>
     </nav>
