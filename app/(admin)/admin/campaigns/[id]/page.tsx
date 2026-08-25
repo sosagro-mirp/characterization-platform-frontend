@@ -91,12 +91,12 @@ export default function EditCampaignPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           {campaign.name}
         </h1>
-        <div className="flex flex-wrap gap-4 text-xs text-[var(--text-muted)] my-2">
+        <div className="mt-2 flex flex-wrap gap-4 text-xs text-[var(--text-muted)]">
           <div>
             <span className="font-medium text-[var(--text-primary)]">Creado por:</span>{" "}
             {campaign.createdBy
@@ -110,10 +110,6 @@ export default function EditCampaignPage() {
             </div>
           )}
         </div>
-        <p className="text-sm text-[var(--text-muted)]">
-          {campaign.steps.length} paso{campaign.steps.length === 1 ? "" : "s"} configurado
-          {campaign.steps.length === 1 ? "" : "s"}.
-        </p>
       </div>
 
       {error && (
@@ -122,27 +118,39 @@ export default function EditCampaignPage() {
         </p>
       )}
 
-      <section>
-        <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-3">
-          Datos generales
-        </h2>
-        <CampaignForm
-          mode="edit"
-          initial={campaign}
-          onSubmit={handleSave}
-          submitLabel="Guardar cambios"
-          canToggleActive={isAdmin}
-        />
+      <section className="w-full overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            Datos generales
+          </h2>
+        </div>
+        <div className="p-6">
+          <CampaignForm
+            mode="edit"
+            initial={campaign}
+            onSubmit={handleSave}
+            submitLabel="Guardar cambios"
+            canToggleActive={isAdmin}
+          />
+        </div>
       </section>
 
-      <section>
-        <StepEditor
-          campaignId={campaignId}
-          steps={campaign.steps}
-          instruments={instruments}
-          availableCrops={crops}
-          onChanged={refresh}
-        />
+      <section className="w-full overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            Pasos de la campaña
+          </h2>
+          <span className="text-xs text-[var(--text-muted)]">Se guardan automáticamente</span>
+        </div>
+        <div className="p-6">
+          <StepEditor
+            campaignId={campaignId}
+            steps={campaign.steps}
+            instruments={instruments}
+            availableCrops={crops}
+            onChanged={refresh}
+          />
+        </div>
       </section>
     </div>
   );

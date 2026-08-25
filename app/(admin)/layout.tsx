@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import AdminGuard from "@/components/auth/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
+import { Navbar } from "@/components/navbar/Navbar";
 
 export default function AdminLayout({
   children,
@@ -10,6 +11,8 @@ export default function AdminLayout({
 }) {
   return (
     <Suspense fallback={null}>
+      <Navbar />
+
       {/* Pantallas pequeñas y tablet: bloqueo con mensaje */}
       <div className="lg:hidden flex min-h-screen flex-col items-center justify-center gap-6 bg-surface-muted px-8 text-center">
         <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-subtle-bg">

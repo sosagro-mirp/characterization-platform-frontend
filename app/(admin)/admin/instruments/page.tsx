@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { getInstruments } from "@/services/instruments.service";
 import InstrumentsTable from "@/components/instrument-editor/InstrumentsTable";
 import AdminOnly from "@/components/admin/AdminOnly";
@@ -18,8 +19,9 @@ export default async function AdminInstrumentsPage() {
         <AdminOnly>
           <Link
             href="/admin/instruments/new"
-            className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors"
+            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold bg-brand text-brand-foreground hover:bg-brand-hover transition-colors"
           >
+            <Plus className="size-5 shrink-0" />
             Nuevo instrumento
           </Link>
         </AdminOnly>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
-import { CopyPlus, GitBranch } from "lucide-react";
+import { ChevronDown, ChevronUp, CopyPlus, GitBranch, Star, Trash2 } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -73,46 +73,46 @@ export default function QuestionNode({
 
   return (
     <div
-      className={`group flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors ${isSelected ? "bg-[var(--success-bg)] text-[var(--success-fg)]" : "hover:bg-[var(--surface-muted)]"
+      className={`group flex items-center gap-2 border-b border-[var(--border)] py-2 pl-9 pr-3 cursor-pointer transition-colors ${isSelected ? "bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]" : "hover:bg-[var(--surface-muted)]"
         }`}
       onClick={() =>
         setSelection({ kind: "question", sectionId, questionId: question.questionId })
       }
     >
-      <span className="mt-0.5 text-xs text-[var(--text-muted)] w-4 shrink-0">
+      <span className="text-xs text-[var(--text-muted)] w-4 shrink-0">
         {question.order}.
       </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm truncate text-[var(--text-primary)]">{question.text}</p>
-        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-          <span className="text-[10px] font-medium rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[var(--text-muted)]">
-            {TYPE_LABELS[question.type?.name] ?? question.type?.name}
-          </span>
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <p className="min-w-0 flex-1 truncate text-sm text-[var(--text-primary)]">
+          {question.text}
           {question.isRequired && (
-            <span className="text-[10px] text-[var(--danger-fg)] font-medium">*</span>
+            <span className="ml-0.5 text-[var(--danger-fg)]"> *</span>
           )}
-          {question.isSelectionCriteria && (
-            <span
-              className="text-[10px] font-medium rounded-full bg-indigo-100 px-1.5 py-0.5 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
-              title="Criterio de selección de unidades productivas"
-            >
-              Criterio
-            </span>
-          )}
-          {question.isKeyQuestion && (
-            <span
-              className="text-[10px] font-medium rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-              title="Pregunta estratégica de caracterización tecnológica"
-            >
-              Estratégica
-            </span>
-          )}
-          {question.conditionQuestionId && (
-            <span title="Pregunta condicional">
-              <GitBranch className="w-2.5 h-2.5 text-[var(--text-muted)]" />
-            </span>
-          )}
-        </div>
+        </p>
+        <span className="shrink-0 rounded-full bg-[var(--surface-muted)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--text-muted)] whitespace-nowrap">
+          {TYPE_LABELS[question.type?.name] ?? question.type?.name}
+        </span>
+        {question.isSelectionCriteria && (
+          <span
+            className="shrink-0 rounded bg-[var(--warning-bg)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--warning-fg)] whitespace-nowrap"
+            title="Criterio de selección de unidades productivas"
+          >
+            Criterio
+          </span>
+        )}
+        {question.isKeyQuestion && (
+          <Star
+            className="size-3 shrink-0 fill-[var(--warning-fg)] text-[var(--warning-fg)]"
+            aria-hidden="true"
+          >
+            <title>Pregunta estratégica de caracterización tecnológica</title>
+          </Star>
+        )}
+        {question.conditionQuestionId && (
+          <span className="shrink-0" title="Pregunta condicional">
+            <GitBranch className="size-3 text-[var(--info-fg)]" aria-hidden="true" />
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <button
@@ -122,12 +122,11 @@ export default function QuestionNode({
             e.stopPropagation();
             reorderQuestion(sectionId, question.questionId, "up");
           }}
-          className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
+          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--border)] disabled:opacity-30"
           title="Subir"
+          aria-label="Subir pregunta"
         >
-          <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 4l5 6H3l5-6z" />
-          </svg>
+          <ChevronUp className="size-3" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -136,31 +135,30 @@ export default function QuestionNode({
             e.stopPropagation();
             reorderQuestion(sectionId, question.questionId, "down");
           }}
-          className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
+          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--border)] disabled:opacity-30"
           title="Bajar"
+          aria-label="Bajar pregunta"
         >
-          <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 12L3 6h10l-5 6z" />
-          </svg>
+          <ChevronDown className="size-3" aria-hidden="true" />
         </button>
         <button
           type="button"
           disabled={duplicating}
           onClick={handleDuplicate}
-          className="p-1 rounded hover:bg-[var(--border)] disabled:opacity-30"
+          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--border)] disabled:opacity-30"
           title="Duplicar"
+          aria-label="Duplicar pregunta"
         >
-          <CopyPlus className="w-3 h-3" />
+          <CopyPlus className="size-3" aria-hidden="true" />
         </button>
         <button
           type="button"
           onClick={handleDeleteClick}
-          className="p-1 rounded hover:bg-[var(--danger-bg)] text-[var(--danger-fg)]"
+          className="rounded p-1 text-[var(--danger-fg)] hover:bg-[var(--danger-bg)]"
           title="Eliminar"
+          aria-label="Eliminar pregunta"
         >
-          <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M6 2h4a1 1 0 0 1 0 2H6a1 1 0 0 1 0-2zM3 5h10l-1 9H4L3 5zm3 2v5h1V7H6zm3 0v5h1V7H9z" />
-          </svg>
+          <Trash2 className="size-3" aria-hidden="true" />
         </button>
       </div>
 

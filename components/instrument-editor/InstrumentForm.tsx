@@ -125,9 +125,9 @@ export default function InstrumentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+        <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
           Nombre
         </label>
         <input
@@ -137,13 +137,13 @@ export default function InstrumentForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={handleNameBlur}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
       </div>
 
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+          <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
             Versión
           </label>
           <input
@@ -153,11 +153,11 @@ export default function InstrumentForm({
             value={version}
             onChange={(e) => setVersion(Number(e.target.value))}
             onBlur={handleVersionBlur}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+          <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
             Fecha de publicación
           </label>
           <input
@@ -166,41 +166,46 @@ export default function InstrumentForm({
             value={publishDate}
             onChange={(e) => setPublishDate(e.target.value)}
             onBlur={handlePublishDateBlur}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
       </div>
 
       {isAdmin && (
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={isActive}
-            onChange={(e) => handleIsActiveChange(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--border)] accent-[var(--brand)]"
-          />
-          <label htmlFor="isActive" className="text-sm text-[var(--text-primary)]">
-            Instrumento activo (visible para encuestadores)
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
+          <label htmlFor="isActive" className="flex items-start gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={isActive}
+              onChange={(e) => handleIsActiveChange(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+            />
+            <span>
+              Instrumento activo
+              <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+                Visible para encuestadores en campaña.
+              </span>
+            </span>
           </label>
         </div>
       )}
 
       {actorTypes.length > 0 && (
         <div>
-          <p className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+          <p className="mb-2 text-xs text-[var(--text-muted)]">
             Tipos de actor
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {actorTypes.map((at) => (
               <button
                 key={at.actorTypeId}
                 type="button"
                 onClick={() => toggleActorType(at.actorTypeId)}
-                className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                   selectedActorTypeIds.includes(at.actorTypeId)
-                    ? "bg-[var(--brand)] border-[var(--brand)] text-[var(--brand-foreground)]"
-                    : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                    ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]"
+                    : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
                 }`}
               >
                 {at.name}
@@ -210,16 +215,12 @@ export default function InstrumentForm({
         </div>
       )}
 
-      {autoSave ? (
-        <p className="pt-2 text-xs text-[var(--text-muted)]">
-          Los cambios se guardan automáticamente.
-        </p>
-      ) : (
+      {!autoSave && (
         <div className="flex items-center gap-4 pt-2">
           <button
             type="submit"
             disabled={saveStatus === "saving"}
-            className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+            className="rounded-md bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
           >
             {submitLabel}
           </button>
