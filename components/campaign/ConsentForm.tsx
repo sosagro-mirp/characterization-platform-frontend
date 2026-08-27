@@ -141,7 +141,7 @@ export default function ConsentForm({
           type="checkbox"
           checked={acceptedDataProcessing}
           onChange={(e) => setAcceptedDataProcessing(e.target.checked)}
-          className="mt-0.5"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] text-brand focus:ring-brand"
         />
         <span className="text-sm text-text-primary">
           Autorizo el tratamiento de mis datos personales para fines exclusivamente
@@ -158,6 +158,7 @@ export default function ConsentForm({
             type="checkbox"
             checked={acceptedPhoto}
             onChange={(e) => setAcceptedPhoto(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] text-brand focus:ring-brand"
           />
           <span className="text-sm text-text-primary">Autorizo fotografías</span>
         </label>
@@ -166,6 +167,7 @@ export default function ConsentForm({
             type="checkbox"
             checked={acceptedAudio}
             onChange={(e) => setAcceptedAudio(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] text-brand focus:ring-brand"
           />
           <span className="text-sm text-text-primary">Autorizo grabaciones de audio</span>
         </label>
@@ -174,6 +176,7 @@ export default function ConsentForm({
             type="checkbox"
             checked={acceptedVideo}
             onChange={(e) => setAcceptedVideo(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] text-brand focus:ring-brand"
           />
           <span className="text-sm text-text-primary">Autorizo grabaciones de video</span>
         </label>
@@ -182,6 +185,7 @@ export default function ConsentForm({
             type="checkbox"
             checked={acceptedFollowUpContact}
             onChange={(e) => setAcceptedFollowUpContact(e.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-[var(--border)] text-brand focus:ring-brand"
           />
           <span className="text-sm text-text-primary">
             Autorizo ser contactado en etapas posteriores del proyecto
