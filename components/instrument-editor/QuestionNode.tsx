@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
-import { ChevronDown, ChevronUp, CopyPlus, GitBranch, Star, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, CopyPlus, FolderInput, GitBranch, Star, Trash2 } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
+import CopyQuestionDialog from "./CopyQuestionDialog";
 
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto",
@@ -42,6 +43,7 @@ export default function QuestionNode({
   const [duplicating, setDuplicating] = useState(false);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
   const [affectedQuestions, setAffectedQuestions] = useState<QuestionDetail[]>([]);
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -153,6 +155,18 @@ export default function QuestionNode({
         </button>
         <button
           type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowCopyDialog(true);
+          }}
+          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--border)]"
+          title="Copiar a otro instrumento"
+          aria-label="Copiar a otro instrumento"
+        >
+          <FolderInput className="size-3" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
           onClick={handleDeleteClick}
           className="rounded p-1 text-[var(--danger-fg)] hover:bg-[var(--danger-bg)]"
           title="Eliminar"
@@ -183,6 +197,13 @@ export default function QuestionNode({
           ))}
         </ul>
       </ConfirmDialog>
+
+      {showCopyDialog && (
+        <CopyQuestionDialog
+          question={question}
+          onClose={() => setShowCopyDialog(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import {
   CreateInstrumentRequest,
+  DuplicateInstrumentRequest,
   InstrumentDetail,
   InstrumentListItem,
   UpdateInstrumentRequest,
@@ -45,6 +46,16 @@ export function updateInstrument(
 
 export function deleteInstrument(id: string): Promise<void> {
   return apiClient.delete<void>(`/api/instruments/${id}`);
+}
+
+export function duplicateInstrument(
+  id: string,
+  data: DuplicateInstrumentRequest,
+): Promise<InstrumentListItem> {
+  return apiClient.post<InstrumentListItem>(
+    `/api/instruments/${id}/duplicate`,
+    data,
+  );
 }
 
 interface RenderedSection {

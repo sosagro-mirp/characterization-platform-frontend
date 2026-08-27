@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import {
+  CopyQuestionResponse,
   CreateQuestionRequest,
   QuestionDetail,
   UpdateQuestionRequest,
@@ -42,5 +43,15 @@ export function deleteQuestion(
 ): Promise<void> {
   return apiClient.delete<void>(
     `/api/sections/${sectionId}/questions/${questionId}`,
+  );
+}
+
+export function copyQuestionToSection(
+  targetSectionId: string,
+  sourceQuestionId: string,
+): Promise<CopyQuestionResponse> {
+  return apiClient.post<CopyQuestionResponse>(
+    `/api/sections/${targetSectionId}/questions/copy`,
+    { sourceQuestionId },
   );
 }
