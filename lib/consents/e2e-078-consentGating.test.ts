@@ -35,7 +35,7 @@ describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento"
   // Criterio 1
   it("lo exige siempre para un encuestado nuevo", () => {
     expect(
-      resolveConsentRequirement({ mode: "new", consentStatus: null, activeVersion: ACTIVE_VERSION }),
+      resolveConsentRequirement({ mode: "new", consentStatus: null }),
     ).toBe(true);
   });
 
@@ -45,7 +45,6 @@ describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento"
       resolveConsentRequirement({
         mode: "existing",
         consentStatus: status(),
-        activeVersion: ACTIVE_VERSION,
       }),
     ).toBe(false);
   });
@@ -56,7 +55,6 @@ describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento"
       resolveConsentRequirement({
         mode: "existing",
         consentStatus: status({ status: "outdated_version", acceptedVersion: "1.0" }),
-        activeVersion: ACTIVE_VERSION,
       }),
     ).toBe(true);
   });
@@ -66,7 +64,6 @@ describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento"
       resolveConsentRequirement({
         mode: "existing",
         consentStatus: status({ status: "revoked" }),
-        activeVersion: ACTIVE_VERSION,
       }),
     ).toBe(true);
   });
@@ -76,7 +73,6 @@ describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento"
       resolveConsentRequirement({
         mode: "existing",
         consentStatus: status({ status: "none", acceptedVersion: null }),
-        activeVersion: ACTIVE_VERSION,
       }),
     ).toBe(true);
   });
@@ -86,7 +82,6 @@ describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento"
       resolveConsentRequirement({
         mode: "existing",
         consentStatus: null,
-        activeVersion: ACTIVE_VERSION,
       }),
     ).toBe(true);
   });

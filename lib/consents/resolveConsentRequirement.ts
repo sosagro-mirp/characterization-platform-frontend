@@ -17,7 +17,6 @@ interface ResolveConsentRequirementParams {
   mode: "new" | "existing";
   /** Respuesta de `GET /api/farmers/:id/consent`, o `null` si no se pudo consultar. */
   consentStatus: ConsentStatus | null;
-  activeVersion: string | null;
 }
 
 /**
@@ -25,6 +24,12 @@ interface ResolveConsentRequirementParams {
  * lo requiere si su última constancia no está "valid" para la versión
  * activa — ante cualquier duda (estado desconocido, consulta fallida) se
  * exige el consentimiento: nunca se omite por defecto.
+ *
+ * No recibe la versión activa como parámetro (hallazgo F4 de la auditoría):
+ * `GET /api/farmers/:id/consent` ya la compara contra el documento publicado
+ * del lado del backend y devuelve el resultado en `status`
+ * ("outdated_version" cuando no coincide), así que repetir esa comparación
+ * aquí sería lógica muerta.
  */
 export function resolveConsentRequirement({
   mode,

@@ -27,6 +27,9 @@ export default function CampaignIntroPage() {
   const [step, setStep] = useState<Step>("intro");
   // sessionId de la sesión ya creada, esperando consentimiento antes de navegar.
   const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  // Nombre del encuestado ya identificado (spec 78, hallazgo F3), para
+  // precargar el campo "Nombre de quien acepta" en ConsentForm.
+  const [pendingFarmerName, setPendingFarmerName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     getCampaignRender(campaignId)
@@ -41,10 +44,11 @@ export default function CampaignIntroPage() {
     router.replace(`/campaign/${campaignId}/session/${sessionId}`);
   }
 
-  async function launchSession(farmerId: string | null) {
+  async function launchSession(farmerId: string | null, farmerName?: string) {
     if (!campaign) return;
     setStep("starting");
     setError(null);
+    setPendingFarmerName(farmerName);
     try {
       const session = await createSession({
         campaignId,
@@ -55,7 +59,7 @@ export default function CampaignIntroPage() {
         campaignId,
         campaignName: campaign.name,
         farmerId,
-        farmerName: null,
+        farmerName: farmerName ?? null,
       });
 
       // Spec 78 — un encuestado nuevo siempre necesita consentimiento; uno
@@ -65,7 +69,6 @@ export default function CampaignIntroPage() {
       const needsConsent = resolveConsentRequirement({
         mode: farmerId ? "existing" : "new",
         consentStatus,
-        activeVersion: null,
       });
 
       if (needsConsent) {
@@ -81,16 +84,16 @@ export default function CampaignIntroPage() {
     }
   }
 
-  function handleSearchSelect(farmerId: string) {
-    launchSession(farmerId);
+  function handleSearchSelect(farmerId: string, farmerName: string) {
+    launchSession(farmerId, farmerName);
   }
 
   function handleNewFarmer() {
     launchSession(null);
   }
 
-  function handleContinueLast(farmerId: string) {
-    launchSession(farmerId);
+  function handleContinueLast(farmerId: string, farmerName: string) {
+    launchSession(farmerId, farmerName);
   }
 
   function handleConsentAccepted(record: ConsentRecord) {
@@ -160,7 +163,11 @@ export default function CampaignIntroPage() {
           <h2 className="text-base font-semibold text-text-primary mb-4">
             Consentimiento informado
           </h2>
-          <ConsentForm sessionId={pendingSessionId} onAccepted={handleConsentAccepted} />
+          <ConsentForm
+            sessionId={pendingSessionId}
+            defaultRespondentName={pendingFarmerName}
+            onAccepted={handleConsentAccepted}
+          />
         </section>
       )}
 
