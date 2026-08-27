@@ -1,3 +1,7 @@
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+# pnpm 11 reemplazó ignoredBuiltDependencies/onlyBuiltDependencies por
+# allowBuilds (mapa nombre -> boolean). `false` preserva la intención
+# original: no ejecutar estos scripts de build, pero de forma explícita
+# para no caer en ERR_PNPM_IGNORED_BUILDS bajo CI=true (ver deploy 03).
+allowBuilds:
+  'sharp': false
+  'unrs-resolver': false
