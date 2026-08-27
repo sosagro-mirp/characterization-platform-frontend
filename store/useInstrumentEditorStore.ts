@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import {
   ActorTypeSummary,
+  CopyQuestionResponse,
   CreateOptionRequest,
   CreateQuestionRequest,
   CreateSectionRequest,
@@ -20,6 +21,7 @@ import {
   updateSection,
 } from "@/services/sections.service";
 import {
+  copyQuestionToSection,
   createQuestion,
   deleteQuestion,
   updateQuestion,
@@ -76,6 +78,11 @@ interface InstrumentEditorState {
   // Questions
   addQuestion: (sectionId: string, data: CreateQuestionRequest) => Promise<void>;
   duplicateQuestion: (sectionId: string, questionId: string) => Promise<void>;
+  copyQuestionToInstrument: (
+    targetInstrumentId: string,
+    targetSectionId: string,
+    sourceQuestionId: string
+  ) => Promise<CopyQuestionResponse>;
   updateQuestionInStore: (
     sectionId: string,
     questionId: string,
@@ -288,6 +295,40 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
             selection: { kind: "question", sectionId, questionId: created.questionId },
           }));
         });
+      },
+
+      // A diferencia del resto de acciones del editor, esta NO usa `withSave`:
+      // el diálogo que la invoca necesita saber si la copia falló para
+      // mostrar el error, y `withSave` atrapa los errores sin relanzarlos.
+      copyQuestionToInstrument: async (
+        targetInstrumentId,
+        targetSectionId,
+        sourceQuestionId
+      ) => {
+        setSaveStatus("saving");
+        try {
+          const response = await copyQuestionToSection(targetSectionId, sourceQuestionId);
+
+          if (targetInstrumentId === get().instrumentId) {
+            set((s) => ({
+              sections: s.sections.map((sec) =>
+                sec.sectionId === targetSectionId
+                  ? { ...sec, questions: [...sec.questions, response.question] }
+                  : sec
+              ),
+            }));
+          }
+
+          setSaveStatus("saved");
+          setTimeout(() => set({ saveStatus: "idle" }), 2000);
+          return response;
+        } catch (err) {
+          setSaveStatus(
+            "error",
+            err instanceof Error ? err.message : "Error al copiar la pregunta"
+          );
+          throw err;
+        }
       },
 
       updateQuestionInStore: async (sectionId, questionId, data) => {
