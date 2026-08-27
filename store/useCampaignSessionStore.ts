@@ -14,6 +14,9 @@ interface CampaignSessionState {
   totalSteps: number;
   completedCount: number;
   preSurveyPhase: PreSurveyPhase;
+  /** Spec 78 — constancia de consentimiento otorgada en esta sesión, si aplicó. */
+  consentRecordId: string | null;
+  consentVersion: string | null;
   startSession: (params: {
     sessionId: string;
     campaignId: string;
@@ -28,6 +31,7 @@ interface CampaignSessionState {
   }) => void;
   setPreSurveyPhase: (phase: PreSurveyPhase) => void;
   setFarmer: (farmerId: string, farmerName: string | null) => void;
+  setConsent: (consentRecordId: string, consentVersion: string) => void;
   clearSession: () => void;
 }
 
@@ -41,6 +45,8 @@ const initial = {
   totalSteps: 0,
   completedCount: 0,
   preSurveyPhase: 'idle' as PreSurveyPhase,
+  consentRecordId: null,
+  consentVersion: null,
 };
 
 export const useCampaignSessionStore = create<CampaignSessionState>()(
@@ -63,6 +69,8 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
         set({ preSurveyPhase: phase }),
       setFarmer: (farmerId, farmerName) =>
         set({ farmerId, farmerName }),
+      setConsent: (consentRecordId, consentVersion) =>
+        set({ consentRecordId, consentVersion }),
       clearSession: () => set(initial),
     }),
     {

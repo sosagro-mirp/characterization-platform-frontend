@@ -5,21 +5,28 @@ import { useParams, useRouter } from "next/navigation";
 import { CampaignRender } from "@/app/(instrument)/types";
 import { getCampaignRender } from "@/services/campaigns.service";
 import { createSession } from "@/services/campaign-sessions.service";
+import { getFarmerConsentStatus } from "@/services/consents.service";
+import { resolveConsentRequirement } from "@/lib/consents/resolveConsentRequirement";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import PreSurveyForm from "@/components/campaign/PreSurveyForm";
+import ConsentForm from "@/components/campaign/ConsentForm";
+import type { ConsentRecord } from "@/services/consents.service";
 
-type Step = "intro" | "pre-survey" | "starting";
+type Step = "intro" | "pre-survey" | "consent" | "starting";
 
 export default function CampaignIntroPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const campaignId = params.id;
   const startSession = useCampaignSessionStore((s) => s.startSession);
+  const setConsent = useCampaignSessionStore((s) => s.setConsent);
 
   const [campaign, setCampaign] = useState<CampaignRender | null>(null);
   const [loadingCampaign, setLoadingCampaign] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("intro");
+  // sessionId de la sesión ya creada, esperando consentimiento antes de navegar.
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     getCampaignRender(campaignId)
@@ -29,6 +36,10 @@ export default function CampaignIntroPage() {
       )
       .finally(() => setLoadingCampaign(false));
   }, [campaignId]);
+
+  function navigateToSession(sessionId: string) {
+    router.replace(`/campaign/${campaignId}/session/${sessionId}`);
+  }
 
   async function launchSession(farmerId: string | null) {
     if (!campaign) return;
@@ -46,7 +57,24 @@ export default function CampaignIntroPage() {
         farmerId,
         farmerName: null,
       });
-      router.replace(`/campaign/${campaignId}/session/${session.sessionId}`);
+
+      // Spec 78 — un encuestado nuevo siempre necesita consentimiento; uno
+      // conocido solo si su última constancia no está vigente para la
+      // versión actualmente publicada.
+      const consentStatus = farmerId ? await getFarmerConsentStatus(farmerId) : null;
+      const needsConsent = resolveConsentRequirement({
+        mode: farmerId ? "existing" : "new",
+        consentStatus,
+        activeVersion: null,
+      });
+
+      if (needsConsent) {
+        setPendingSessionId(session.sessionId);
+        setStep("consent");
+        return;
+      }
+
+      navigateToSession(session.sessionId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión.");
       setStep("intro");
@@ -63,6 +91,12 @@ export default function CampaignIntroPage() {
 
   function handleContinueLast(farmerId: string) {
     launchSession(farmerId);
+  }
+
+  function handleConsentAccepted(record: ConsentRecord) {
+    if (!pendingSessionId) return;
+    setConsent(record.consentRecordId, record.consentDocument.version);
+    navigateToSession(pendingSessionId);
   }
 
   if (loadingCampaign) {
@@ -118,6 +152,15 @@ export default function CampaignIntroPage() {
             onNewFarmer={handleNewFarmer}
             onContinueLast={handleContinueLast}
           />
+        </section>
+      )}
+
+      {step === "consent" && pendingSessionId && (
+        <section>
+          <h2 className="text-base font-semibold text-text-primary mb-4">
+            Consentimiento informado
+          </h2>
+          <ConsentForm sessionId={pendingSessionId} onAccepted={handleConsentAccepted} />
         </section>
       )}
 
