@@ -1,7 +1,21 @@
-# pnpm 11 reemplazó ignoredBuiltDependencies/onlyBuiltDependencies por
-# allowBuilds (mapa nombre -> boolean). `false` preserva la intención
-# original: no ejecutar estos scripts de build, pero de forma explícita
-# para no caer en ERR_PNPM_IGNORED_BUILDS bajo CI=true (ver deploy 03).
+# `sharp` y `unrs-resolver` NO deben ejecutar sus scripts de build: el proyecto
+# funciona con los binarios preconstruidos que traen, y compilarlos no aporta
+# nada aquí.
+#
+# Se declaran las DOS sintaxis a propósito:
+#   - `ignoredBuiltDependencies` la lee pnpm 10 (la versión fijada hoy en
+#     `packageManager`).
+#   - `allowBuilds: false` la lee pnpm 11, que removió la clave anterior y
+#     volvió `strictDepBuilds` el default: sin una decisión explícita, la
+#     instalación falla con ERR_PNPM_IGNORED_BUILDS en vez de solo advertir.
+#
+# Mantener ambas hace que el build se comporte igual con cualquiera de las dos
+# versiones mayores, y evita que un futuro salto de pnpm rompa el despliegue
+# como pasó el 2026-08-27 (ver deploys/03_pre_deploy_produccion_v3.md).
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
 allowBuilds:
-  'sharp': false
-  'unrs-resolver': false
+  sharp: false
+  unrs-resolver: false
