@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ClipboardList, Eye, Pencil, Power, Search, Trash2 } from "lucide-react";
+import { ClipboardList, CopyPlus, Eye, Pencil, Power, Search, Trash2 } from "lucide-react";
 import { InstrumentListItem } from "@/app/(admin)/types";
 import { deleteInstrument, updateInstrument } from "@/services/instruments.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import Tooltip from "@/components/common/Tooltip";
 import ConfirmDialog from "./ConfirmDialog";
+import DuplicateInstrumentDialog from "./DuplicateInstrumentDialog";
 
 interface InstrumentsTableProps {
   instruments: InstrumentListItem[];
@@ -18,6 +19,7 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
   const router = useRouter();
   const isAdmin = useAuthStore((s) => s.user?.role === "admin");
   const [deleteTarget, setDeleteTarget] = useState<InstrumentListItem | null>(null);
+  const [duplicateTarget, setDuplicateTarget] = useState<InstrumentListItem | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -133,6 +135,17 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
                       </Tooltip>
                       {isAdmin && (
                         <>
+                          <Tooltip label="Duplicar instrumento completo">
+                            <button
+                              type="button"
+                              disabled={loadingId === inst.instrumentId}
+                              onClick={() => setDuplicateTarget(inst)}
+                              className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors disabled:opacity-50"
+                              aria-label="Duplicar instrumento completo"
+                            >
+                              <CopyPlus className="size-3.5" aria-hidden="true" />
+                            </button>
+                          </Tooltip>
                           <Tooltip label={inst.isActive ? "Desactivar instrumento" : "Activar instrumento"}>
                             <button
                               type="button"
@@ -190,6 +203,15 @@ export default function InstrumentsTable({ instruments }: InstrumentsTableProps)
         destructive
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <DuplicateInstrumentDialog
+        instrument={duplicateTarget}
+        onClose={() => setDuplicateTarget(null)}
+        onDuplicated={(created) => {
+          setDuplicateTarget(null);
+          router.push(`/admin/instruments/${created.instrumentId}`);
+        }}
       />
     </>
   );

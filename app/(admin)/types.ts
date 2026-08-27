@@ -77,6 +77,12 @@ export interface UpdateQuestionRequest {
   conditionValue?: string | null;
 }
 
+export interface CopyQuestionResponse {
+  question: QuestionDetail;
+  /** true si la pregunta de origen tenía condición de visibilidad; no viaja a la copia. */
+  droppedCondition: boolean;
+}
+
 // ── Section ──────────────────────────────────────────────────────────────────
 
 export interface SectionDetail {
@@ -139,6 +145,12 @@ export interface UpdateInstrumentRequest {
   publishDate?: string;
   isActive?: boolean;
   actorTypeIds?: string[];
+}
+
+export interface DuplicateInstrumentRequest {
+  name: string;
+  version: number;
+  publishDate?: string;
 }
 
 // ── Role / User ──────────────────────────────────────────────────────────────
