@@ -1,17 +1,27 @@
 /**
- * e2e-078 — Bloqueo del flujo de campaña hasta que exista consentimiento.
+ * e2e-078 — Consentimiento informado: cuándo se considera pendiente y qué
+ * habilita el botón de continuar del formulario.
  *
  * Escrito junto con `spec/78_consentimiento_informado_tratamiento_datos.md`,
  * antes de la implementación: arranca EN ROJO (los módulos
  * `./resolveConsentRequirement` y `./consentSubmission` todavía no existen).
  *
- * El entorno de Vitest de este repositorio es `node` (ver `vitest.config.ts`),
- * así que aquí se prueba solo la lógica pura que decide si hay que mostrar la
- * pantalla de consentimiento y si el botón de continuar está habilitado. La
- * verificación visual y de navegación vive en
- * `docs/testing/test-078-consentimiento-informado.md`.
+ * **Cambio de alcance (2026-08-28):** `resolveConsentRequirement` ya NO
+ * decide si se bloquea el flujo — el flujo nunca se bloquea (criterio 1).
+ * Ahora alimenta el indicador `consentPending` del
+ * `store/useCampaignSessionStore.ts` (Fase 12) y el aviso persistente en
+ * `components/instrument/InstrumentQuestionFlow.tsx`. Su lógica pura de
+ * "¿hace falta pedirlo?" no cambia — solo cambia qué hace el llamador con el
+ * resultado. Por eso los tests de este bloque no requieren reescritura:
+ * siguen probando la misma función, con la misma semántica.
  *
- * Cubre los criterios 1, 2, 3, 4 y 5 del spec.
+ * El entorno de Vitest de este repositorio es `node` (ver `vitest.config.ts`),
+ * así que aquí se prueba solo la lógica pura. La verificación visual del
+ * aviso persistente, el modal y la navegación vive en
+ * `docs/testing/test-078-consentimiento-informado.md` (TC-078-014 a 020).
+ *
+ * Cubre los criterios 1-bis, 2, 3, 4 y 5 del spec (el criterio 1 original,
+ * "no puede llegar a S1 sin consentimiento", ya no aplica).
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -31,16 +41,16 @@ function status(overrides: Partial<ConsentStatus> = {}): ConsentStatus {
   };
 }
 
-describe("resolveConsentRequirement — cuándo hay que pedir el consentimiento", () => {
-  // Criterio 1
-  it("lo exige siempre para un encuestado nuevo", () => {
+describe("resolveConsentRequirement — cuándo se marca 'consentimiento pendiente' (ya no bloquea, solo alimenta el aviso)", () => {
+  // Criterio 1-bis / 1-cuarter
+  it("lo marca pendiente siempre para un encuestado nuevo", () => {
     expect(
       resolveConsentRequirement({ mode: "new", consentStatus: null }),
     ).toBe(true);
   });
 
   // Criterio 4
-  it("no lo exige para un encuestado conocido con consentimiento vigente", () => {
+  it("no lo marca pendiente para un encuestado conocido con consentimiento vigente", () => {
     expect(
       resolveConsentRequirement({
         mode: "existing",

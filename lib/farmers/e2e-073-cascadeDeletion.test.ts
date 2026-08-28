@@ -30,6 +30,7 @@ const preview: FarmerDeletionPreview = {
     responses: 30,
     documentCollisions: 0,
     relations: 0,
+    consentRecords: 0,
   },
   farm: { farmId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", name: "La Esperanza TEST", shared: false, willBeDeleted: true },
   preserved: { changeRequests: 0 },
@@ -96,11 +97,26 @@ describe("summarizeDeletionPreview — criterio 10", () => {
         responses: 0,
         documentCollisions: 0,
         relations: 0,
+        consentRecords: 0,
       },
       farm: null,
     };
 
     expect(summarizeDeletionPreview(vacio)).toEqual([]);
+  });
+
+  // Spec 78 — TC-078-008: la vista previa declara las constancias de
+  // consentimiento informado que se eliminarán en cascada.
+  it("declara las constancias de consentimiento informado (spec 78)", () => {
+    const conConsentimiento: FarmerDeletionPreview = {
+      ...preview,
+      counts: { ...preview.counts, consentRecords: 1 },
+    };
+
+    const text = summarizeDeletionPreview(conConsentimiento).join(" | ");
+
+    expect(text).toContain("1");
+    expect(text).toMatch(/constancia de consentimiento informado/i);
   });
 
   it("advierte cuando la finca es compartida y no se borrará", () => {

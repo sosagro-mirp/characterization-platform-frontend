@@ -9,27 +9,20 @@ import { getFarmerConsentStatus } from "@/services/consents.service";
 import { resolveConsentRequirement } from "@/lib/consents/resolveConsentRequirement";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import PreSurveyForm from "@/components/campaign/PreSurveyForm";
-import ConsentForm from "@/components/campaign/ConsentForm";
-import type { ConsentRecord } from "@/services/consents.service";
 
-type Step = "intro" | "pre-survey" | "consent" | "starting";
+type Step = "intro" | "pre-survey" | "starting";
 
 export default function CampaignIntroPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const campaignId = params.id;
   const startSession = useCampaignSessionStore((s) => s.startSession);
-  const setConsent = useCampaignSessionStore((s) => s.setConsent);
+  const setConsentPending = useCampaignSessionStore((s) => s.setConsentPending);
 
   const [campaign, setCampaign] = useState<CampaignRender | null>(null);
   const [loadingCampaign, setLoadingCampaign] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("intro");
-  // sessionId de la sesión ya creada, esperando consentimiento antes de navegar.
-  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
-  // Nombre del encuestado ya identificado (spec 78, hallazgo F3), para
-  // precargar el campo "Nombre de quien acepta" en ConsentForm.
-  const [pendingFarmerName, setPendingFarmerName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     getCampaignRender(campaignId)
@@ -44,11 +37,16 @@ export default function CampaignIntroPage() {
     router.replace(`/campaign/${campaignId}/session/${sessionId}`);
   }
 
+  // Cambio de alcance (2026-08-28, Fase 12) — el consentimiento ya no
+  // bloquea el flujo: `launchSession` navega siempre a la sesión. La
+  // resolución de `needsConsent` se conserva íntegra (mismos criterios de
+  // antes), pero ahora solo alimenta `consentPending` en el store, que
+  // `InstrumentQuestionFlow` usa para mostrar el aviso persistente y ofrecer
+  // el `ConsentModal` en cualquier momento — no para decidir la navegación.
   async function launchSession(farmerId: string | null, farmerName?: string) {
     if (!campaign) return;
     setStep("starting");
     setError(null);
-    setPendingFarmerName(farmerName);
     try {
       const session = await createSession({
         campaignId,
@@ -70,12 +68,7 @@ export default function CampaignIntroPage() {
         mode: farmerId ? "existing" : "new",
         consentStatus,
       });
-
-      if (needsConsent) {
-        setPendingSessionId(session.sessionId);
-        setStep("consent");
-        return;
-      }
+      setConsentPending(needsConsent);
 
       navigateToSession(session.sessionId);
     } catch (err) {
@@ -94,12 +87,6 @@ export default function CampaignIntroPage() {
 
   function handleContinueLast(farmerId: string, farmerName: string) {
     launchSession(farmerId, farmerName);
-  }
-
-  function handleConsentAccepted(record: ConsentRecord) {
-    if (!pendingSessionId) return;
-    setConsent(record.consentRecordId, record.consentDocument.version);
-    navigateToSession(pendingSessionId);
   }
 
   if (loadingCampaign) {
@@ -154,19 +141,6 @@ export default function CampaignIntroPage() {
             onSearchSelect={handleSearchSelect}
             onNewFarmer={handleNewFarmer}
             onContinueLast={handleContinueLast}
-          />
-        </section>
-      )}
-
-      {step === "consent" && pendingSessionId && (
-        <section>
-          <h2 className="text-base font-semibold text-text-primary mb-4">
-            Consentimiento informado
-          </h2>
-          <ConsentForm
-            sessionId={pendingSessionId}
-            defaultRespondentName={pendingFarmerName}
-            onAccepted={handleConsentAccepted}
           />
         </section>
       )}

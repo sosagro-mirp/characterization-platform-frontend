@@ -309,6 +309,13 @@ export interface FarmerDetail {
   email: string | null;
   farm: FarmSummaryForFarmer | null;
   createdAt: string;
+  /**
+   * Spec 78, Fase 13 (cambio de alcance 2026-08-28) — true si el agricultor
+   * no tiene consentimiento vigente de la versión publicada. Solo
+   * `GET /api/farmers` lo trae; `GET /api/farmers/:id` no lo incluye —
+   * el detalle exacto se consulta aparte con `getFarmerConsentStatus`.
+   */
+  hasPendingConsent?: boolean;
 }
 
 export interface UpdateFarmerRequest {
@@ -333,6 +340,8 @@ export interface FarmerDeletionCounts {
   responses: number;
   documentCollisions: number;
   relations: number;
+  /** Constancias de consentimiento informado (spec 78). */
+  consentRecords: number;
 }
 
 export interface FarmerDeletionFarmInfo {
