@@ -58,6 +58,7 @@ export default function InstrumentEditorLayout({
   questionTypes,
 }: InstrumentEditorLayoutProps) {
   const {
+    instrumentId: storeInstrumentId,
     initialize,
     selection,
     saveStatus,
@@ -71,6 +72,16 @@ export default function InstrumentEditorLayout({
     instrumentActorTypes,
     updateInstrumentMeta,
   } = useInstrumentEditorStore();
+
+  // Hallazgo TC-079-008 — InstrumentEditorLayout monta InstrumentForm en su
+  // primer render, antes de que el useEffect de abajo llame a initialize().
+  // InstrumentForm solo lee sus `initialValues` una vez (useState), así que
+  // si montara con el store todavía en su estado por defecto
+  // (instrumentIsPublic/instrumentIsActive: false), quedaría congelado en
+  // ese valor aunque el store se actualice segundos después con el real.
+  // Esperar a que storeInstrumentId coincida con la prop evita montarlo con
+  // datos que sabemos que van a cambiar.
+  const storeReady = storeInstrumentId === instrumentId;
 
   const formattedPublishDate = instrumentPublishDate
     ? new Date(instrumentPublishDate).toLocaleDateString("es-CO")
@@ -123,6 +134,9 @@ export default function InstrumentEditorLayout({
               Los cambios se guardan solos
             </span>
           </div>
+          {!storeReady ? (
+            <p className="text-sm text-[var(--text-muted)]">Cargando…</p>
+          ) : (
           <InstrumentForm
             actorTypes={allActorTypes}
             initialValues={{
@@ -138,6 +152,7 @@ export default function InstrumentEditorLayout({
             onSubmit={updateInstrumentMeta}
             autoSave
           />
+          )}
         </div>
       );
     }
