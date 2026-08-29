@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import {
   ActorTypeSummary,
   CreateInstrumentRequest,
   UpdateInstrumentRequest,
 } from "@/app/(admin)/types";
 import { useAuthStore } from "@/store/useAuthStore";
+import { buildPublicSurveyUrl } from "@/lib/public-surveys/publicSurveyUrl";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 
 interface InstrumentFormProps {
@@ -16,6 +18,7 @@ interface InstrumentFormProps {
     version: number;
     publishDate: string;
     isActive: boolean;
+    isPublic: boolean;
     actorTypeIds: string[];
   };
   onSubmit: (
@@ -29,6 +32,10 @@ interface InstrumentFormProps {
    * indicador global del header refleja el estado.
    */
   autoSave?: boolean;
+  /** Spec 79 — necesario para armar la URL pública una vez isPublic está activo. Ausente al crear (el instrumento aún no tiene id). */
+  instrumentId?: string;
+  /** Spec 79, criterio 3 — nombres en español de los tipos de pregunta multimedia presentes; deshabilita el toggle "Enlace público" y explica el motivo. */
+  mediaTypesPresent?: string[];
 }
 
 export default function InstrumentForm({
@@ -37,6 +44,8 @@ export default function InstrumentForm({
   onSubmit,
   submitLabel = "Guardar",
   autoSave = false,
+  instrumentId,
+  mediaTypesPresent = [],
 }: InstrumentFormProps) {
   const [name, setName] = useState(initialValues?.name ?? "");
   const [version, setVersion] = useState(initialValues?.version ?? 1);
@@ -44,6 +53,9 @@ export default function InstrumentForm({
     initialValues?.publishDate ?? new Date().toISOString().slice(0, 10),
   );
   const [isActive, setIsActive] = useState(initialValues?.isActive ?? true);
+  const [isPublic, setIsPublic] = useState(initialValues?.isPublic ?? false);
+  const [publicToggleError, setPublicToggleError] = useState<string>();
+  const [copied, setCopied] = useState(false);
   const [selectedActorTypeIds, setSelectedActorTypeIds] = useState<string[]>(
     initialValues?.actorTypeIds ?? [],
   );
@@ -86,6 +98,43 @@ export default function InstrumentForm({
     if (publishDate === lastPersisted.current.publishDate) return;
     lastPersisted.current.publishDate = publishDate;
     void persist({ publishDate });
+  };
+
+  // Spec 79, criterio 3 — a diferencia del resto de campos, este necesita su
+  // propio mensaje de error inline: el 422 del backend explica exactamente
+  // qué preguntas bloquean el enlace, y el indicador global del header no es
+  // suficientemente específico para esa explicación. Revierte el checkbox
+  // si el backend rechaza el cambio.
+  const handleIsPublicChange = async (checked: boolean) => {
+    setPublicToggleError(undefined);
+    setIsPublic(checked);
+    if (!autoSave) return;
+    try {
+      await onSubmit({ isPublic: checked });
+    } catch (err) {
+      setIsPublic(!checked);
+      setPublicToggleError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar el enlace público.",
+      );
+    }
+  };
+
+  const publicSurveyUrl =
+    instrumentId && typeof window !== "undefined"
+      ? buildPublicSurveyUrl(window.location.origin, instrumentId)
+      : null;
+
+  const handleCopyUrl = async () => {
+    if (!publicSurveyUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicSurveyUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard no disponible — el usuario puede seleccionar el texto manualmente */
+    }
   };
 
   const handleIsActiveChange = (checked: boolean) => {
@@ -188,6 +237,61 @@ export default function InstrumentForm({
               </span>
             </span>
           </label>
+        </div>
+      )}
+
+      {isAdmin && autoSave && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5 space-y-3">
+          <label
+            htmlFor="isPublic"
+            className={`flex items-start gap-2.5 text-sm text-[var(--text-primary)] ${
+              mediaTypesPresent.length > 0 ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+            }`}
+          >
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={isPublic}
+              disabled={mediaTypesPresent.length > 0}
+              onChange={(e) => void handleIsPublicChange(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+            />
+            <span>
+              Enlace público
+              <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+                Cualquier persona con el enlace puede responder sin cuenta. Las
+                respuestas quedan pendientes de revisión, sin agricultor asociado.
+              </span>
+            </span>
+          </label>
+
+          {mediaTypesPresent.length > 0 && (
+            <p className="text-[10.5px] text-[var(--warning-fg)]">
+              No se puede activar: este instrumento tiene preguntas de tipo{" "}
+              {mediaTypesPresent.join(", ")}, que requieren el flujo autenticado
+              de subida de archivos.
+            </p>
+          )}
+
+          {publicToggleError && (
+            <p className="text-[10.5px] text-[var(--danger-fg)]">{publicToggleError}</p>
+          )}
+
+          {isPublic && publicSurveyUrl && (
+            <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2">
+              <span className="min-w-0 flex-1 truncate text-xs text-[var(--text-primary)]">
+                {publicSurveyUrl}
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleCopyUrl()}
+                aria-label={copied ? "Enlace copiado" : "Copiar enlace público"}
+                className="shrink-0 rounded-md p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

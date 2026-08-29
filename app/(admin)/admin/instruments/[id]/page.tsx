@@ -22,6 +22,7 @@ interface EditorData {
   version: number;
   publishDate: string;
   isActive: boolean;
+  isPublic: boolean;
   actorTypes: ActorTypeSummary[];
   createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
@@ -127,6 +128,7 @@ export default function InstrumentEditorPage({ params }: PageProps) {
           version={editor.version}
           publishDate={editor.publishDate}
           isActive={editor.isActive}
+          isPublic={editor.isPublic}
           actorTypes={editor.actorTypes}
           createdBy={editor.createdBy}
           updatedBy={editor.updatedBy}
