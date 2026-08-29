@@ -11,7 +11,9 @@ import type {
     InstrumentSection,
 } from "@/app/(instrument)/types";
 import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
+import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
+import ConsentModal from "@/components/campaign/ConsentModal";
 
 interface InstrumentQuestionFlowProps {
     localId: string;
@@ -43,6 +45,15 @@ export default function InstrumentQuestionFlow({
     const [completed, setCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [sessionExpired, setSessionExpired] = useState(false);
+    // Cambio de alcance (2026-08-28, Fase 12) — aviso persistente de
+    // consentimiento pendiente, visible mientras se aplican las preguntas
+    // (no solo antes de S1). `consentPending`/`farmerName` vienen del mismo
+    // store que ya alimenta el resto de la sesión de campaña; en modo vista
+    // previa no hay sesión real, así que el banner nunca se muestra ahí.
+    const consentPending = useCampaignSessionStore((s) => s.consentPending);
+    const farmerName = useCampaignSessionStore((s) => s.farmerName);
+    const setConsent = useCampaignSessionStore((s) => s.setConsent);
+    const [consentModalOpen, setConsentModalOpen] = useState(false);
     const {
         initializeSurvey,
         flattenedQuestions,
@@ -265,6 +276,21 @@ export default function InstrumentQuestionFlow({
                     Modo vista previa — sin datos enviados
                 </div>
             )}
+            {/* Spec 78, cambio de alcance (2026-08-28) — criterio 1-cuarter:
+                aviso persistente mientras el encuestado no tenga
+                consentimiento vigente, con acceso directo al formulario. */}
+            {!previewMode && campaignSessionId && consentPending && (
+                <div className="bg-[var(--warning-bg)] border-b border-[var(--warning-fg)]/30 px-4 py-2 text-sm text-[var(--warning-fg)] text-center flex items-center justify-center gap-3">
+                    <span>Este encuestado todavía no dio su consentimiento informado.</span>
+                    <button
+                        type="button"
+                        onClick={() => setConsentModalOpen(true)}
+                        className="rounded-md bg-[var(--warning-fg)] px-3 py-1 text-xs font-medium text-white hover:opacity-90 transition-colors"
+                    >
+                        Registrar consentimiento
+                    </button>
+                </div>
+            )}
 
             {/* Contenido scrollable */}
             <div className="flex-1">
@@ -416,6 +442,19 @@ export default function InstrumentQuestionFlow({
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Consentimiento pendiente — Fase 12, se abre in place, sin navegar. */}
+            {consentModalOpen && campaignSessionId && (
+                <ConsentModal
+                    sessionId={campaignSessionId}
+                    defaultRespondentName={farmerName ?? undefined}
+                    onAccepted={(record) => {
+                        setConsent(record.consentRecordId, record.consentDocument.version);
+                        setConsentModalOpen(false);
+                    }}
+                    onClose={() => setConsentModalOpen(false)}
+                />
             )}
         </div>
     );

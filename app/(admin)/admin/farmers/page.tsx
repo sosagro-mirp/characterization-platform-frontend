@@ -83,6 +83,7 @@ export default function FarmersListPage() {
                   <th className="px-3 py-2.5 text-left">Documento</th>
                   <th className="px-3 py-2.5 text-left">Teléfono</th>
                   <th className="px-3 py-2.5 text-left">Finca</th>
+                  <th className="px-3 py-2.5 text-left">Consentimiento</th>
                   <th className="px-3 py-2.5 text-left">Creación</th>
                 </tr>
               </thead>
@@ -111,6 +112,17 @@ export default function FarmersListPage() {
                     </td>
                     <td className="px-3 py-2.5 text-[var(--text-muted)]">
                       {farmer.farm?.name ?? "—"}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {farmer.hasPendingConsent ? (
+                        <span className="inline-flex items-center rounded-full bg-[var(--warning-bg)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--warning-fg)]">
+                          Pendiente
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--text-muted)]">
+                          Vigente
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-2.5 text-[var(--text-muted)]">
                       {new Date(farmer.createdAt).toLocaleDateString("es-CO")}

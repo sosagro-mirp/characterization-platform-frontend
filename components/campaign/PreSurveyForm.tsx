@@ -7,9 +7,9 @@ import { getLastFarmer } from "@/services/campaign-sessions.service";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 
 interface PreSurveyFormProps {
-  onSearchSelect: (farmerId: string) => void;
+  onSearchSelect: (farmerId: string, farmerName: string) => void;
   onNewFarmer: () => void;
-  onContinueLast: (farmerId: string) => void;
+  onContinueLast: (farmerId: string, farmerName: string) => void;
 }
 
 export default function PreSurveyForm({
@@ -85,7 +85,7 @@ export default function PreSurveyForm({
             {searchResults.map((farmer) => (
               <li key={farmer.id}>
                 <button
-                  onClick={() => onSearchSelect(farmer.id)}
+                  onClick={() => onSearchSelect(farmer.id, farmer.name)}
                   className="w-full text-left px-4 py-3 hover:bg-brand-subtle-bg transition-colors"
                 >
                   <p className="text-sm font-semibold text-text-primary">
@@ -125,7 +125,7 @@ export default function PreSurveyForm({
       {/* Continue with last farmer */}
       {lastFarmer && (
         <button
-          onClick={() => onContinueLast(lastFarmer.farmerId)}
+          onClick={() => onContinueLast(lastFarmer.farmerId, lastFarmer.name)}
           className="w-full rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-brand-foreground hover:bg-brand-hover transition-colors"
         >
           Continuar con {farmerLabel}

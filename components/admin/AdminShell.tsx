@@ -52,6 +52,11 @@ export default function AdminShell({ children }: AdminShellProps) {
         <Link href="/admin/farmers" className={navLinkClass("/admin/farmers")}>
           Agricultores
         </Link>
+        {(role === "admin" || role === "researcher") && (
+          <Link href="/admin/consents" className={navLinkClass("/admin/consents")}>
+            Consentimiento
+          </Link>
+        )}
         {role === "admin" && (
           <Link href="/admin/users" className={navLinkClass("/admin/users")}>
             Usuarios
