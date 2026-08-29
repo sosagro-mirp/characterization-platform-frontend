@@ -120,6 +120,8 @@ export interface InstrumentListItem {
   version: number;
   publishDate: string;
   isActive: boolean;
+  /** Spec 79 — el instrumento se puede compartir por /encuesta/{instrumentId}. */
+  isPublic: boolean;
   actorTypes: ActorTypeSummary[];
   createdBy?: UserAuditSummary | null;
   updatedBy?: UserAuditSummary | null;
@@ -144,6 +146,8 @@ export interface UpdateInstrumentRequest {
   version?: number;
   publishDate?: string;
   isActive?: boolean;
+  /** Spec 79 — se rechaza con 422 si el instrumento tiene preguntas multimedia. */
+  isPublic?: boolean;
   actorTypeIds?: string[];
 }
 
@@ -430,4 +434,25 @@ export interface SurveyResponsesResult {
   instrumentName: string | null;
   syncedAt: string;
   responses: SurveyResponseItem[];
+}
+
+// ── Bandeja de revisión de envíos públicos (spec 79) ────────────────────────
+
+export type PublicSubmissionReviewStatus = "pending" | "processed" | "discarded";
+
+export interface PublicSubmissionListItem {
+  surveyId: string;
+  instrumentId: string;
+  instrumentName: string;
+  createdAt: string;
+  responseCount: number;
+  reviewStatus: PublicSubmissionReviewStatus;
+}
+
+/** Cuerpo del 409 de POST /api/surveys/:id/process-public — colisión de documentId (spec 68). */
+export interface DocumentCollisionInfo {
+  message: string;
+  documentId: string;
+  submittedName: string;
+  existingFarmer: { farmerId: string; name: string };
 }

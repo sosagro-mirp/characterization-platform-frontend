@@ -46,6 +46,8 @@ interface InstrumentEditorState {
   instrumentVersion: number;
   instrumentPublishDate: string;
   instrumentIsActive: boolean;
+  /** Spec 79 — este instrumento se puede compartir por /encuesta/{instrumentId}. */
+  instrumentIsPublic: boolean;
   instrumentActorTypes: ActorTypeSummary[];
   questionTypes: TypeOfQuestionSummary[];
   sections: SectionDetail[];
@@ -59,6 +61,7 @@ interface InstrumentEditorState {
     version: number;
     publishDate: string;
     isActive: boolean;
+    isPublic: boolean;
     actorTypes: ActorTypeSummary[];
     sections: SectionDetail[];
     questionTypes: TypeOfQuestionSummary[];
@@ -135,6 +138,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       instrumentVersion: 1,
       instrumentPublishDate: "",
       instrumentIsActive: false,
+      instrumentIsPublic: false,
       instrumentActorTypes: [],
       questionTypes: [],
       sections: [],
@@ -149,6 +153,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
           instrumentVersion: payload.version,
           instrumentPublishDate: payload.publishDate,
           instrumentIsActive: payload.isActive,
+          instrumentIsPublic: payload.isPublic,
           instrumentActorTypes: payload.actorTypes ?? [],
           questionTypes: payload.questionTypes ?? [],
           sections: payload.sections,
@@ -167,6 +172,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
             instrumentVersion: updated.version,
             instrumentPublishDate: updated.publishDate,
             instrumentIsActive: updated.isActive,
+            instrumentIsPublic: updated.isPublic,
             instrumentActorTypes: updated.actorTypes,
           });
         });

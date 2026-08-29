@@ -6,6 +6,8 @@ import type {
   ExtractFarmerResult,
 } from "@/app/(instrument)/types";
 import type {
+  PublicSubmissionListItem,
+  PublicSubmissionReviewStatus,
   SurveyListItem,
   SurveyResponsesResult,
 } from "@/app/(admin)/types";
@@ -85,5 +87,46 @@ export function getSurveyResponses(surveyId: string): Promise<SurveyResponsesRes
   return apiClient.get<SurveyResponsesResult>(
     `/api/surveys/${surveyId}/responses`,
     { cache: "no-store" },
+  );
+}
+
+// ── Bandeja de revisión de envíos públicos (spec 79) ────────────────────────
+
+export function getPublicSubmissions(filters?: {
+  instrumentId?: string;
+  reviewStatus?: PublicSubmissionReviewStatus;
+}): Promise<PublicSubmissionListItem[]> {
+  const params = new URLSearchParams();
+  if (filters?.instrumentId) params.set("instrumentId", filters.instrumentId);
+  if (filters?.reviewStatus) params.set("reviewStatus", filters.reviewStatus);
+  const qs = params.toString();
+  return apiClient.get<PublicSubmissionListItem[]>(
+    `/api/surveys/public-submissions${qs ? `?${qs}` : ""}`,
+    { cache: "no-store" },
+  );
+}
+
+/**
+ * Reutiliza extractFarmer del lado del backend (incluida la detección de
+ * colisiones del spec 68): un 409 con { documentId, submittedName,
+ * existingFarmer } significa que hace falta declarar `resolution` para
+ * continuar.
+ */
+export function processPublicSubmission(
+  surveyId: string,
+  resolution?: "same_person" | "separate_person",
+): Promise<ExtractFarmerResult> {
+  return apiClient.post<ExtractFarmerResult>(
+    `/api/surveys/${surveyId}/process-public`,
+    resolution ? { resolution } : {},
+  );
+}
+
+export function discardPublicSubmission(
+  surveyId: string,
+): Promise<{ surveyId: string; reviewStatus: string }> {
+  return apiClient.post<{ surveyId: string; reviewStatus: string }>(
+    `/api/surveys/${surveyId}/discard-public`,
+    {},
   );
 }

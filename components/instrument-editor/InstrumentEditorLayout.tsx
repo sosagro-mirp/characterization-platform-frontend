@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Settings } from "lucide-react";
 import {
   ActorTypeSummary,
@@ -24,6 +24,7 @@ interface InstrumentEditorLayoutProps {
   version: number;
   publishDate: string;
   isActive: boolean;
+  isPublic: boolean;
   actorTypes: ActorTypeSummary[];
   createdBy?: UserAuditSummary | null;
   updatedBy?: UserAuditSummary | null;
@@ -32,12 +33,23 @@ interface InstrumentEditorLayoutProps {
   questionTypes: TypeOfQuestionSummary[];
 }
 
+// Spec 79 — mismo set que InstrumentsService.MEDIA_QUESTION_TYPES en el
+// backend: preguntas que exigen el flujo autenticado de media-attachments,
+// incompatible con el canal público sin autenticación.
+const PUBLIC_INCOMPATIBLE_TYPES: Record<string, string> = {
+  image: "imagen",
+  voice_recording: "grabación de voz",
+  document: "documento",
+  video: "video",
+};
+
 export default function InstrumentEditorLayout({
   instrumentId,
   name,
   version,
   publishDate,
   isActive,
+  isPublic,
   actorTypes,
   createdBy,
   updatedBy,
@@ -55,6 +67,7 @@ export default function InstrumentEditorLayout({
     instrumentVersion,
     instrumentPublishDate,
     instrumentIsActive,
+    instrumentIsPublic,
     instrumentActorTypes,
     updateInstrumentMeta,
   } = useInstrumentEditorStore();
@@ -70,11 +83,27 @@ export default function InstrumentEditorLayout({
       version,
       publishDate,
       isActive,
+      isPublic,
       actorTypes,
       sections,
       questionTypes,
     });
   }, [instrumentId]);
+
+  // Spec 79, criterio 3 — se calcula desde el árbol vivo del store (no de
+  // la prop `sections` inicial) para reflejar preguntas agregadas o
+  // eliminadas después de cargar la página, sin esperar al intento de
+  // activar el toggle.
+  const mediaTypesPresent = useMemo(() => {
+    const found = new Set<string>();
+    storeSections.forEach((section) => {
+      section.questions.forEach((question) => {
+        const label = PUBLIC_INCOMPATIBLE_TYPES[question.type.name];
+        if (label) found.add(label);
+      });
+    });
+    return [...found];
+  }, [storeSections]);
 
   const renderPanel = () => {
     if (!selection || selection.kind === "instrument") {
@@ -101,8 +130,11 @@ export default function InstrumentEditorLayout({
               version: instrumentVersion,
               publishDate: instrumentPublishDate,
               isActive: instrumentIsActive,
+              isPublic: instrumentIsPublic,
               actorTypeIds: instrumentActorTypes.map((a) => a.actorTypeId),
             }}
+            instrumentId={instrumentId}
+            mediaTypesPresent={mediaTypesPresent}
             onSubmit={updateInstrumentMeta}
             autoSave
           />

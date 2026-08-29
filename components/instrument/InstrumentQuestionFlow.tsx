@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import InstrumentQuestionRenderer from "@/components/instrument/InstrumentQuestionRenderer";
 import SurveyCompletedCard from "@/components/instrument/SurveyCompletedCard";
 import type {
@@ -14,6 +15,7 @@ import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
 import ConsentModal from "@/components/campaign/ConsentModal";
+import type { PublicSurveyConsentInput } from "@/lib/public-surveys/publicSurveyPayload";
 
 interface InstrumentQuestionFlowProps {
     localId: string;
@@ -26,6 +28,18 @@ interface InstrumentQuestionFlowProps {
     previewMode?: boolean;
     existingSurveyId?: string;
     onPreviewComplete?: () => void;
+    /**
+     * Spec 79 — canal público sin encuestador: envía por
+     * submitPublicResponses en vez de submitResponses (una sola llamada
+     * atómica, sin crear el survey por adelantado), oculta "salir de la
+     * encuesta" (no hay a dónde volver dentro del sistema) y nunca consulta
+     * ni muestra el aviso de consentimiento pendiente del flujo de
+     * encuestador — el consentimiento del canal público ya se capturó antes,
+     * en el paso previo, y viaja en publicConsent.
+     */
+    publicMode?: boolean;
+    /** Requerido cuando publicMode es true — el consentimiento ya aceptado en el paso previo. */
+    publicConsent?: PublicSurveyConsentInput;
 }
 
 export default function InstrumentQuestionFlow({
@@ -39,17 +53,24 @@ export default function InstrumentQuestionFlow({
     previewMode = false,
     existingSurveyId,
     onPreviewComplete,
+    publicMode = false,
+    publicConsent,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [sessionExpired, setSessionExpired] = useState(false);
+    // Spec 79, criterio 9 — el enlace se cerró entre la carga del formulario
+    // y el envío. Solo aplica en publicMode; el flujo de encuestador no
+    // tiene este estado (submitResponses nunca devuelve "closed").
+    const [linkClosed, setLinkClosed] = useState(false);
     // Cambio de alcance (2026-08-28, Fase 12) — aviso persistente de
     // consentimiento pendiente, visible mientras se aplican las preguntas
     // (no solo antes de S1). `consentPending`/`farmerName` vienen del mismo
     // store que ya alimenta el resto de la sesión de campaña; en modo vista
-    // previa no hay sesión real, así que el banner nunca se muestra ahí.
+    // previa y en publicMode no hay sesión real, así que el banner nunca se
+    // muestra ahí (ambos dejan campaignSessionId sin definir).
     const consentPending = useCampaignSessionStore((s) => s.consentPending);
     const farmerName = useCampaignSessionStore((s) => s.farmerName);
     const setConsent = useCampaignSessionStore((s) => s.setConsent);
@@ -63,6 +84,7 @@ export default function InstrumentQuestionFlow({
         goNext,
         goPrevious,
         submitResponses,
+        submitPublicResponses,
         submitting,
         error,
         clearError,
@@ -204,6 +226,17 @@ export default function InstrumentQuestionFlow({
                 return;
             }
 
+            if (publicMode) {
+                if (!publicConsent) return;
+                const publicResult = await submitPublicResponses(publicConsent);
+                if (publicResult.outcome === "submitted") {
+                    setCompleted(true);
+                } else if (publicResult.outcome === "closed") {
+                    setLinkClosed(true);
+                }
+                return;
+            }
+
             const result = await submitResponses({
                 campaignSessionId,
                 stepOrder,
@@ -242,10 +275,87 @@ export default function InstrumentQuestionFlow({
                 />
             );
         }
+        if (publicMode) {
+            // No reutiliza SurveyCompletedCard: ese componente consulta
+            // useCampaignSessionStore para ofrecer "Continuar con la
+            // siguiente encuesta" — un enlace a /campaign (autenticado) que
+            // no tiene sentido para un visitante anónimo, y que podría
+            // aparecer por error si el mismo navegador tuvo antes una sesión
+            // de encuestador activa. Pantalla final propia, sin enlaces al
+            // sistema interno (criterio de "Puntos delicados", punto 5).
+            return (
+                <section className="w-full max-w-xl mx-auto mt-19 min-h-[calc(100vh-76px)] bg-surface flex flex-col justify-center items-center px-4">
+                    <div className="bg-brand max-w-max p-6 rounded-full text-brand-foreground">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-8"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m4.5 12.75 6 6 9-13.5"
+                            />
+                        </svg>
+                    </div>
+                    <h2 className="font-bold text-3xl mt-6 text-text-primary text-center">
+                        ¡Gracias por responder!
+                    </h2>
+                    <p className="text-text-muted mt-2 px-4 text-center">
+                        Tus respuestas quedaron registradas. El equipo del proyecto
+                        SosAgro 4.C las revisará próximamente.
+                    </p>
+                    <Link
+                        href="/privacidad"
+                        className="text-sm text-brand hover:underline mt-8"
+                    >
+                        Ver política de privacidad
+                    </Link>
+                </section>
+            );
+        }
         return (
             <SurveyCompletedCard
                 campaignSessionId={campaignSessionId}
             />
+        );
+    }
+
+    // Spec 79, criterio 9 — el enlace se cerró mientras se respondía. No
+    // tiene sentido seguir mostrando el formulario: el envío ya no puede
+    // completarse. Reemplaza toda la pantalla, igual que el estado
+    // "completed" de arriba.
+    if (publicMode && linkClosed) {
+        return (
+            <section className="w-full max-w-xl mx-auto mt-19 min-h-[calc(100vh-76px)] bg-surface flex flex-col justify-center items-center px-4 text-center">
+                <div className="bg-[var(--warning-bg)] max-w-max p-6 rounded-full text-[var(--warning-fg)]">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="size-8"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                    </svg>
+                </div>
+                <h2 className="font-bold text-2xl mt-6 text-text-primary">
+                    Esta encuesta ya no está recibiendo respuestas
+                </h2>
+                <p className="text-text-muted mt-2 px-4">
+                    El enlace se cerró mientras respondías. Tus respuestas no se
+                    enviaron. Si crees que esto es un error, contacta a quien te
+                    compartió el enlace.
+                </p>
+            </section>
         );
     }
 
@@ -316,23 +426,28 @@ export default function InstrumentQuestionFlow({
                                     </p>
                                 )}
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => previewMode ? router.push("/admin/instruments") : setShowExitConfirm(true)}
-                                aria-label={previewMode ? "Salir de la vista previa" : "Salir de la encuesta"}
-                                className="shrink-0 p-1.5 rounded-lg text-text-muted hover:text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="size-5"
+                            {/* Spec 79 — sin botón de salida en publicMode: no hay
+                                ninguna ruta del sistema a la que un visitante
+                                anónimo deba (o pueda) volver. */}
+                            {!publicMode && (
+                                <button
+                                    type="button"
+                                    onClick={() => previewMode ? router.push("/admin/instruments") : setShowExitConfirm(true)}
+                                    aria-label={previewMode ? "Salir de la vista previa" : "Salir de la encuesta"}
+                                    className="shrink-0 p-1.5 rounded-lg text-text-muted hover:text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        className="size-5"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
                     </div>
 

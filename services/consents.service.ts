@@ -101,11 +101,14 @@ export function listConsentRecords(filters?: {
   farmerId?: string;
   sessionId?: string;
   consentDocumentId?: string;
+  /** Spec 79 — constancia anclada a una encuesta pública, antes de que exista un farmer. */
+  surveyId?: string;
 }): Promise<ConsentRecord[]> {
   const params = new URLSearchParams();
   if (filters?.farmerId) params.set("farmerId", filters.farmerId);
   if (filters?.sessionId) params.set("sessionId", filters.sessionId);
   if (filters?.consentDocumentId) params.set("consentDocumentId", filters.consentDocumentId);
+  if (filters?.surveyId) params.set("surveyId", filters.surveyId);
   const qs = params.toString();
   return apiClient.get<ConsentRecord[]>(`/api/consents${qs ? `?${qs}` : ""}`, {
     cache: "no-store",
