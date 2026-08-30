@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { CampaignRender } from "@/app/(instrument)/types";
 import { getCampaignRender } from "@/services/campaigns.service";
 import { createSession } from "@/services/campaign-sessions.service";
+import { getFarmerConsentStatus } from "@/services/consents.service";
+import { resolveConsentRequirement } from "@/lib/consents/resolveConsentRequirement";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import PreSurveyForm from "@/components/campaign/PreSurveyForm";
 
@@ -15,6 +17,7 @@ export default function CampaignIntroPage() {
   const router = useRouter();
   const campaignId = params.id;
   const startSession = useCampaignSessionStore((s) => s.startSession);
+  const setConsentPending = useCampaignSessionStore((s) => s.setConsentPending);
 
   const [campaign, setCampaign] = useState<CampaignRender | null>(null);
   const [loadingCampaign, setLoadingCampaign] = useState(true);
@@ -30,7 +33,17 @@ export default function CampaignIntroPage() {
       .finally(() => setLoadingCampaign(false));
   }, [campaignId]);
 
-  async function launchSession(farmerId: string | null) {
+  function navigateToSession(sessionId: string) {
+    router.replace(`/campaign/${campaignId}/session/${sessionId}`);
+  }
+
+  // Cambio de alcance (2026-08-28, Fase 12) — el consentimiento ya no
+  // bloquea el flujo: `launchSession` navega siempre a la sesión. La
+  // resolución de `needsConsent` se conserva íntegra (mismos criterios de
+  // antes), pero ahora solo alimenta `consentPending` en el store, que
+  // `InstrumentQuestionFlow` usa para mostrar el aviso persistente y ofrecer
+  // el `ConsentModal` en cualquier momento — no para decidir la navegación.
+  async function launchSession(farmerId: string | null, farmerName?: string) {
     if (!campaign) return;
     setStep("starting");
     setError(null);
@@ -44,25 +57,36 @@ export default function CampaignIntroPage() {
         campaignId,
         campaignName: campaign.name,
         farmerId,
-        farmerName: null,
+        farmerName: farmerName ?? null,
       });
-      router.replace(`/campaign/${campaignId}/session/${session.sessionId}`);
+
+      // Spec 78 — un encuestado nuevo siempre necesita consentimiento; uno
+      // conocido solo si su última constancia no está vigente para la
+      // versión actualmente publicada.
+      const consentStatus = farmerId ? await getFarmerConsentStatus(farmerId) : null;
+      const needsConsent = resolveConsentRequirement({
+        mode: farmerId ? "existing" : "new",
+        consentStatus,
+      });
+      setConsentPending(needsConsent);
+
+      navigateToSession(session.sessionId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión.");
       setStep("intro");
     }
   }
 
-  function handleSearchSelect(farmerId: string) {
-    launchSession(farmerId);
+  function handleSearchSelect(farmerId: string, farmerName: string) {
+    launchSession(farmerId, farmerName);
   }
 
   function handleNewFarmer() {
     launchSession(null);
   }
 
-  function handleContinueLast(farmerId: string) {
-    launchSession(farmerId);
+  function handleContinueLast(farmerId: string, farmerName: string) {
+    launchSession(farmerId, farmerName);
   }
 
   if (loadingCampaign) {

@@ -129,8 +129,10 @@ const Footer = () => {
             {project.sigpCode}
           </p>
           <div className="flex gap-6">
-            {/* TODO: enlazar páginas de privacidad y términos cuando existan */}
-            <span>Política de privacidad</span>
+            <Link href="/privacidad" className="hover:text-white transition-colors">
+              Política de privacidad
+            </Link>
+            {/* TODO: enlazar términos y condiciones cuando exista esa página */}
             <span>Términos y condiciones</span>
           </div>
         </div>

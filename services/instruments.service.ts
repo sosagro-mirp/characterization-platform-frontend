@@ -71,6 +71,7 @@ export async function getInstrumentForEditor(id: string): Promise<{
   version: number;
   publishDate: string;
   isActive: boolean;
+  isPublic: boolean;
   actorTypes: import("@/app/(admin)/types").ActorTypeSummary[];
   createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
@@ -90,6 +91,7 @@ export async function getInstrumentForEditor(id: string): Promise<{
     version: meta.version,
     publishDate: meta.publishDate,
     isActive: meta.isActive,
+    isPublic: meta.isPublic,
     actorTypes: meta.actorTypes ?? [],
     createdBy: meta.createdBy,
     updatedBy: meta.updatedBy,

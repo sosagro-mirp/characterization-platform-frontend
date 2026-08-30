@@ -9,6 +9,12 @@ import type {
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
 import { createSurvey, submitBatchResponses } from "@/services/surveys.service";
 import { createOption } from "@/services/options.service";
+import { ApiError } from "@/lib/apiClient";
+import { submitPublicSurvey } from "@/services/public-surveys.service";
+import {
+  buildPublicSubmissionPayload,
+  type PublicSurveyConsentInput,
+} from "@/lib/public-surveys/publicSurveyPayload";
 
 interface FlattenedQuestionItem {
   sectionId: string;
@@ -16,6 +22,76 @@ interface FlattenedQuestionItem {
   sectionOrder: number;
   question: InstrumentQuestion;
 }
+
+/**
+ * Compartido por submitResponses (autenticado) y submitPublicResponses
+ * (canal público, spec 79): resuelve las opciones dinámicas de "Otro" antes
+ * de armar el payload de envío. `createOption` es un endpoint @Public() en
+ * el backend, así que funciona igual sin sesión.
+ */
+async function resolveOtherTextAnswers(
+  flattenedQuestions: FlattenedQuestionItem[],
+  answers: Record<string, InstrumentDraftAnswer>,
+): Promise<
+  | { ok: true; answers: Record<string, InstrumentDraftAnswer> }
+  | { ok: false; message: string }
+> {
+  const updatedAnswers = { ...answers };
+
+  for (const { question } of flattenedQuestions) {
+    const answer = answers[question.questionId];
+    if (!answer?.otherText?.trim()) continue;
+
+    const otherOption = question.options.find((o) => o.isOther);
+    if (!otherOption) continue;
+
+    const isMultiple = question.type.name === "multiple_choice";
+    const otherSelected = isMultiple
+      ? (answer.optionIds ?? []).includes(otherOption.optionId)
+      : answer.optionId === otherOption.optionId;
+
+    if (!otherSelected) continue;
+
+    try {
+      const newOption = await createOption(
+        question.questionId,
+        answer.otherText.trim(),
+      );
+      updatedAnswers[question.questionId] = isMultiple
+        ? {
+            ...answer,
+            optionIds: [
+              ...(answer.optionIds ?? []).filter(
+                (id) => id !== otherOption.optionId,
+              ),
+              newOption.optionId,
+            ],
+            otherText: undefined,
+          }
+        : {
+            ...answer,
+            optionId: newOption.optionId,
+            otherText: undefined,
+          };
+    } catch {
+      return {
+        ok: false,
+        message: "Error al guardar la nueva opción. Intenta nuevamente.",
+      };
+    }
+  }
+
+  return { ok: true, answers: updatedAnswers };
+}
+
+// Spec 79 — resultado del envío público. Deliberadamente distinto de
+// SubmitResult: no hay "session_expired" (no hay sesión que expire) y sí
+// "closed", el equivalente a que el enlace se haya desactivado entre la
+// carga del formulario y el envío (criterio 9).
+export type PublicSubmitResult =
+  | { outcome: "submitted"; surveyId: string }
+  | { outcome: "closed" }
+  | { outcome: "error"; message: string };
 
 interface InstrumentSurveyState {
   localId?: string;
@@ -38,6 +114,9 @@ interface InstrumentSurveyState {
   submitResponses: (
     campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
   ) => Promise<SubmitResult>;
+  submitPublicResponses: (
+    consent: PublicSurveyConsentInput,
+  ) => Promise<PublicSubmitResult>;
 }
 
 const initialState = {
@@ -197,50 +276,15 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       set({ submitting: true, error: undefined });
 
-      // Pre-paso: crear opciones dinámicas para respuestas con otherText
-      const updatedAnswers = { ...answers };
-
-      for (const { question } of flattenedQuestions) {
-        const answer = answers[question.questionId];
-        if (!answer?.otherText?.trim()) continue;
-
-        const otherOption = question.options.find((o) => o.isOther);
-        if (!otherOption) continue;
-
-        const isMultiple = question.type.name === "multiple_choice";
-        const otherSelected = isMultiple
-          ? (answer.optionIds ?? []).includes(otherOption.optionId)
-          : answer.optionId === otherOption.optionId;
-
-        if (!otherSelected) continue;
-
-        try {
-          const newOption = await createOption(
-            question.questionId,
-            answer.otherText.trim(),
-          );
-          updatedAnswers[question.questionId] = isMultiple
-            ? {
-                ...answer,
-                optionIds: [
-                  ...(answer.optionIds ?? []).filter(
-                    (id) => id !== otherOption.optionId,
-                  ),
-                  newOption.optionId,
-                ],
-                otherText: undefined,
-              }
-            : {
-                ...answer,
-                optionId: newOption.optionId,
-                otherText: undefined,
-              };
-        } catch (e) {
-          const message = "Error al guardar la nueva opción. Intenta nuevamente.";
-          set({ error: message, submitting: false });
-          return { outcome: "error", message };
-        }
+      const otherTextResult = await resolveOtherTextAnswers(
+        flattenedQuestions,
+        answers,
+      );
+      if (!otherTextResult.ok) {
+        set({ error: otherTextResult.message, submitting: false });
+        return { outcome: "error", message: otherTextResult.message };
       }
+      const updatedAnswers = otherTextResult.answers;
 
       set({ answers: updatedAnswers });
 
@@ -294,6 +338,65 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         }
         const message =
           e instanceof Error ? e.message : "Error al enviar respuestas";
+        set({ error: message, submitting: false });
+        return { outcome: "error", message };
+      }
+    },
+
+    // Spec 79 — envío del canal público: una sola llamada atómica
+    // (instrumento + consentimiento + respuestas), sin crear un survey
+    // aparte primero. No hay campaignContext ni existingSurveyId: el canal
+    // público no tiene sesión de campaña ni permite reanudar un borrador.
+    submitPublicResponses: async (
+      consent: PublicSurveyConsentInput,
+    ): Promise<PublicSubmitResult> => {
+      const { instrumentId, flattenedQuestions, answers } = get();
+
+      if (!instrumentId) {
+        return { outcome: "error", message: "No hay encuesta activa" };
+      }
+
+      set({ submitting: true, error: undefined });
+
+      const otherTextResult = await resolveOtherTextAnswers(
+        flattenedQuestions,
+        answers,
+      );
+      if (!otherTextResult.ok) {
+        set({ error: otherTextResult.message, submitting: false });
+        return { outcome: "error", message: otherTextResult.message };
+      }
+      const updatedAnswers = otherTextResult.answers;
+      set({ answers: updatedAnswers });
+
+      let payload;
+      try {
+        payload = buildPublicSubmissionPayload({
+          instrumentId,
+          consent,
+          answers: updatedAnswers,
+        });
+      } catch (e) {
+        const message =
+          e instanceof Error ? e.message : "No hay respuestas para enviar";
+        set({ error: message, submitting: false });
+        return { outcome: "error", message };
+      }
+
+      try {
+        const result = await submitPublicSurvey(payload);
+        set({ submitting: false, surveyId: result.surveyId });
+        return { outcome: "submitted", surveyId: result.surveyId };
+      } catch (e) {
+        // 403 (enlace cerrado a mitad de camino) y 404 (instrumento ya no
+        // existe/dejó de ser público) se tratan igual del lado del cliente:
+        // ver criterio 9 y resolvePublicSurveyAccess.
+        if (e instanceof ApiError && (e.status === 403 || e.status === 404)) {
+          set({ submitting: false });
+          return { outcome: "closed" };
+        }
+        const message =
+          e instanceof Error ? e.message : "Error al enviar la encuesta";
         set({ error: message, submitting: false });
         return { outcome: "error", message };
       }

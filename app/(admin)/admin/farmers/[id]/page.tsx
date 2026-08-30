@@ -10,6 +10,8 @@ import {
   updateFarmer,
 } from "@/services/farmers.service";
 import { updateFarm } from "@/services/farms.service";
+import { getFarmerConsentStatus } from "@/services/consents.service";
+import type { ConsentStatus } from "@/lib/consents/resolveConsentRequirement";
 import { listCrops } from "@/services/types-of-crops.service";
 import { CropSummary } from "@/app/(instrument)/types";
 import { SurveysTab } from "./SurveysTab";
@@ -30,6 +32,9 @@ export default function EditFarmerPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>("datos");
   const [farmer, setFarmer] = useState<FarmerDetail | null>(null);
+  // Spec 78, Fase 13 — estado exacto de consentimiento (GET /api/farmers/:id
+  // no lo trae; solo el listado GET /api/farmers agrega hasPendingConsent).
+  const [consentStatus, setConsentStatus] = useState<ConsentStatus | null>(null);
   const [crops, setCrops] = useState<CropSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,10 +60,15 @@ export default function EditFarmerPage() {
     let cancelled = false;
     async function load() {
       try {
-        const [f, c] = await Promise.all([getFarmer(id), listCrops()]);
+        const [f, c, consent] = await Promise.all([
+          getFarmer(id),
+          listCrops(),
+          getFarmerConsentStatus(id),
+        ]);
         if (cancelled) return;
         setFarmer(f);
         setCrops(c);
+        setConsentStatus(consent);
         setName(f.name ?? "");
         setDocumentId(f.documentId ?? "");
         setPhone(f.phone ?? "");
@@ -203,6 +213,26 @@ export default function EditFarmerPage() {
             <div className="flex items-center gap-2 rounded-md border border-[var(--success-fg)]/30 bg-[var(--success-bg)] px-3.5 py-2.5 text-sm text-[var(--success-fg)]">
               <Check className="size-4 shrink-0" aria-hidden="true" />
               Los datos del agricultor se actualizaron correctamente.
+            </div>
+          )}
+
+          {/* Spec 78, Fase 13 — estado exacto de consentimiento informado. */}
+          {consentStatus && (
+            <div
+              className={`flex items-center gap-2.5 rounded-md border px-3.5 py-2.5 text-xs ${
+                consentStatus.status === "valid"
+                  ? "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)]"
+                  : "border-[var(--warning-fg)]/30 bg-[var(--warning-bg)] text-[var(--warning-fg)]"
+              }`}
+            >
+              <span className="font-semibold">Consentimiento informado:</span>
+              <span>
+                {consentStatus.status === "valid" && `vigente (v${consentStatus.acceptedVersion})`}
+                {consentStatus.status === "outdated_version" &&
+                  `pendiente — versión aceptada (v${consentStatus.acceptedVersion}) quedó desactualizada`}
+                {consentStatus.status === "revoked" && "pendiente — revocado"}
+                {consentStatus.status === "none" && "pendiente — nunca se registró"}
+              </span>
             </div>
           )}
 

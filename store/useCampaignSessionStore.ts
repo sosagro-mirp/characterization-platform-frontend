@@ -14,6 +14,16 @@ interface CampaignSessionState {
   totalSteps: number;
   completedCount: number;
   preSurveyPhase: PreSurveyPhase;
+  /** Spec 78 — constancia de consentimiento otorgada en esta sesión, si aplicó. */
+  consentRecordId: string | null;
+  consentVersion: string | null;
+  /**
+   * Cambio de alcance (2026-08-28) — el consentimiento ya no bloquea el
+   * flujo; este flag alimenta el aviso persistente en el layout de preguntas
+   * (`InstrumentQuestionFlow`) mientras el encuestado no tenga consentimiento
+   * vigente.
+   */
+  consentPending: boolean;
   startSession: (params: {
     sessionId: string;
     campaignId: string;
@@ -28,6 +38,8 @@ interface CampaignSessionState {
   }) => void;
   setPreSurveyPhase: (phase: PreSurveyPhase) => void;
   setFarmer: (farmerId: string, farmerName: string | null) => void;
+  setConsent: (consentRecordId: string, consentVersion: string) => void;
+  setConsentPending: (pending: boolean) => void;
   clearSession: () => void;
 }
 
@@ -41,6 +53,9 @@ const initial = {
   totalSteps: 0,
   completedCount: 0,
   preSurveyPhase: 'idle' as PreSurveyPhase,
+  consentRecordId: null,
+  consentVersion: null,
+  consentPending: false,
 };
 
 export const useCampaignSessionStore = create<CampaignSessionState>()(
@@ -63,6 +78,9 @@ export const useCampaignSessionStore = create<CampaignSessionState>()(
         set({ preSurveyPhase: phase }),
       setFarmer: (farmerId, farmerName) =>
         set({ farmerId, farmerName }),
+      setConsent: (consentRecordId, consentVersion) =>
+        set({ consentRecordId, consentVersion, consentPending: false }),
+      setConsentPending: (pending) => set({ consentPending: pending }),
       clearSession: () => set(initial),
     }),
     {

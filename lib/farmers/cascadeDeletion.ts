@@ -26,7 +26,8 @@ export function isDeletionConfirmed(
 /**
  * Spec 73 — criterio 10: enumera en español lo que el inventario de borrado
  * contiene, omitiendo los conteos en cero para no inflar el diálogo con
- * líneas vacías.
+ * líneas vacías. Incluye `consentRecords` (spec 78, criterio "borrado en
+ * cascada declara las constancias de consentimiento que se eliminarán").
  */
 export function summarizeDeletionPreview(
   preview: FarmerDeletionPreview,
@@ -55,6 +56,15 @@ export function summarizeDeletionPreview(
   if (counts.relations > 0) {
     lines.push(
       pluralLine(counts.relations, "relación asociada (tecnologías, obstáculos, conexiones)", "relaciones asociadas (tecnologías, obstáculos, conexiones)"),
+    );
+  }
+  if (counts.consentRecords > 0) {
+    lines.push(
+      pluralLine(
+        counts.consentRecords,
+        "constancia de consentimiento informado",
+        "constancias de consentimiento informado",
+      ),
     );
   }
 
