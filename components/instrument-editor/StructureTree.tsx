@@ -1,12 +1,18 @@
 "use client";
 
-import { Plus, Settings } from "lucide-react";
+import { Archive, Plus, Settings } from "lucide-react";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import SectionNode from "./SectionNode";
 
 export default function StructureTree() {
-  const { sections, selection, setSelection, addSection } =
-    useInstrumentEditorStore();
+  const {
+    sections,
+    selection,
+    setSelection,
+    addSection,
+    showArchived,
+    toggleShowArchived,
+  } = useInstrumentEditorStore();
 
   const handleAddSection = () => {
     const nextOrder = sections.length + 1;
@@ -27,6 +33,19 @@ export default function StructureTree() {
         >
           <Settings className="size-3.5 shrink-0" aria-hidden="true" />
           Configuración general
+        </button>
+        <button
+          type="button"
+          onClick={toggleShowArchived}
+          className={`mt-1 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs font-medium transition-colors ${
+            showArchived
+              ? "bg-[var(--surface-muted)] text-[var(--text-primary)]"
+              : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+          }`}
+          title="Spec 84 — muestra preguntas y opciones archivadas"
+        >
+          <Archive className="size-3.5 shrink-0" aria-hidden="true" />
+          {showArchived ? "Ocultar archivadas" : "Mostrar archivadas"}
         </button>
       </div>
 

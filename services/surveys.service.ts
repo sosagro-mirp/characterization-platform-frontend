@@ -28,10 +28,18 @@ export function createSurvey(
   return apiClient.post<CreateSurveyResult>("/api/surveys", payload);
 }
 
-export function extractFarmer(surveyId: string): Promise<ExtractFarmerResult> {
+/**
+ * Spec 68 — un 409 significa colisión de `documentId`: el cuerpo trae
+ * `{ documentId, submittedName, existingFarmer: { farmerId, name } }` y hace
+ * falta reintentar con `resolution` declarada.
+ */
+export function extractFarmer(
+  surveyId: string,
+  resolution?: "same_person" | "separate_person",
+): Promise<ExtractFarmerResult> {
   return apiClient.post<ExtractFarmerResult>(
     `/api/surveys/${surveyId}/extract-farmer`,
-    {},
+    resolution ? { resolution } : {},
   );
 }
 

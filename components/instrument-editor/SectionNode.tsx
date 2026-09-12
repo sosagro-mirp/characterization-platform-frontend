@@ -24,6 +24,7 @@ export default function SectionNode({
     setSelection,
     reorderSection,
     removeSectionFromStore,
+    showArchived,
   } = useInstrumentEditorStore();
 
   const isSelected =
@@ -90,9 +91,16 @@ export default function SectionNode({
           </button>
           <button
             type="button"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              removeSectionFromStore(section.sectionId);
+              try {
+                await removeSectionFromStore(section.sectionId);
+              } catch (err) {
+                // Spec 84 — 409: la sección tiene preguntas con respuestas.
+                // No hay "archivar" a nivel de sección; el mensaje del
+                // backend ya explica qué hacer (archivar sus preguntas).
+                alert(err instanceof Error ? err.message : "No se pudo eliminar la sección.");
+              }
             }}
             className="rounded p-1 text-[var(--danger-fg)] hover:bg-[var(--danger-bg)]"
             title="Eliminar sección"
@@ -105,16 +113,18 @@ export default function SectionNode({
 
       {expanded && (
         <div>
-          {section.questions.map((q, qi) => (
-            <QuestionNode
-              key={q.questionId}
-              question={q}
-              sectionId={section.sectionId}
-              isFirst={qi === 0}
-              isLast={qi === section.questions.length - 1}
-              selection={selection}
-            />
-          ))}
+          {section.questions
+            .filter((q) => showArchived || !q.archivedAt)
+            .map((q, qi, visible) => (
+              <QuestionNode
+                key={q.questionId}
+                question={q}
+                sectionId={section.sectionId}
+                isFirst={qi === 0}
+                isLast={qi === visible.length - 1}
+                selection={selection}
+              />
+            ))}
           <button
             type="button"
             onClick={handleAddQuestion}

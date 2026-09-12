@@ -12,14 +12,40 @@ import {
   overwriteSurvey,
   skipStep,
 } from "@/services/surveys.service";
+import { ApiError } from "@/lib/apiClient";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import CampaignProgress from "@/components/campaign/CampaignProgress";
 import DuplicateDialog from "@/components/campaign/DuplicateDialog";
+import DocumentCollisionDialog from "@/components/campaign/DocumentCollisionDialog";
 
 interface DuplicatePending {
   instrument: { instrumentId: string; name: string; isActive: boolean };
   stepOrder: number;
   duplicateSurveyId: string;
+}
+
+// Spec 68/84 — colisión de documentId detectada al extraer el productor,
+// tanto en el flujo nuevo (Registro, un solo instrumento) como en el legado
+// (S1, cuando S_REG todavía no existe en el backend).
+interface CollisionPending {
+  surveyId: string;
+  submittedName: string;
+  existingFarmerName: string;
+  phase: "registro_pending" | "s1_pending";
+}
+
+interface DocumentCollisionBody {
+  documentId: string;
+  submittedName: string;
+  existingFarmer: { farmerId: string; name: string };
+}
+
+function isDocumentCollision(err: unknown): err is ApiError & { body: DocumentCollisionBody } {
+  return (
+    err instanceof ApiError &&
+    err.status === 409 &&
+    typeof (err.body as { documentId?: unknown })?.documentId === "string"
+  );
 }
 
 export default function CampaignSessionPage() {
@@ -42,14 +68,18 @@ export default function CampaignSessionPage() {
   const [error, setError] = useState<string | null>(null);
   const [duplicatePending, setDuplicatePending] = useState<DuplicatePending | null>(null);
   const [duplicateActionLoading, setDuplicateActionLoading] = useState(false);
+  // Spec 84 — colisión de documentId; el flujo se detiene hasta que el
+  // encuestador elija "misma persona" o "persona distinta".
+  const [collisionPending, setCollisionPending] = useState<CollisionPending | null>(null);
+  const [collisionLoading, setCollisionLoading] = useState(false);
   // Incrementing this triggers the main useEffect to re-run after a skip
   const [forceRetry, setForceRetry] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
 
-    // Don't run the flow while the duplicate dialog is open
-    if (duplicatePending !== null) return;
+    // Don't run the flow while a dialog is open.
+    if (duplicatePending !== null || collisionPending !== null) return;
 
     async function run() {
       try {
@@ -59,6 +89,22 @@ export default function CampaignSessionPage() {
             setPreSurveyPhase("done");
             return;
           }
+          // Spec 84 — S_REG reemplaza a S1+S2 en la pre-encuesta: un solo
+          // instrumento. Si todavía no existe en este backend (no se ha
+          // promovido, ver spec 83/84 Fase 8), se sigue con S1/S2 tal como
+          // funcionaba antes: nadie se queda sin poder trabajar mientras
+          // tanto.
+          try {
+            const registro = await getInstrumentByCode("S_REG");
+            if (cancelled) return;
+            setPreSurveyPhase("registro_pending");
+            router.replace(
+              `/instrument/${registro.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+            return;
+          } catch (err) {
+            if (!(err instanceof ApiError && err.status === 404)) throw err;
+          }
           const s1 = await getInstrumentByCode("S1");
           if (cancelled) return;
           setPreSurveyPhase("s1_pending");
@@ -66,6 +112,44 @@ export default function CampaignSessionPage() {
             `/instrument/${s1.instrumentId}?campaignSessionId=${sessionId}`,
           );
           return;
+        }
+
+        // ── Phase: registro_pending — un solo instrumento (spec 84): al
+        // volver, extrae productor y luego cultivos sobre la misma encuesta ──
+        if (preSurveyPhase === "registro_pending") {
+          const completedSurveyId = searchParams.get("completedSurveyId");
+          if (!completedSurveyId) {
+            const registro = await getInstrumentByCode("S_REG");
+            if (cancelled) return;
+            router.replace(
+              `/instrument/${registro.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+            return;
+          }
+
+          let farmerResult;
+          try {
+            farmerResult = await extractFarmer(completedSurveyId);
+          } catch (err) {
+            if (isDocumentCollision(err)) {
+              if (!cancelled) {
+                setCollisionPending({
+                  surveyId: completedSurveyId,
+                  submittedName: err.body.submittedName,
+                  existingFarmerName: err.body.existingFarmer.name,
+                  phase: "registro_pending",
+                });
+              }
+              return;
+            }
+            throw err;
+          }
+          if (cancelled) return;
+          setFarmer(farmerResult.farmer.id, farmerResult.farmer.name);
+
+          await extractCrops(completedSurveyId);
+          if (cancelled) return;
+          setPreSurveyPhase("done");
         }
 
         // ── Phase: s1_pending — S1 submitted, extract farmer then launch S2 ─
@@ -79,7 +163,23 @@ export default function CampaignSessionPage() {
             );
             return;
           }
-          const result = await extractFarmer(completedSurveyId);
+          let result;
+          try {
+            result = await extractFarmer(completedSurveyId);
+          } catch (err) {
+            if (isDocumentCollision(err)) {
+              if (!cancelled) {
+                setCollisionPending({
+                  surveyId: completedSurveyId,
+                  submittedName: err.body.submittedName,
+                  existingFarmerName: err.body.existingFarmer.name,
+                  phase: "s1_pending",
+                });
+              }
+              return;
+            }
+            throw err;
+          }
           if (cancelled) return;
           setFarmer(result.farmer.id, result.farmer.name);
 
@@ -160,7 +260,7 @@ export default function CampaignSessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // farmerId, campaignId: read from store inside run(), not reactive dependencies.
   // router, setFarmer, setProgress, setPreSurveyPhase: stable references (Zustand/Next.js).
-  }, [sessionId, preSurveyPhase, searchParams, forceRetry, duplicatePending]);
+  }, [sessionId, preSurveyPhase, searchParams, forceRetry, duplicatePending, collisionPending]);
 
   async function handleOverwrite() {
     if (!duplicatePending) return;
@@ -206,6 +306,34 @@ export default function CampaignSessionPage() {
       setDuplicatePending(null);
     } finally {
       setDuplicateActionLoading(false);
+    }
+  }
+
+  async function resolveCollision(resolution: "same_person" | "separate_person") {
+    if (!collisionPending) return;
+    setCollisionLoading(true);
+    try {
+      const result = await extractFarmer(collisionPending.surveyId, resolution);
+      setFarmer(result.farmer.id, result.farmer.name);
+
+      if (collisionPending.phase === "registro_pending") {
+        await extractCrops(collisionPending.surveyId);
+        setPreSurveyPhase("done");
+      } else {
+        const s2 = await getInstrumentByCode("S2");
+        setPreSurveyPhase("s2_pending");
+        setCollisionPending(null);
+        router.replace(
+          `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
+        );
+        return;
+      }
+      setCollisionPending(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al resolver la colisión de documento.");
+      setCollisionPending(null);
+    } finally {
+      setCollisionLoading(false);
     }
   }
 
@@ -266,6 +394,16 @@ export default function CampaignSessionPage() {
           onSkip={handleSkip}
           onCancel={() => router.replace("/campaign")}
           loading={duplicateActionLoading}
+        />
+      )}
+
+      {collisionPending && (
+        <DocumentCollisionDialog
+          submittedName={collisionPending.submittedName}
+          existingFarmerName={collisionPending.existingFarmerName}
+          onSamePerson={() => resolveCollision("same_person")}
+          onSeparatePerson={() => resolveCollision("separate_person")}
+          loading={collisionLoading}
         />
       )}
 
