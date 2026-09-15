@@ -22,6 +22,10 @@ export interface OptionDetail {
   text: string;
   value: number | null;
   isOther: boolean;
+  /** Spec 84 — solo viene poblado desde `getInstrumentForEditor` (editor-structure). */
+  archivedAt?: string | null;
+  /** Spec 84 — cuántas respuestas usan esta opción; solo desde editor-structure. */
+  responseCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,6 +55,10 @@ export interface QuestionDetail {
   options: OptionDetail[];
   conditionQuestionId: string | null;
   conditionValue: string | null;
+  /** Spec 84 — solo viene poblado desde `getInstrumentForEditor` (editor-structure). */
+  archivedAt?: string | null;
+  /** Spec 84 — cuántas respuestas tiene esta pregunta; solo desde editor-structure. */
+  responseCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +83,8 @@ export interface UpdateQuestionRequest {
   order?: number;
   conditionQuestionId?: string | null;
   conditionValue?: string | null;
+  /** Spec 84 — mueve la pregunta a otra sección del mismo instrumento. */
+  targetSectionId?: string;
 }
 
 export interface CopyQuestionResponse {

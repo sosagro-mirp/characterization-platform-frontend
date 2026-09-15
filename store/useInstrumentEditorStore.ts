@@ -21,14 +21,19 @@ import {
   updateSection,
 } from "@/services/sections.service";
 import {
+  archiveQuestion,
   copyQuestionToSection,
   createQuestion,
   deleteQuestion,
+  moveQuestionToSection as moveQuestionToSectionRequest,
+  unarchiveQuestion,
   updateQuestion,
 } from "@/services/questions.service";
 import {
+  archiveOption,
   batchCreateOptions,
   deleteOption,
+  unarchiveOption,
   updateOption,
 } from "@/services/options.service";
 import { SaveStatus } from "@/components/instrument-editor/SaveStatusIndicator";
@@ -54,6 +59,8 @@ interface InstrumentEditorState {
   selection: EditorSelection;
   saveStatus: SaveStatus;
   saveError: string | undefined;
+  /** Spec 84 — muestra preguntas y opciones archivadas en el árbol. */
+  showArchived: boolean;
 
   initialize: (payload: {
     instrumentId: string;
@@ -68,6 +75,7 @@ interface InstrumentEditorState {
   }) => void;
 
   setSelection: (selection: EditorSelection) => void;
+  toggleShowArchived: () => void;
 
   // Instrument
   updateInstrumentMeta: (data: UpdateInstrumentRequest) => Promise<void>;
@@ -92,6 +100,15 @@ interface InstrumentEditorState {
     data: UpdateQuestionRequest
   ) => Promise<void>;
   removeQuestionFromStore: (sectionId: string, questionId: string) => Promise<void>;
+  /** Spec 84 — alternativa a borrar cuando la pregunta ya tiene respuestas. */
+  archiveQuestionInStore: (sectionId: string, questionId: string) => Promise<void>;
+  unarchiveQuestionInStore: (sectionId: string, questionId: string) => Promise<void>;
+  /** Spec 84 — mueve la pregunta a otra sección del mismo instrumento. */
+  moveQuestionToSection: (
+    sourceSectionId: string,
+    questionId: string,
+    targetSectionId: string
+  ) => Promise<void>;
   reorderQuestion: (
     sectionId: string,
     questionId: string,
@@ -107,6 +124,17 @@ interface InstrumentEditorState {
     data: UpdateOptionRequest
   ) => Promise<void>;
   removeOptionFromStore: (
+    questionId: string,
+    sectionId: string,
+    optionId: string
+  ) => Promise<void>;
+  /** Spec 84 — alternativa a borrar cuando la opción ya tiene respuestas. */
+  archiveOptionInStore: (
+    questionId: string,
+    sectionId: string,
+    optionId: string
+  ) => Promise<void>;
+  unarchiveOptionInStore: (
     questionId: string,
     sectionId: string,
     optionId: string
@@ -145,6 +173,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       selection: { kind: "instrument" },
       saveStatus: "idle",
       saveError: undefined,
+      showArchived: false,
 
       initialize: (payload) =>
         set({
@@ -163,6 +192,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
         }),
 
       setSelection: (selection) => set({ selection }),
+      toggleShowArchived: () => set((s) => ({ showArchived: !s.showArchived })),
 
       updateInstrumentMeta: async (data) => {
         await withSave(async () => {
@@ -205,8 +235,12 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
         });
       },
 
+      // Spec 84 — a diferencia del resto de acciones, no usa `withSave`: el
+      // 409 (sección con preguntas respondidas) lo necesita atrapar el
+      // componente para ofrecer archivar en su lugar, y `withSave` no relanza.
       removeSectionFromStore: async (sectionId) => {
-        await withSave(async () => {
+        setSaveStatus("saving");
+        try {
           await deleteSection(get().instrumentId, sectionId);
           set((s) => ({
             sections: s.sections
@@ -214,7 +248,15 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
               .map((sec, i) => ({ ...sec, order: i + 1 })),
             selection: { kind: "instrument" },
           }));
-        });
+          setSaveStatus("saved");
+          setTimeout(() => set({ saveStatus: "idle" }), 2000);
+        } catch (err) {
+          setSaveStatus(
+            "error",
+            err instanceof Error ? err.message : "Error al borrar la sección"
+          );
+          throw err;
+        }
       },
 
       reorderSection: async (sectionId, direction) => {
@@ -369,26 +411,19 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
         });
       },
 
+      // Spec 84 — sin `withSave`: el 409 (pregunta con respuestas o con
+      // dependientes activos) lo necesita atrapar el componente para ofrecer
+      // archivar en su lugar.
+      //
+      // El borrado va primero y es lo único que se envía: si el backend lo
+      // rechaza, no se ha tocado nada ni en el servidor ni en el store. El
+      // backend solo borra si ninguna pregunta no archivada ni ningún paso de
+      // campaña depende de esta; las archivadas que la usaban como condición
+      // pierden `conditionQuestionId` por la FK (`ON DELETE SET NULL`), pero
+      // conservan `conditionValue`. El store replica exactamente eso.
       removeQuestionFromStore: async (sectionId, questionId) => {
-        await withSave(async () => {
-          // Clear conditions on any question that references the one being deleted
-          const allQuestions = get().sections.flatMap((s) => s.questions);
-          const dependents = allQuestions.filter(
-            (q) => q.conditionQuestionId === questionId
-          );
-          await Promise.all(
-            dependents.map((q) => {
-              const depSection = get().sections.find((s) =>
-                s.questions.some((sq) => sq.questionId === q.questionId)
-              );
-              if (!depSection) return Promise.resolve();
-              return updateQuestion(depSection.sectionId, q.questionId, {
-                conditionQuestionId: null,
-                conditionValue: null,
-              });
-            })
-          );
-
+        setSaveStatus("saving");
+        try {
           await deleteQuestion(sectionId, questionId);
 
           set((s) => ({
@@ -398,19 +433,111 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
                 .filter((q) => q.questionId !== questionId)
                 .map((q, i) => ({
                   ...q,
-                  order: i + 1,
+                  // El backend recompacta el orden solo en la sección de origen.
+                  order: sec.sectionId === sectionId ? i + 1 : q.order,
                   conditionQuestionId:
                     q.conditionQuestionId === questionId
                       ? null
                       : q.conditionQuestionId,
-                  conditionValue:
-                    q.conditionQuestionId === questionId
-                      ? null
-                      : q.conditionValue,
                 })),
             })),
             selection: { kind: "section", sectionId },
           }));
+          setSaveStatus("saved");
+          setTimeout(() => set({ saveStatus: "idle" }), 2000);
+        } catch (err) {
+          setSaveStatus(
+            "error",
+            err instanceof Error ? err.message : "Error al borrar la pregunta"
+          );
+          throw err;
+        }
+      },
+
+      archiveQuestionInStore: async (sectionId, questionId) => {
+        setSaveStatus("saving");
+        try {
+          const updated = await archiveQuestion(sectionId, questionId);
+          set((s) => ({
+            sections: s.sections.map((sec) =>
+              sec.sectionId === sectionId
+                ? {
+                    ...sec,
+                    questions: sec.questions.map((q) =>
+                      q.questionId === questionId
+                        ? { ...q, archivedAt: updated.archivedAt }
+                        : q
+                    ),
+                  }
+                : sec
+            ),
+          }));
+          setSaveStatus("saved");
+          setTimeout(() => set({ saveStatus: "idle" }), 2000);
+        } catch (err) {
+          setSaveStatus(
+            "error",
+            err instanceof Error ? err.message : "Error al archivar la pregunta"
+          );
+          throw err;
+        }
+      },
+
+      unarchiveQuestionInStore: async (sectionId, questionId) => {
+        await withSave(async () => {
+          const updated = await unarchiveQuestion(sectionId, questionId);
+          set((s) => ({
+            sections: s.sections.map((sec) =>
+              sec.sectionId === sectionId
+                ? {
+                    ...sec,
+                    questions: sec.questions.map((q) =>
+                      q.questionId === questionId
+                        ? { ...q, archivedAt: updated.archivedAt ?? null }
+                        : q
+                    ),
+                  }
+                : sec
+            ),
+          }));
+        });
+      },
+
+      moveQuestionToSection: async (sourceSectionId, questionId, targetSectionId) => {
+        if (sourceSectionId === targetSectionId) return;
+        await withSave(async () => {
+          const updated = await moveQuestionToSectionRequest(
+            sourceSectionId,
+            questionId,
+            targetSectionId
+          );
+          set((s) => {
+            const source = s.sections.find((sec) => sec.sectionId === sourceSectionId);
+            const original = source?.questions.find((q) => q.questionId === questionId);
+            if (!original) return s;
+            const moved: QuestionDetail = {
+              ...original,
+              ...updated,
+              options: updated.options ?? original.options,
+            };
+            return {
+              sections: s.sections.map((sec) => {
+                if (sec.sectionId === sourceSectionId) {
+                  return {
+                    ...sec,
+                    questions: sec.questions
+                      .filter((q) => q.questionId !== questionId)
+                      .map((q, i) => ({ ...q, order: i + 1 })),
+                  };
+                }
+                if (sec.sectionId === targetSectionId) {
+                  return { ...sec, questions: [...sec.questions, moved] };
+                }
+                return sec;
+              }),
+              selection: { kind: "question", sectionId: targetSectionId, questionId },
+            };
+          });
         });
       },
 
@@ -483,8 +610,11 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
         });
       },
 
+      // Spec 84 — sin `withSave`: el 409 (opción con respuestas) lo necesita
+      // atrapar el componente para ofrecer archivar en su lugar.
       removeOptionFromStore: async (questionId, sectionId, optionId) => {
-        await withSave(async () => {
+        setSaveStatus("saving");
+        try {
           await deleteOption(questionId, optionId);
           set((s) => ({
             sections: s.sections.map((sec) =>
@@ -497,6 +627,77 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
                             ...q,
                             options: q.options.filter(
                               (o) => o.optionId !== optionId
+                            ),
+                          }
+                        : q
+                    ),
+                  }
+                : sec
+            ),
+          }));
+          setSaveStatus("saved");
+          setTimeout(() => set({ saveStatus: "idle" }), 2000);
+        } catch (err) {
+          setSaveStatus(
+            "error",
+            err instanceof Error ? err.message : "Error al borrar la opción"
+          );
+          throw err;
+        }
+      },
+
+      archiveOptionInStore: async (questionId, sectionId, optionId) => {
+        setSaveStatus("saving");
+        try {
+          const updated = await archiveOption(questionId, optionId);
+          set((s) => ({
+            sections: s.sections.map((sec) =>
+              sec.sectionId === sectionId
+                ? {
+                    ...sec,
+                    questions: sec.questions.map((q) =>
+                      q.questionId === questionId
+                        ? {
+                            ...q,
+                            options: q.options.map((o) =>
+                              o.optionId === optionId
+                                ? { ...o, archivedAt: updated.archivedAt }
+                                : o
+                            ),
+                          }
+                        : q
+                    ),
+                  }
+                : sec
+            ),
+          }));
+          setSaveStatus("saved");
+          setTimeout(() => set({ saveStatus: "idle" }), 2000);
+        } catch (err) {
+          setSaveStatus(
+            "error",
+            err instanceof Error ? err.message : "Error al archivar la opción"
+          );
+          throw err;
+        }
+      },
+
+      unarchiveOptionInStore: async (questionId, sectionId, optionId) => {
+        await withSave(async () => {
+          const updated = await unarchiveOption(questionId, optionId);
+          set((s) => ({
+            sections: s.sections.map((sec) =>
+              sec.sectionId === sectionId
+                ? {
+                    ...sec,
+                    questions: sec.questions.map((q) =>
+                      q.questionId === questionId
+                        ? {
+                            ...q,
+                            options: q.options.map((o) =>
+                              o.optionId === optionId
+                                ? { ...o, archivedAt: updated.archivedAt ?? null }
+                                : o
                             ),
                           }
                         : q

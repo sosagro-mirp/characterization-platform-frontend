@@ -55,3 +55,37 @@ export function copyQuestionToSection(
     { sourceQuestionId },
   );
 }
+
+// Spec 84 — "editar en sitio + archivar": una pregunta con respuestas nunca
+// se borra. `deleteQuestion` puede devolver 409 (ver `ApiError.status` en el
+// catch del llamador); estas dos son la alternativa.
+
+export function archiveQuestion(
+  sectionId: string,
+  questionId: string,
+): Promise<QuestionDetail> {
+  return apiClient.patch<QuestionDetail>(
+    `/api/sections/${sectionId}/questions/${questionId}/archive`,
+  );
+}
+
+export function unarchiveQuestion(
+  sectionId: string,
+  questionId: string,
+): Promise<QuestionDetail> {
+  return apiClient.patch<QuestionDetail>(
+    `/api/sections/${sectionId}/questions/${questionId}/unarchive`,
+  );
+}
+
+/** Spec 84 — mueve la pregunta a otra sección del mismo instrumento. */
+export function moveQuestionToSection(
+  sourceSectionId: string,
+  questionId: string,
+  targetSectionId: string,
+): Promise<QuestionDetail> {
+  return apiClient.patch<QuestionDetail>(
+    `/api/sections/${sourceSectionId}/questions/${questionId}`,
+    { targetSectionId },
+  );
+}

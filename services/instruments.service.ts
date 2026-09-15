@@ -77,10 +77,14 @@ export async function getInstrumentForEditor(id: string): Promise<{
   updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   sections: import("@/app/(admin)/types").SectionDetail[];
 }> {
+  // Spec 84 — `/editor-structure` (a diferencia de `/render`, público y que
+  // oculta lo archivado) muestra TODO, con `archivedAt`/`responseCount` por
+  // pregunta y opción: es lo que decide si algo se puede borrar o hay que
+  // archivarlo.
   const [meta, render] = await Promise.all([
     getInstrumentById(id),
     apiClient.get<{ sections?: RenderedSection[] }>(
-      `/api/instruments/${id}/render`,
+      `/api/instruments/${id}/editor-structure`,
       { cache: "no-store" },
     ),
   ]);
