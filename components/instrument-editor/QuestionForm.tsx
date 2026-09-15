@@ -70,7 +70,20 @@ export default function QuestionForm({
     questionTypes.find((t) => t.typeId === typeId)?.name ?? "";
   const showOptions = TYPES_WITH_OPTIONS.includes(currentTypeName);
 
+  // Spec 84 — una pregunta con respuestas no puede cambiar de tipo (una
+  // respuesta de selección y una de sí/no guardan cosas distintas); el
+  // backend lo rechaza con 409, pero bloquearlo aquí evita el viaje y el
+  // desajuste entre el selector y lo que de verdad quedó guardado.
+  const hasResponses = (question.responseCount ?? 0) > 0;
+
   const handleTypeChange = (newTypeId: string) => {
+    if (hasResponses) {
+      alert(
+        "Esta pregunta ya tiene respuestas: no se puede cambiar su tipo. " +
+          "Cree una pregunta nueva con el tipo correcto y archive esta."
+      );
+      return;
+    }
     const newTypeName = questionTypes.find((t) => t.typeId === newTypeId)?.name ?? "";
     const newHasOptions = TYPES_WITH_OPTIONS.includes(newTypeName);
     const currentHasOptions = TYPES_WITH_OPTIONS.includes(currentTypeName);
@@ -161,8 +174,14 @@ export default function QuestionForm({
         </label>
         <select
           value={typeId}
+          disabled={hasResponses}
           onChange={(e) => handleTypeChange(e.target.value)}
-          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
+          title={
+            hasResponses
+              ? "Tiene respuestas: no se puede cambiar el tipo"
+              : undefined
+          }
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)] disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <option value="">Seleccionar tipo…</option>
           {questionTypes.map((t) => (
@@ -171,6 +190,13 @@ export default function QuestionForm({
             </option>
           ))}
         </select>
+        {hasResponses && (
+          <p className="mt-1 text-[10.5px] text-[var(--text-muted)]">
+            Tiene {question.responseCount} respuesta
+            {question.responseCount === 1 ? "" : "s"}: para cambiar el tipo, cree una
+            pregunta nueva y archive esta.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">

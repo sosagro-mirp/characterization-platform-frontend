@@ -44,3 +44,24 @@ export function deleteOption(
     `/api/questions/${questionId}/options/${optionId}`,
   );
 }
+
+// Spec 84 — alternativa a borrar cuando la opción ya tiene respuestas
+// (`deleteOption` devuelve 409 en ese caso).
+
+export function archiveOption(
+  questionId: string,
+  optionId: string,
+): Promise<OptionDetail> {
+  return apiClient.patch<OptionDetail>(
+    `/api/questions/${questionId}/options/${optionId}/archive`,
+  );
+}
+
+export function unarchiveOption(
+  questionId: string,
+  optionId: string,
+): Promise<OptionDetail> {
+  return apiClient.patch<OptionDetail>(
+    `/api/questions/${questionId}/options/${optionId}/unarchive`,
+  );
+}

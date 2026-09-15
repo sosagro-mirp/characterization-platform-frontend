@@ -2,7 +2,11 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { noopStorage } from "@/lib/noopStorage";
 
-type PreSurveyPhase = 'idle' | 's1_pending' | 's2_pending' | 'done';
+// Spec 84 — 'registro_pending' es el flujo nuevo (un solo instrumento
+// S_REG); 's1_pending'/'s2_pending' se conservan para cuando S_REG no está
+// disponible en el backend (respaldo). Un valor persistido antes del spec 84
+// nunca trae 'registro_pending', así que no hace falta migrar el storage.
+type PreSurveyPhase = 'idle' | 'registro_pending' | 's1_pending' | 's2_pending' | 'done';
 
 interface CampaignSessionState {
   sessionId: string | null;

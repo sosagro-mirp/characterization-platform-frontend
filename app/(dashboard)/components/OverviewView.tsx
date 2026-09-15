@@ -62,9 +62,9 @@ function wrapNumericAggregation(
  * fila — nunca los números ilustrativos del mockup:
  * - KPI strip → `/kpis` (sin categoryId → tira de resumen general, D5).
  * - Donut de cultivo + mapa → `/overview` (`byCrop`, `byDepartment`).
- * - Género + edad → `/analytics?categoryId=C1` (S1a: única fuente real de
+ * - Género + edad → `/analytics?categoryId=C1` (S1a/S_REG: fuentes de
  *   `farmer.gender`; `/overview` no expone género, a diferencia de edad).
- * - Etapas de la cadena → `/analytics?categoryId=C3` (S1b·10).
+ * - Etapas de la cadena → `/analytics?categoryId=C3` (S1b/S_REG·10).
  * - Batería Likert ★ consolidada + índice por edad → `/digital-demand`
  *   (D4) — **no** `/analytics` sin más: ningún endpoint de Fase 1-2 agrega
  *   los 130 ítems ★ cruzando instrumentos salvo `/digital-demand`; llamarlo
@@ -141,11 +141,11 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
         <div className={CARD_CLASS}>
-          {cardHeader("Distribución por cultivo", "S1b·4-7 · Dona")}
+          {cardHeader("Distribución por cultivo", "S1b/S_REG·4-7 · Dona")}
           <CropDonut data={overview.byCrop} />
         </div>
         <div className={CARD_CLASS}>
-          {cardHeader("Cobertura geográfica", "S1a·Ubicación · Mapa")}
+          {cardHeader("Cobertura geográfica", "S1a/S_REG·Ubicación · Mapa")}
           {/* D6 (Fase 6): el mapa se muestra siempre — `/department-counts`
               (y aquí `/overview`.byDepartment) ya ignora departmentId/townId
               por diseño del backend (spec 30), así que ocultarlo cuando hay
@@ -158,7 +158,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className={CARD_CLASS}>
-          {cardHeader("Género del productor", "S1a·15")}
+          {cardHeader("Género del productor", "S1a/S_REG·15")}
           {genderQuestion ? (
             <SingleChoiceChart question={genderQuestion} />
           ) : (
@@ -166,7 +166,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
           )}
         </div>
         <div className={CARD_CLASS}>
-          {cardHeader("Rango de edad", "S1a·16 · Histograma")}
+          {cardHeader("Rango de edad", "S1a/S_REG·16 · Histograma")}
           {overview.age ? (
             <NumericChart question={wrapNumericAggregation(overview.age)} />
           ) : (
@@ -174,7 +174,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
           )}
         </div>
         <div className={CARD_CLASS}>
-          {cardHeader("Etapas de la cadena", "S1b·10 · BarrasH")}
+          {cardHeader("Etapas de la cadena", "S1b/S_REG·10 · BarrasH")}
           {chainStageQuestion ? (
             <MultipleChoiceChart question={chainStageQuestion} />
           ) : (
