@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { QuestionDetail } from "@/app/(admin)/types";
 import { EditorSelection, useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
-import { ApiError } from "@/lib/apiClient";
+import { getDeleteQuestionConflict } from "@/lib/instrument-editor/deleteQuestionConflict";
 import {
   Archive,
   ArchiveRestore,
@@ -79,14 +79,21 @@ export default function QuestionNode({
       setShowDeleteWarning(true);
       return;
     }
+    await attemptDelete();
+  };
+
+  // Spec 84 — el store intenta el borrado sin tocar nada antes; si el backend
+  // lo rechaza, el estado queda intacto y el error se relanza aquí.
+  const attemptDelete = async () => {
     try {
       await removeQuestionFromStore(sectionId, question.questionId);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) {
+      if (getDeleteQuestionConflict(err) === "responses") {
         setShowArchiveInstead(true);
-      } else {
-        alert(err instanceof Error ? err.message : "No se pudo eliminar la pregunta.");
       }
+      // Cualquier otro fallo (409 por dependientes o pasos de campaña, red,
+      // 5xx) ya lo muestra `SaveStatusIndicator` con el mensaje del backend:
+      // el store deja `saveStatus = "error"` y `saveError` antes de relanzar.
     }
   };
 
@@ -272,12 +279,12 @@ export default function QuestionNode({
       <ConfirmDialog
         open={showDeleteWarning}
         title="Eliminar pregunta referenciada"
-        description="Las siguientes preguntas usan esta pregunta como condición de visibilidad. Al eliminarla, perderán su condición y siempre serán visibles:"
-        confirmLabel="Eliminar de todas formas"
+        description="Las siguientes preguntas usan esta pregunta como condición de visibilidad. Si alguna no está archivada, no se podrá eliminar: quite antes su condición o archívela. Las archivadas perderán la condición."
+        confirmLabel="Intentar eliminar"
         destructive
-        onConfirm={() => {
+        onConfirm={async () => {
           setShowDeleteWarning(false);
-          removeQuestionFromStore(sectionId, question.questionId);
+          await attemptDelete();
         }}
         onCancel={() => setShowDeleteWarning(false)}
       >

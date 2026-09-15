@@ -12,7 +12,12 @@ import {
   overwriteSurvey,
   skipStep,
 } from "@/services/surveys.service";
-import { ApiError } from "@/lib/apiClient";
+import {
+  CollisionPending,
+  collisionFromError,
+  resolveCollisionFlow,
+  resolveRegistrationStart,
+} from "@/lib/campaign-session/preSurveyFlow";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import CampaignProgress from "@/components/campaign/CampaignProgress";
 import DuplicateDialog from "@/components/campaign/DuplicateDialog";
@@ -22,30 +27,6 @@ interface DuplicatePending {
   instrument: { instrumentId: string; name: string; isActive: boolean };
   stepOrder: number;
   duplicateSurveyId: string;
-}
-
-// Spec 68/84 — colisión de documentId detectada al extraer el productor,
-// tanto en el flujo nuevo (Registro, un solo instrumento) como en el legado
-// (S1, cuando S_REG todavía no existe en el backend).
-interface CollisionPending {
-  surveyId: string;
-  submittedName: string;
-  existingFarmerName: string;
-  phase: "registro_pending" | "s1_pending";
-}
-
-interface DocumentCollisionBody {
-  documentId: string;
-  submittedName: string;
-  existingFarmer: { farmerId: string; name: string };
-}
-
-function isDocumentCollision(err: unknown): err is ApiError & { body: DocumentCollisionBody } {
-  return (
-    err instanceof ApiError &&
-    err.status === 409 &&
-    typeof (err.body as { documentId?: unknown })?.documentId === "string"
-  );
 }
 
 export default function CampaignSessionPage() {
@@ -94,22 +75,12 @@ export default function CampaignSessionPage() {
           // promovido, ver spec 83/84 Fase 8), se sigue con S1/S2 tal como
           // funcionaba antes: nadie se queda sin poder trabajar mientras
           // tanto.
-          try {
-            const registro = await getInstrumentByCode("S_REG");
-            if (cancelled) return;
-            setPreSurveyPhase("registro_pending");
-            router.replace(
-              `/instrument/${registro.instrumentId}?campaignSessionId=${sessionId}`,
-            );
-            return;
-          } catch (err) {
-            if (!(err instanceof ApiError && err.status === 404)) throw err;
-          }
-          const s1 = await getInstrumentByCode("S1");
+          // Decisión extraída a `lib/campaign-session/preSurveyFlow.ts`.
+          const start = await resolveRegistrationStart(getInstrumentByCode);
           if (cancelled) return;
-          setPreSurveyPhase("s1_pending");
+          setPreSurveyPhase(start.phase);
           router.replace(
-            `/instrument/${s1.instrumentId}?campaignSessionId=${sessionId}`,
+            `/instrument/${start.instrumentId}?campaignSessionId=${sessionId}`,
           );
           return;
         }
@@ -131,15 +102,9 @@ export default function CampaignSessionPage() {
           try {
             farmerResult = await extractFarmer(completedSurveyId);
           } catch (err) {
-            if (isDocumentCollision(err)) {
-              if (!cancelled) {
-                setCollisionPending({
-                  surveyId: completedSurveyId,
-                  submittedName: err.body.submittedName,
-                  existingFarmerName: err.body.existingFarmer.name,
-                  phase: "registro_pending",
-                });
-              }
+            const collision = collisionFromError(err, completedSurveyId, "registro_pending");
+            if (collision) {
+              if (!cancelled) setCollisionPending(collision);
               return;
             }
             throw err;
@@ -167,15 +132,9 @@ export default function CampaignSessionPage() {
           try {
             result = await extractFarmer(completedSurveyId);
           } catch (err) {
-            if (isDocumentCollision(err)) {
-              if (!cancelled) {
-                setCollisionPending({
-                  surveyId: completedSurveyId,
-                  submittedName: err.body.submittedName,
-                  existingFarmerName: err.body.existingFarmer.name,
-                  phase: "s1_pending",
-                });
-              }
+            const collision = collisionFromError(err, completedSurveyId, "s1_pending");
+            if (collision) {
+              if (!cancelled) setCollisionPending(collision);
               return;
             }
             throw err;
@@ -313,18 +272,20 @@ export default function CampaignSessionPage() {
     if (!collisionPending) return;
     setCollisionLoading(true);
     try {
-      const result = await extractFarmer(collisionPending.surveyId, resolution);
-      setFarmer(result.farmer.id, result.farmer.name);
+      const outcome = await resolveCollisionFlow(collisionPending, resolution, {
+        extractFarmer,
+        extractCrops,
+        getInstrumentByCode,
+        onFarmer: setFarmer,
+      });
 
-      if (collisionPending.phase === "registro_pending") {
-        await extractCrops(collisionPending.surveyId);
+      if (outcome.phase === "done") {
         setPreSurveyPhase("done");
       } else {
-        const s2 = await getInstrumentByCode("S2");
         setPreSurveyPhase("s2_pending");
         setCollisionPending(null);
         router.replace(
-          `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
+          `/instrument/${outcome.instrumentId}?campaignSessionId=${sessionId}`,
         );
         return;
       }

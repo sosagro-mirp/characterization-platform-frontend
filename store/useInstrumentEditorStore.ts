@@ -411,29 +411,19 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
         });
       },
 
-      // Spec 84 — sin `withSave`: el 409 (pregunta con respuestas) lo
-      // necesita atrapar el componente para ofrecer archivar en su lugar.
+      // Spec 84 — sin `withSave`: el 409 (pregunta con respuestas o con
+      // dependientes activos) lo necesita atrapar el componente para ofrecer
+      // archivar en su lugar.
+      //
+      // El borrado va primero y es lo único que se envía: si el backend lo
+      // rechaza, no se ha tocado nada ni en el servidor ni en el store. El
+      // backend solo borra si ninguna pregunta no archivada ni ningún paso de
+      // campaña depende de esta; las archivadas que la usaban como condición
+      // pierden `conditionQuestionId` por la FK (`ON DELETE SET NULL`), pero
+      // conservan `conditionValue`. El store replica exactamente eso.
       removeQuestionFromStore: async (sectionId, questionId) => {
         setSaveStatus("saving");
         try {
-          // Clear conditions on any question that references the one being deleted
-          const allQuestions = get().sections.flatMap((s) => s.questions);
-          const dependents = allQuestions.filter(
-            (q) => q.conditionQuestionId === questionId
-          );
-          await Promise.all(
-            dependents.map((q) => {
-              const depSection = get().sections.find((s) =>
-                s.questions.some((sq) => sq.questionId === q.questionId)
-              );
-              if (!depSection) return Promise.resolve();
-              return updateQuestion(depSection.sectionId, q.questionId, {
-                conditionQuestionId: null,
-                conditionValue: null,
-              });
-            })
-          );
-
           await deleteQuestion(sectionId, questionId);
 
           set((s) => ({
@@ -443,15 +433,12 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
                 .filter((q) => q.questionId !== questionId)
                 .map((q, i) => ({
                   ...q,
-                  order: i + 1,
+                  // El backend recompacta el orden solo en la sección de origen.
+                  order: sec.sectionId === sectionId ? i + 1 : q.order,
                   conditionQuestionId:
                     q.conditionQuestionId === questionId
                       ? null
                       : q.conditionQuestionId,
-                  conditionValue:
-                    q.conditionQuestionId === questionId
-                      ? null
-                      : q.conditionValue,
                 })),
             })),
             selection: { kind: "section", sectionId },
