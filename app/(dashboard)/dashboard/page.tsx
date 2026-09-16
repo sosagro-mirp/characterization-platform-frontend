@@ -15,6 +15,7 @@ import OverviewView from "../components/OverviewView";
 import CategoryView from "../components/CategoryView";
 import DigitalDemandView from "../components/DigitalDemandView";
 import CategoryInactiveCard from "../components/CategoryInactiveCard";
+import DashboardUnavailableNotice from "../components/DashboardUnavailableNotice";
 
 export const metadata: Metadata = {
   title: "Explorar datos",
@@ -51,6 +52,7 @@ export default async function DashboardPage({
         </Suspense>
 
         <div className="flex-1 p-4 sm:p-6 space-y-4">
+          <DashboardUnavailableNotice />
           <Suspense fallback={<DashboardSkeleton />}>
             <DashboardViewContent state={state} categories={categories} />
           </Suspense>
