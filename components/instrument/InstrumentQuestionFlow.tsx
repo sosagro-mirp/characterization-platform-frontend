@@ -14,6 +14,7 @@ import type {
 import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
+import { isAnswerComplete } from "@/lib/instrument/isAnswerComplete";
 import ConsentModal from "@/components/campaign/ConsentModal";
 import type { PublicSurveyConsentInput } from "@/lib/public-surveys/publicSurveyPayload";
 
@@ -158,46 +159,6 @@ export default function InstrumentQuestionFlow({
         [sections],
     );
     const currentSectionName = currentItem?.sectionName ?? sortedSections[0]?.name ?? "";
-
-    const isAnswerComplete = (question: InstrumentQuestion, answer?: InstrumentDraftAnswer) => {
-        if (!question.isRequired) {
-            return true;
-        }
-
-        if (!answer) {
-            return false;
-        }
-
-        switch (question.type.name) {
-            case "open_text":
-                return Boolean(answer.textValue?.trim());
-            case "numeric":
-                return answer.numericValue !== undefined;
-            case "numeric_with_unit":
-                return answer.numericValue !== undefined && Boolean(answer.optionId);
-            case "yes_no":
-                return answer.booleanValue !== undefined;
-            case "multiple_choice": {
-                const selectedIds = answer.optionIds ?? [];
-                if (selectedIds.length === 0) return false;
-                const otherOption = question.options.find((o) => o.isOther);
-                if (otherOption && selectedIds.includes(otherOption.optionId)) {
-                    return Boolean(answer.otherText?.trim());
-                }
-                return true;
-            }
-            case "single_choice":
-            case "likert":
-                return Boolean(answer.optionId);
-            default:
-                return Boolean(
-                    answer.optionId ||
-                    answer.textValue ||
-                    answer.numericValue !== undefined ||
-                    answer.booleanValue !== undefined,
-                );
-        }
-    };
 
     const handleAnswerChange = (answer: InstrumentDraftAnswer) => {
         setValidationError(undefined);

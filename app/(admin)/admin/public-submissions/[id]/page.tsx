@@ -12,6 +12,7 @@ import {
 import { listConsentRecords, type ConsentRecord } from "@/services/consents.service";
 import type { DocumentCollisionInfo } from "@/app/(admin)/types";
 import type { SurveyResponsesResult } from "@/app/(admin)/types";
+import { formatResponseValue } from "@/lib/responses/formatResponseValue";
 import CollisionResolutionDialog from "@/components/admin/public-submissions/CollisionResolutionDialog";
 
 interface PageProps {
@@ -262,11 +263,7 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
                 </td>
                 <td className="px-3 py-2.5 text-[var(--text-primary)]">{r.questionText}</td>
                 <td className="px-3 py-2.5 text-[var(--text-primary)] font-medium">
-                  {r.optionText ??
-                    r.textValue ??
-                    (r.numericValue !== null ? String(r.numericValue) : null) ??
-                    (r.booleanValue !== null ? (r.booleanValue ? "Sí" : "No") : null) ??
-                    "—"}
+                  {formatResponseValue(r)}
                 </td>
               </tr>
             ))}

@@ -434,6 +434,8 @@ export interface SurveyResponseItem {
   numericValue: number | null;
   booleanValue: boolean | null;
   optionText: string | null;
+  // Spec 86 — la respuesta es a la opción "Otros"; su texto viene en textValue.
+  isOther: boolean;
   publicUrl: string | null;
   mimeType: string | null;
   originalFilename: string | null;

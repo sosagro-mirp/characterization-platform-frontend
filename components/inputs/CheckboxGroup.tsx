@@ -156,7 +156,7 @@ export default function CheckboxGroup({
                                     value={otherText ?? ""}
                                     onChange={(e) => onOtherTextChange?.(e.target.value)}
                                     className="mt-1 ml-10 w-[calc(100%-2.5rem)] border-b border-[var(--border-strong)] bg-transparent px-0 py-1 text-sm focus:outline-none focus:border-brand transition-colors"
-                                    maxLength={50}
+                                    maxLength={255}
                                 />
                             )}
                         </div>
