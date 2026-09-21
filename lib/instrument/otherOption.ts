@@ -5,8 +5,8 @@ import type {
 
 /**
  * Spec 86 — el texto de la opción "Otros" viaja en la propia respuesta
- * (fila de la opción isOther, campo textValue). Mismo límite que la columna
- * text_value del backend para ese caso.
+ * (fila de la opción isOther, campo textValue). Mismo límite que valida el
+ * backend (OTHER_TEXT_MAX_LENGTH en src/responses/other-option.ts).
  */
 export const OTHER_TEXT_MAX_LENGTH = 255;
 

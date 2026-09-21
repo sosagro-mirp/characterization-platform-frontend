@@ -11,10 +11,10 @@ import { formatResponseValue } from "@/lib/responses/formatResponseValue";
  * respuesta (fila de la opción isOther, campo textValue) y el cliente web ya
  * no crea opciones nuevas.
  *
- * ESTAS PRUEBAS NACEN EN ROJO: no existen todavía
- *   - lib/instrument/buildResponsesPayload.ts (se extrae del store),
- *   - lib/instrument/isAnswerComplete.ts (se extrae de InstrumentQuestionFlow),
- *   - lib/responses/formatResponseValue.ts (se extrae de ResponsesAccordion),
+ * Nacieron en rojo con el spec y se pusieron en verde al implementarlo:
+ *   - lib/instrument/buildResponsesPayload.ts (extraído del store),
+ *   - lib/instrument/isAnswerComplete.ts (extraído de InstrumentQuestionFlow),
+ *   - lib/responses/formatResponseValue.ts (extraído de ResponsesAccordion),
  *   - el parámetro `questions` de buildPublicSubmissionPayload,
  *   - `isOther` en SurveyResponseItem.
  *
@@ -131,6 +131,19 @@ describe("spec-086 · buildPublicSubmissionPayload (canal público)", () => {
       ]),
     );
     expect(responses).toHaveLength(3);
+  });
+});
+
+describe("spec-086 · buildPublicSubmissionPayload con una pregunta ausente en `questions`", () => {
+  it("TC-086-W4b · sin la pregunta no puede identificar «Otros»: envía la fila sin texto (no inventa uno)", () => {
+    const { responses } = buildPublicSubmissionPayload({
+      instrumentId: "inst-1",
+      consent: { acceptedDataProcessing: true },
+      answers: { qs: singleAnswer },
+      questions: [qMulti], // qs no está
+    });
+
+    expect(responses).toEqual([{ questionId: "qs", optionId: "qs-other" }]);
   });
 });
 

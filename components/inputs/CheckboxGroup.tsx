@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import QuestionContainer from "@/components/instrument/QuestionContainer";
 import { OPTION_SEARCH_THRESHOLD, normalizeSearchText } from "@/lib/optionSearch";
+import { OTHER_TEXT_MAX_LENGTH } from "@/lib/instrument/otherOption";
 
 interface CheckboxOption {
     id: string;
@@ -156,7 +157,7 @@ export default function CheckboxGroup({
                                     value={otherText ?? ""}
                                     onChange={(e) => onOtherTextChange?.(e.target.value)}
                                     className="mt-1 ml-10 w-[calc(100%-2.5rem)] border-b border-[var(--border-strong)] bg-transparent px-0 py-1 text-sm focus:outline-none focus:border-brand transition-colors"
-                                    maxLength={255}
+                                    maxLength={OTHER_TEXT_MAX_LENGTH}
                                 />
                             )}
                         </div>
