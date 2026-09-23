@@ -434,7 +434,8 @@ export interface SurveyResponseItem {
   numericValue: number | null;
   booleanValue: boolean | null;
   optionText: string | null;
-  publicUrl: string | null;
+  attachmentId: string | null;
+  attachmentStatus: "pending" | "uploaded" | "failed" | null;
   mimeType: string | null;
   originalFilename: string | null;
 }

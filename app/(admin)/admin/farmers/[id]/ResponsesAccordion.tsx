@@ -1,56 +1,7 @@
 "use client";
 
 import type { SurveyResponseItem } from "@/app/(admin)/types";
-
-function MediaValue({ r }: { r: SurveyResponseItem }) {
-  if (!r.publicUrl) {
-    return <span className="text-sm font-medium text-[var(--text-muted)]">Sin evidencia capturada</span>;
-  }
-
-  if (r.questionType === "image") {
-    return (
-      <div className="mt-1 space-y-1">
-        <a href={r.publicUrl} target="_blank" rel="noopener noreferrer">
-          <img
-            src={r.publicUrl}
-            alt={r.originalFilename ?? "imagen"}
-            className="max-h-40 rounded-lg border border-[var(--border)] object-contain"
-          />
-        </a>
-        {r.originalFilename && (
-          <p className="text-xs text-[var(--text-muted)]">{r.originalFilename}</p>
-        )}
-      </div>
-    );
-  }
-
-  if (r.questionType === "voice_recording") {
-    return (
-      <div className="mt-1 space-y-1">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <audio controls src={r.publicUrl} className="w-full" />
-        {r.originalFilename && (
-          <p className="text-xs text-[var(--text-muted)]">{r.originalFilename}</p>
-        )}
-      </div>
-    );
-  }
-
-  if (r.questionType === "document") {
-    return (
-      <a
-        href={r.publicUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand)] underline underline-offset-2"
-      >
-        📄 {r.originalFilename ?? "Abrir documento"}
-      </a>
-    );
-  }
-
-  return <span className="text-sm font-medium text-[var(--text-primary)]">{r.publicUrl}</span>;
-}
+import { MediaEvidence } from "@/components/inputs/MediaAttachmentViewer";
 
 function formatValue(r: SurveyResponseItem): string {
   switch (r.questionType) {
@@ -82,7 +33,7 @@ function formatValue(r: SurveyResponseItem): string {
   }
 }
 
-const MULTIMEDIA_TYPES = new Set(["image", "voice_recording", "document"]);
+const MULTIMEDIA_TYPES = new Set(["image", "voice_recording", "document", "video"]);
 
 export function ResponsesAccordion({
   responses,
@@ -123,7 +74,13 @@ export function ResponsesAccordion({
                   {r.questionText}
                 </p>
                 {MULTIMEDIA_TYPES.has(r.questionType) ? (
-                  <MediaValue r={r} />
+                  <div className="mt-1">
+                    <MediaEvidence
+                      attachmentId={r.attachmentId}
+                      mimeType={r.mimeType}
+                      originalFilename={r.originalFilename}
+                    />
+                  </div>
                 ) : (
                   <p className="text-sm font-medium text-[var(--text-primary)]">
                     {formatValue(r)}

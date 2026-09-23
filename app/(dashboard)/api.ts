@@ -35,7 +35,6 @@ const FILTER_QUERY_KEYS: (keyof DashboardFilters)[] = [
   "ageRange",
   "educationLevel",
   "connectivity",
-  "populationGroup",
   "profile",
   "tenure",
   "chainStage",
