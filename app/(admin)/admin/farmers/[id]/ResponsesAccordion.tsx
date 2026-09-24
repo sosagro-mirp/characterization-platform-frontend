@@ -1,6 +1,7 @@
 "use client";
 
 import type { SurveyResponseItem } from "@/app/(admin)/types";
+import { formatResponseValue } from "@/lib/responses/formatResponseValue";
 
 function MediaValue({ r }: { r: SurveyResponseItem }) {
   if (!r.publicUrl) {
@@ -52,36 +53,6 @@ function MediaValue({ r }: { r: SurveyResponseItem }) {
   return <span className="text-sm font-medium text-[var(--text-primary)]">{r.publicUrl}</span>;
 }
 
-function formatValue(r: SurveyResponseItem): string {
-  switch (r.questionType) {
-    case "yes_no":
-      if (r.booleanValue === true) return "Sí";
-      if (r.booleanValue === false) return "No";
-      return r.optionText ?? "—";
-    case "numeric":
-      return r.numericValue != null ? String(r.numericValue) : "—";
-    case "numeric_with_unit":
-      return r.numericValue != null && r.optionText
-        ? `${r.numericValue} ${r.optionText}`
-        : r.numericValue != null
-          ? String(r.numericValue)
-          : "—";
-    case "open_text":
-      return r.textValue ?? "—";
-    case "single_choice":
-    case "likert":
-    case "compliance":
-    case "multiple_choice":
-      return r.optionText ?? r.textValue ?? "—";
-    default:
-      return (
-        r.textValue ??
-        r.optionText ??
-        (r.numericValue != null ? String(r.numericValue) : "—")
-      );
-  }
-}
-
 const MULTIMEDIA_TYPES = new Set(["image", "voice_recording", "document"]);
 
 export function ResponsesAccordion({
@@ -126,7 +97,7 @@ export function ResponsesAccordion({
                   <MediaValue r={r} />
                 ) : (
                   <p className="text-sm font-medium text-[var(--text-primary)]">
-                    {formatValue(r)}
+                    {formatResponseValue(r)}
                   </p>
                 )}
               </div>
