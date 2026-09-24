@@ -457,6 +457,10 @@ export interface PublicSubmissionListItem {
   createdAt: string;
   responseCount: number;
   reviewStatus: PublicSubmissionReviewStatus;
+  /** Spec 93: opcionales, el backend los entrega cuando puede extraerlos. */
+  farmerName?: string | null;
+  documentId?: string | null;
+  warnings?: { code: string; message?: string }[];
 }
 
 /** Cuerpo del 409 de POST /api/surveys/:id/process-public — colisión de documentId (spec 68). */
