@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getProcessPreview } from "@/services/surveys.service";
-import { listTowns, type TownSummary } from "@/services/towns.service";
+import { listPublicTowns, type TownSummary } from "@/services/towns.service";
 import {
+  describeBlockReason,
   describePreview,
   type FarmMode,
   type ProcessPreview,
@@ -16,6 +17,8 @@ export interface ProcessDecision {
   farmId?: string;
   /** Verdadero cuando el panel cargó y las decisiones obligatorias están completas. */
   ready: boolean;
+  /** Qué falta cuando `ready` es falso (para mostrarlo bajo el botón). */
+  blockReason: string | null;
 }
 
 interface ProcessPreviewPanelProps {
@@ -48,7 +51,9 @@ export function ProcessPreviewPanel({
   const [preview, setPreview] = useState<ProcessPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [towns, setTowns] = useState<TownSummary[]>([]);
+  const [townsError, setTownsError] = useState<string | null>(null);
   const [townId, setTownId] = useState("");
   const [farmMode, setFarmMode] = useState<FarmMode>("create");
   const [farmId, setFarmId] = useState("");
@@ -76,7 +81,13 @@ export function ProcessPreviewPanel({
     return () => {
       cancelled = true;
     };
-  }, [surveyId, townId]);
+  }, [surveyId, townId, reloadKey]);
+
+  const retry = () => {
+    setError(null);
+    setLoading(true);
+    setReloadKey((k) => k + 1);
+  };
 
   const description = useMemo(
     () => (preview ? describePreview(preview) : null),
@@ -87,47 +98,97 @@ export function ProcessPreviewPanel({
   const needsTownList = description?.requiresTown || Boolean(townId);
   useEffect(() => {
     if (!needsTownList || towns.length > 0) return;
-    listTowns()
-      .then(setTowns)
-      .catch(() => setTowns([]));
+    let cancelled = false;
+    listPublicTowns()
+      .then((t) => {
+        if (!cancelled) {
+          setTowns(t);
+          setTownsError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled)
+          setTownsError(
+            "No se pudieron cargar los municipios. Recarga la página para intentarlo de nuevo.",
+          );
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [needsTownList, towns.length]);
 
   const linkableCandidates = description?.farmCandidates.filter(
     (c) => c.source === "farm" && c.farmId,
   );
 
-  const ready =
-    !loading &&
-    !error &&
-    description !== null &&
-    (description.canProcess || Boolean(townId)) &&
-    (farmMode === "create" || Boolean(farmId));
+  // Solo hay decisión de finca cuando el backend va a crear una.
+  const choosingFarm = description?.farmChoiceRequired ?? false;
+  const linkedFarm = description?.linkedFarm ?? null;
+  const effectiveMode: FarmMode = choosingFarm
+    ? farmMode
+    : linkedFarm
+      ? "link"
+      : "create";
+  const effectiveFarmId = choosingFarm
+    ? farmMode === "link" &&
+      linkableCandidates?.some((c) => c.farmId === farmId)
+      ? farmId
+      : undefined
+    : linkedFarm?.farmId;
+
+  const blockReason = error
+    ? "Reintenta la vista previa para poder crear el agricultor."
+    : describeBlockReason({
+        hasPreview: description !== null,
+        loading,
+        requiresTown: description?.requiresTown ?? false,
+        townId: townId || undefined,
+        farmChoiceRequired: choosingFarm,
+        farmMode,
+        farmId: effectiveFarmId,
+      });
+  const ready = blockReason === null;
 
   useEffect(() => {
     onDecisionChange({
       townId: townId || undefined,
-      farmMode,
-      farmId: farmMode === "link" ? farmId || undefined : undefined,
+      farmMode: effectiveMode,
+      farmId: effectiveMode === "link" ? effectiveFarmId : undefined,
       ready,
+      blockReason,
     });
-  }, [townId, farmMode, farmId, ready, onDecisionChange]);
+  }, [
+    townId,
+    effectiveMode,
+    effectiveFarmId,
+    ready,
+    blockReason,
+    onDecisionChange,
+  ]);
 
-  if (error) {
-    return (
-      <p
-        role="alert"
-        className="rounded-md border border-[var(--danger-fg)]/40 bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-fg)]"
+  const errorBox = error ? (
+    <div
+      role="alert"
+      className="flex flex-wrap items-center gap-2 rounded-md border border-[var(--danger-fg)]/40 bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-fg)]"
+    >
+      <span>{error}</span>
+      <button
+        type="button"
+        onClick={retry}
+        className="rounded-md border border-[var(--danger-fg)]/40 px-2 py-1 text-xs font-medium hover:opacity-80"
       >
-        {error}
-      </p>
-    );
-  }
+        Reintentar
+      </button>
+    </div>
+  ) : null;
 
   if (!description || !preview) {
     return (
-      <p className="text-xs text-[var(--text-muted)]" role="status">
-        Cargando vista previa…
-      </p>
+      errorBox ?? (
+        <p className="text-xs text-[var(--text-muted)]" role="status">
+          Cargando vista previa…
+        </p>
+      )
     );
   }
 
@@ -181,13 +242,16 @@ export function ProcessPreviewPanel({
         )}
       </p>
 
-      {description.requiresTown && (
+      {errorBox}
+
+      {(description.requiresTown || Boolean(townId)) && (
         <div className="space-y-1">
           <label
             htmlFor="preview-town"
             className="block text-xs font-medium text-[var(--text-primary)]"
           >
-            Municipio de la finca (obligatorio)
+            Municipio de la finca
+            {description.requiresTown ? " (obligatorio)" : ""}
           </label>
           <select
             id="preview-town"
@@ -205,65 +269,84 @@ export function ProcessPreviewPanel({
               </option>
             ))}
           </select>
+          {townsError && (
+            <p role="alert" className="text-xs text-[var(--danger-fg)]">
+              {townsError}
+            </p>
+          )}
         </div>
       )}
 
-      <fieldset className="space-y-1.5">
-        <legend className="text-xs font-medium text-[var(--text-primary)]">
-          Finca
-        </legend>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
-          <input
-            type="radio"
-            name="farm-mode"
-            checked={farmMode === "create"}
-            onChange={() => setFarmMode("create")}
-          />
-          Crear una finca nueva
-        </label>
-        {description.farmCandidates.length > 0 && (
-          <>
-            <p className="text-xs text-[var(--warning-fg)]">
-              Hay fincas con el mismo nombre y vereda. Por defecto se crea una
-              nueva; vincula solo si es realmente la misma finca.
-            </p>
-            <label className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
-              <input
-                type="radio"
-                name="farm-mode"
-                checked={farmMode === "link"}
-                disabled={!linkableCandidates?.length}
-                onChange={() => setFarmMode("link")}
-              />
-              Vincular a una finca existente
-            </label>
-            <ul className="space-y-1 pl-6 text-xs">
-              {description.farmCandidates.map((c, i) => (
-                <li key={`${c.farmId ?? c.surveyId}-${i}`}>
-                  {c.source === "farm" && c.farmId ? (
-                    <label className="flex items-center gap-2 text-[var(--text-primary)]">
-                      <input
-                        type="radio"
-                        name="farm-candidate"
-                        disabled={farmMode !== "link"}
-                        checked={farmId === c.farmId}
-                        onChange={() => setFarmId(c.farmId as string)}
-                      />
-                      {c.name}
-                      {c.vereda ? ` — ${c.vereda}` : ""}
-                    </label>
-                  ) : (
-                    <span className="text-[var(--text-muted)]">
-                      {c.name}
-                      {c.vereda ? ` — ${c.vereda}` : ""} (otro envío pendiente)
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </fieldset>
+      {choosingFarm ? (
+        <fieldset className="space-y-1.5">
+          <legend className="text-xs font-medium text-[var(--text-primary)]">
+            Finca
+          </legend>
+          <label className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
+            <input
+              type="radio"
+              name="farm-mode"
+              checked={farmMode === "create"}
+              onChange={() => setFarmMode("create")}
+            />
+            Crear una finca nueva
+          </label>
+          {description.farmCandidates.length > 0 && (
+            <>
+              <p className="text-xs text-[var(--warning-fg)]">
+                Hay fincas con el mismo nombre y vereda. Por defecto se crea una
+                nueva; vincula solo si es realmente la misma finca.
+              </p>
+              <label className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
+                <input
+                  type="radio"
+                  name="farm-mode"
+                  checked={farmMode === "link"}
+                  disabled={!linkableCandidates?.length}
+                  onChange={() => setFarmMode("link")}
+                />
+                Vincular a una finca existente
+              </label>
+              <ul className="space-y-1 pl-6 text-xs">
+                {description.farmCandidates.map((c, i) => (
+                  <li key={`${c.farmId ?? c.surveyId}-${i}`}>
+                    {c.source === "farm" && c.farmId ? (
+                      <label className="flex items-center gap-2 text-[var(--text-primary)]">
+                        <input
+                          type="radio"
+                          name="farm-candidate"
+                          disabled={farmMode !== "link"}
+                          checked={farmId === c.farmId}
+                          onChange={() => setFarmId(c.farmId as string)}
+                        />
+                        {c.name}
+                        {c.vereda ? ` — ${c.vereda}` : ""}
+                      </label>
+                    ) : (
+                      <span className="text-[var(--text-muted)]">
+                        {c.name}
+                        {c.vereda ? ` — ${c.vereda}` : ""} (otro envío
+                        pendiente)
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </fieldset>
+      ) : (
+        <div className="text-xs">
+          <p className="font-medium text-[var(--text-primary)]">Finca</p>
+          <p className="text-[var(--text-primary)]">
+            {description.farmAction === "complete"
+              ? "Se completará la finca existente del productor."
+              : description.farmAction === "link"
+                ? `Se vinculará a la finca existente${linkedFarm?.name ? `: ${linkedFarm.name}` : "."}`
+                : "El envío no trae nombre de finca: no se creará ninguna."}
+          </p>
+        </div>
+      )}
 
       <div className="text-xs">
         <p className="font-medium text-[var(--text-primary)]">Cultivos</p>
@@ -300,8 +383,15 @@ export function ProcessPreviewPanel({
           aria-label="Advertencias"
           className="space-y-1 rounded-md border border-[var(--warning-fg)]/30 bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--warning-fg)]"
         >
-          {description.warnings.map((w) => (
-            <li key={w.code}>{w.message}</li>
+          {description.warnings.map((w, i) => (
+            <li key={`${w.code}-${i}`}>
+              {w.message}
+              {w.detail && (
+                <span className="block text-[var(--text-muted)]">
+                  {w.detail}
+                </span>
+              )}
+            </li>
           ))}
         </ul>
       )}

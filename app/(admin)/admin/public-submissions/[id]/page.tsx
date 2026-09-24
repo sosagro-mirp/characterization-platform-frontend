@@ -48,6 +48,7 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
   const [decision, setDecision] = useState<ProcessDecision>({
     farmMode: "create",
     ready: false,
+    blockReason: null,
   });
   const [result, setResult] = useState<{
     farmerId: string;
@@ -279,6 +280,11 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
                 actionState === "discarding" ||
                 !decision.ready
               }
+              aria-describedby={
+                !decision.ready && decision.blockReason
+                  ? "process-block-reason"
+                  : undefined
+              }
               onClick={() => handleProcess()}
               className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover transition-colors disabled:opacity-50"
             >
@@ -292,6 +298,15 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
             >
               Descartar
             </button>
+            {!decision.ready && decision.blockReason && (
+              <p
+                id="process-block-reason"
+                role="status"
+                className="basis-full text-xs text-[var(--text-muted)]"
+              >
+                {decision.blockReason}
+              </p>
+            )}
           </div>
         )}
       </div>
