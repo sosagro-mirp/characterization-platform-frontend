@@ -137,6 +137,8 @@ export default function PublicSubmissionsPage() {
               <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 <tr>
                   <th className="px-3 py-2.5 text-left">Instrumento</th>
+                  <th className="px-3 py-2.5 text-left">Nombre</th>
+                  <th className="px-3 py-2.5 text-left">Documento</th>
                   <th className="px-3 py-2.5 text-left">Recibido</th>
                   <th className="px-3 py-2.5 text-left">Respuestas</th>
                   <th className="px-3 py-2.5 text-left">Estado</th>
@@ -152,6 +154,12 @@ export default function PublicSubmissionsPage() {
                     <td className="px-3 py-2.5 font-medium text-[var(--text-primary)]">
                       {s.instrumentName}
                     </td>
+                    <td className="px-3 py-2.5 text-[var(--text-primary)]">
+                      {s.farmerName ?? "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-[var(--text-muted)]">
+                      {s.documentId ?? "—"}
+                    </td>
                     <td className="px-3 py-2.5 text-[var(--text-muted)]">
                       {dateFormatter.format(new Date(s.createdAt))}
                     </td>
@@ -164,6 +172,15 @@ export default function PublicSubmissionsPage() {
                       >
                         {STATUS_LABEL[s.reviewStatus]}
                       </span>
+                      {s.warnings && s.warnings.length > 0 && (
+                        <span
+                          className="ml-2 inline-flex rounded-full bg-[var(--warning-bg)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--warning-fg)]"
+                          title={s.warnings.map((w) => w.code).join(", ")}
+                        >
+                          {s.warnings.length}{" "}
+                          {s.warnings.length === 1 ? "advertencia" : "advertencias"}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
