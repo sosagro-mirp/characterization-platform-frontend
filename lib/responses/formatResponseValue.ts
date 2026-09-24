@@ -7,12 +7,17 @@ export interface FormattableResponse {
   booleanValue: boolean | null;
 }
 
-/** Número sin notación científica, sin separador de miles y sin ceros sobrantes. */
+const NUMBER_FORMAT = new Intl.NumberFormat("en-US", {
+  useGrouping: false,
+  maximumFractionDigits: 20,
+});
+
+/**
+ * Número determinista (no depende del idioma del navegador): sin notación
+ * científica, sin separador de miles y sin ceros sobrantes.
+ */
 function formatNumber(value: number): string {
-  return value.toLocaleString("fullwide", {
-    useGrouping: false,
-    maximumFractionDigits: 6,
-  });
+  return NUMBER_FORMAT.format(value);
 }
 
 /** Texto legible de una respuesta (ficha del agricultor y bandeja de envíos). */
