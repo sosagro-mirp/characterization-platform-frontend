@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/apiClient";
 export interface TownSummary {
   townId: string;
   name: string;
+  department?: { departmentId: string; name: string };
 }
 
 export function listTowns(departmentId?: string): Promise<TownSummary[]> {

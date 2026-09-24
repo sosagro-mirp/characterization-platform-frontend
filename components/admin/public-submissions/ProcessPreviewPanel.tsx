@@ -265,7 +265,7 @@ export function ProcessPreviewPanel({
             <option value="">Selecciona un municipio…</option>
             {towns.map((t) => (
               <option key={t.townId} value={t.townId}>
-                {t.name}
+                {t.department ? `${t.name} (${t.department.name})` : t.name}
               </option>
             ))}
           </select>

@@ -74,7 +74,7 @@ export interface PreviewDescription {
 
 const WARNING_MESSAGES: Record<string, string> = {
   respondent_not_producer:
-    "La persona que respondió indicó que no es la productora; se usarán los datos del productor declarado.",
+    "Quien respondió no es el productor (perfil declarado: extensionista, técnico u otro rol). El taller no distingue esa persona del productor: si procesas este envío, quedará registrada como productora la persona que respondió. Lo indicado es dejarlo pendiente hasta revisarlo caso a caso.",
   missing_town:
     "El envío no trae el municipio de la finca. Elígelo para poder procesarlo.",
   area_converted: "El área de la finca se convirtió a hectáreas.",
