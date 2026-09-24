@@ -158,7 +158,7 @@ export default function PublicSubmissionsPage() {
                       {s.farmerName ?? "—"}
                     </td>
                     <td className="px-3 py-2.5 text-[var(--text-muted)]">
-                      {s.documentId ?? "—"}
+                      {s.farmerDocumentId ?? "—"}
                     </td>
                     <td className="px-3 py-2.5 text-[var(--text-muted)]">
                       {dateFormatter.format(new Date(s.createdAt))}

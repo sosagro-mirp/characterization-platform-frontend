@@ -459,7 +459,7 @@ export interface PublicSubmissionListItem {
   reviewStatus: PublicSubmissionReviewStatus;
   /** Spec 93: opcionales, el backend los entrega cuando puede extraerlos. */
   farmerName?: string | null;
-  documentId?: string | null;
+  farmerDocumentId?: string | null;
   warnings?: { code: string; message?: string }[];
 }
 
