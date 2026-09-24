@@ -46,7 +46,11 @@ export interface ProcessPreview {
 export interface PreviewWarning {
   code: string;
   message: string;
+  /** Detalle del backend (campo recortado, área original, etc.), si aporta algo. */
+  detail?: string;
 }
+
+export type FarmAction = ProcessPreview["farm"]["action"];
 
 export interface PreviewDescription {
   outcome: "new_farmer" | "existing_farmer";
@@ -55,6 +59,12 @@ export interface PreviewDescription {
   requiresResolution: boolean;
   requiresTown: boolean;
   defaultFarmMode: FarmMode;
+  /** Qué hará el backend con la finca (`farm.action`). */
+  farmAction: FarmAction;
+  /** Solo con `create` hay algo que elegir (crear o vincular). */
+  farmChoiceRequired: boolean;
+  /** Finca a la que se vinculará cuando el backend ya anuncia `link`. */
+  linkedFarm: { farmId: string; name: string | null } | null;
   farmCandidates: ProcessPreview["farm"]["sharedCandidates"];
   crops: string[];
   unmappedCrops: string[];
@@ -78,11 +88,21 @@ const WARNING_MESSAGES: Record<string, string> = {
     "Hay otro envío pendiente con este mismo documento.",
 };
 
-function warningMessage(code: string, message?: string): string {
+function describeWarning(code: string, message?: string): PreviewWarning {
+  const usable = message && !message.includes("_") ? message : undefined;
   const known = WARNING_MESSAGES[code];
-  if (known) return known;
-  if (message && !message.includes("_")) return message;
-  return "Advertencia sin descripción; revisa las respuestas del envío.";
+  if (known) {
+    return {
+      code,
+      message: known,
+      ...(usable && usable !== known ? { detail: usable } : {}),
+    };
+  }
+  return {
+    code,
+    message:
+      usable ?? "Advertencia sin descripción; revisa las respuestas del envío.",
+  };
 }
 
 export function describePreview(preview: ProcessPreview): PreviewDescription {
@@ -98,16 +118,25 @@ export function describePreview(preview: ProcessPreview): PreviewDescription {
     requiresResolution: preview.document.status === "collision",
     requiresTown,
     defaultFarmMode: "create",
+    farmAction: preview.farm.action,
+    farmChoiceRequired: preview.farm.action === "create",
+    linkedFarm:
+      preview.farm.action === "link" && preview.farm.farmId
+        ? {
+            farmId: preview.farm.farmId,
+            name:
+              preview.farm.sharedCandidates.find(
+                (c) => c.farmId === preview.farm.farmId,
+              )?.name ?? null,
+          }
+        : null,
     farmCandidates: preview.farm.sharedCandidates,
     crops: preview.crops.resolved.map((c) => c.name),
     unmappedCrops: preview.crops.unmapped,
     fieldsToComplete: preview.fieldsToComplete.map(
       (f) => `${f.entity}.${f.field}`,
     ),
-    warnings: preview.warnings.map((w) => ({
-      code: w.code,
-      message: warningMessage(w.code, w.message),
-    })),
+    warnings: preview.warnings.map((w) => describeWarning(w.code, w.message)),
   };
 }
 
@@ -133,4 +162,26 @@ export function buildProcessBody(input: {
   if (input.townId) body.townId = input.townId;
   if (input.resolution) body.resolution = input.resolution;
   return body;
+}
+
+/** Motivo por el que "Crear agricultor" está deshabilitado, o `null` si no falta nada. */
+export function describeBlockReason(input: {
+  hasPreview: boolean;
+  loading: boolean;
+  requiresTown: boolean;
+  townId?: string;
+  farmChoiceRequired: boolean;
+  farmMode: FarmMode;
+  farmId?: string;
+}): string | null {
+  if (!input.hasPreview || input.loading) {
+    return "Espera a que termine de cargar la vista previa.";
+  }
+  if (input.requiresTown && !input.townId) {
+    return "Elige el municipio de la finca para poder crear el agricultor.";
+  }
+  if (input.farmChoiceRequired && input.farmMode === "link" && !input.farmId) {
+    return "Elige la finca existente a la que se vinculará el envío.";
+  }
+  return null;
 }
