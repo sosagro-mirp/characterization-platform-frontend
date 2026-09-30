@@ -1,5 +1,9 @@
 import { apiClient } from "@/lib/apiClient";
 import type {
+  ProcessBody,
+  ProcessPreview,
+} from "@/lib/public-submissions/processPreview";
+import type {
   CreateResponsePayload,
   DuplicateCheckResult,
   ExtractCropsResult,
@@ -115,18 +119,34 @@ export function getPublicSubmissions(filters?: {
 }
 
 /**
- * Reutiliza extractFarmer del lado del backend (incluida la detección de
- * colisiones del spec 68): un 409 con { documentId, submittedName,
- * existingFarmer } significa que hace falta declarar `resolution` para
- * continuar.
+ * Vista previa de solo lectura de lo que haría `process-public` (spec 93).
+ * `townId` simula la elección del municipio cuando el envío no lo trae.
+ */
+export function getProcessPreview(
+  surveyId: string,
+  options: { townId?: string } = {},
+): Promise<ProcessPreview> {
+  const qs = options.townId
+    ? `?townId=${encodeURIComponent(options.townId)}`
+    : "";
+  return apiClient.get<ProcessPreview>(
+    `/api/surveys/${surveyId}/process-preview${qs}`,
+  );
+}
+
+/**
+ * Procesa un envío público (incluida la detección de colisiones del spec 68):
+ * un 409 con { documentId, submittedName, existingFarmer } significa que hace
+ * falta declarar `resolution` para continuar. `existed` indica si el
+ * productor ya existía (misma persona).
  */
 export function processPublicSubmission(
   surveyId: string,
-  resolution?: "same_person" | "separate_person",
+  body: ProcessBody,
 ): Promise<ExtractFarmerResult> {
   return apiClient.post<ExtractFarmerResult>(
     `/api/surveys/${surveyId}/process-public`,
-    resolution ? { resolution } : {},
+    body,
   );
 }
 
