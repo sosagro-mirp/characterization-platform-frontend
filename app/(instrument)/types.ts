@@ -13,15 +13,6 @@ export type QuestionTypeName =
   | "video"
   | (string & {});
 
-export interface MediaAttachment {
-  attachmentId: string;
-  publicUrl: string;
-  originalFilename: string;
-  mimeType: string;
-  fileSizeBytes: number;
-  status: "pending" | "uploaded" | "failed";
-}
-
 export interface InstrumentType {
   typeId: string;
   name: QuestionTypeName;
@@ -58,8 +49,9 @@ export interface InstrumentDraftAnswer {
   numericValue?: number;
   booleanValue?: boolean;
   otherText?: string;
-  // Multimedia — solo lectura en web; capturado en mobile y subido a R2
-  publicUrl?: string;
+  // Multimedia — solo lectura en web; capturado en mobile y subido a R2.
+  // La evidencia se resuelve por URL firmada a partir de `attachmentId` (spec 85).
+  attachmentId?: string;
   mimeType?: string;
   originalFilename?: string;
 }
