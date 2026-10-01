@@ -436,7 +436,8 @@ export interface SurveyResponseItem {
   optionText: string | null;
   // Spec 86 — la respuesta es a la opción "Otros"; su texto viene en textValue.
   isOther: boolean;
-  publicUrl: string | null;
+  attachmentId: string | null;
+  attachmentStatus: "pending" | "uploaded" | "failed" | null;
   mimeType: string | null;
   originalFilename: string | null;
 }
@@ -459,6 +460,10 @@ export interface PublicSubmissionListItem {
   createdAt: string;
   responseCount: number;
   reviewStatus: PublicSubmissionReviewStatus;
+  /** Spec 93: opcionales, el backend los entrega cuando puede extraerlos. */
+  farmerName?: string | null;
+  farmerDocumentId?: string | null;
+  warnings?: { code: string; message?: string }[];
 }
 
 /** Cuerpo del 409 de POST /api/surveys/:id/process-public — colisión de documentId (spec 68). */

@@ -30,7 +30,6 @@ const VALUE_FILTERS: { paramKey: string; prefix: string }[] = [
   { paramKey: "ageRange", prefix: "Edad" },
   { paramKey: "educationLevel", prefix: "Nivel educativo" },
   { paramKey: "connectivity", prefix: "Conectividad" },
-  { paramKey: "populationGroup", prefix: "Grupo poblacional" },
   { paramKey: "profile", prefix: "Perfil" },
   { paramKey: "tenure", prefix: "Tenencia" },
   { paramKey: "chainStage", prefix: "Etapa" },

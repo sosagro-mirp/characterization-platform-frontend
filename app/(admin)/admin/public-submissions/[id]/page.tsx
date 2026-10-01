@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ApiError } from "@/lib/apiClient";
@@ -14,6 +14,11 @@ import type { DocumentCollisionInfo } from "@/app/(admin)/types";
 import type { SurveyResponsesResult } from "@/app/(admin)/types";
 import { formatResponseValue } from "@/lib/responses/formatResponseValue";
 import CollisionResolutionDialog from "@/components/admin/public-submissions/CollisionResolutionDialog";
+import {
+  ProcessPreviewPanel,
+  type ProcessDecision,
+} from "@/components/admin/public-submissions/ProcessPreviewPanel";
+import { buildProcessBody } from "@/lib/public-submissions/processPreview";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -40,6 +45,19 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [collision, setCollision] = useState<DocumentCollisionInfo | null>(null);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [decision, setDecision] = useState<ProcessDecision>({
+    farmMode: "create",
+    ready: false,
+    blockReason: null,
+  });
+  const [result, setResult] = useState<{
+    farmerId: string;
+    existed: boolean;
+  } | null>(null);
+  const handleDecisionChange = useCallback(
+    (d: ProcessDecision) => setDecision(d),
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +91,16 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
     setActionState("processing");
     setActionError(null);
     try {
-      await processPublicSubmission(id, resolution);
+      const res = await processPublicSubmission(
+        id,
+        buildProcessBody({
+          townId: decision.townId,
+          farmMode: decision.farmMode,
+          farmId: decision.farmId,
+          resolution,
+        }),
+      );
+      setResult({ farmerId: res.farmer.id, existed: res.existed });
       setCollision(null);
       setActionState("processed");
     } catch (err) {
@@ -162,8 +189,21 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
         <div className="rounded-md border border-[var(--success-fg)]/30 bg-[var(--success-bg)] px-3 py-2 text-sm text-[var(--success-fg)] flex items-center justify-between gap-3">
           <span>
             {actionState === "processed"
-              ? "El envío fue procesado: el agricultor quedó creado o vinculado."
+              ? result?.existed
+                ? "El envío se vinculó a un productor que ya existía."
+                : "El envío fue procesado: se creó un productor nuevo."
               : "El envío fue descartado. Sus respuestas se conservan, pero salió de la bandeja de pendientes."}
+            {actionState === "processed" && result?.farmerId && (
+              <>
+                {" "}
+                <Link
+                  href={`/admin/farmers/${result.farmerId}`}
+                  className="font-medium underline"
+                >
+                  Ver ficha del productor
+                </Link>
+              </>
+            )}
           </span>
           <button
             type="button"
@@ -225,10 +265,26 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
         </div>
 
         {!isResolved && (
+          <ProcessPreviewPanel
+            surveyId={id}
+            onDecisionChange={handleDecisionChange}
+          />
+        )}
+
+        {!isResolved && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <button
               type="button"
-              disabled={actionState === "processing" || actionState === "discarding"}
+              disabled={
+                actionState === "processing" ||
+                actionState === "discarding" ||
+                !decision.ready
+              }
+              aria-describedby={
+                !decision.ready && decision.blockReason
+                  ? "process-block-reason"
+                  : undefined
+              }
               onClick={() => handleProcess()}
               className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-hover transition-colors disabled:opacity-50"
             >
@@ -242,6 +298,15 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
             >
               Descartar
             </button>
+            {!decision.ready && decision.blockReason && (
+              <p
+                id="process-block-reason"
+                role="status"
+                className="basis-full text-xs text-[var(--text-muted)]"
+              >
+                {decision.blockReason}
+              </p>
+            )}
           </div>
         )}
       </div>

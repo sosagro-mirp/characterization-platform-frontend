@@ -15,7 +15,6 @@ export interface DashboardFilters {
   ageRange?: string;
   educationLevel?: string;
   connectivity?: string;
-  populationGroup?: string;
   profile?: string;
   tenure?: string;
   chainStage?: string;

@@ -194,7 +194,8 @@ describe("spec-086 · formatResponseValue (admin)", () => {
     booleanValue: null,
     optionText: "Otros",
     isOther: false,
-    publicUrl: null,
+    attachmentId: null,
+    attachmentStatus: null,
     mimeType: null,
     originalFilename: null,
   } as SurveyResponseItem;
