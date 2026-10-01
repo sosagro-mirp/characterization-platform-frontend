@@ -12,13 +12,13 @@ import {
 import { listConsentRecords, type ConsentRecord } from "@/services/consents.service";
 import type { DocumentCollisionInfo } from "@/app/(admin)/types";
 import type { SurveyResponsesResult } from "@/app/(admin)/types";
+import { formatResponseValue } from "@/lib/responses/formatResponseValue";
 import CollisionResolutionDialog from "@/components/admin/public-submissions/CollisionResolutionDialog";
 import {
   ProcessPreviewPanel,
   type ProcessDecision,
 } from "@/components/admin/public-submissions/ProcessPreviewPanel";
 import { buildProcessBody } from "@/lib/public-submissions/processPreview";
-import { formatResponseValue } from "@/lib/responses/formatResponseValue";
 
 interface PageProps {
   params: Promise<{ id: string }>;

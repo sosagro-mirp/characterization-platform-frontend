@@ -5,6 +5,8 @@ export interface FormattableResponse {
   optionText: string | null;
   textValue: string | null;
   booleanValue: boolean | null;
+  /** Spec 86 — la respuesta es a la opción "Otros"; su texto viene en `textValue`. */
+  isOther?: boolean;
 }
 
 const NUMBER_FORMAT = new Intl.NumberFormat("en-US", {
@@ -20,8 +22,20 @@ function formatNumber(value: number): string {
   return NUMBER_FORMAT.format(value);
 }
 
-/** Texto legible de una respuesta (ficha del agricultor y bandeja de envíos). */
+/**
+ * Texto legible de una respuesta (ficha del agricultor y bandeja de envíos).
+ *
+ * Spec 86 — una respuesta a la opción isOther se muestra como
+ * "{opción}: {texto}" (ej. "Otros: Pozo profundo"), o solo con el nombre de la
+ * opción si no trae texto.
+ */
 export function formatResponseValue(r: FormattableResponse): string {
+  if (r.isOther) {
+    const label = r.optionText ?? "Otros";
+    const otherText = r.textValue?.trim();
+    return otherText ? `${label}: ${otherText}` : label;
+  }
+
   switch (r.questionType) {
     case "yes_no":
       if (r.booleanValue === true) return "Sí";

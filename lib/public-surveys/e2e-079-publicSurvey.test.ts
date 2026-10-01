@@ -118,6 +118,7 @@ describe("buildPublicSubmissionPayload — el envío es uno solo y va completo",
       instrumentId: INSTRUMENT_ID,
       consent: acceptedConsent,
       answers,
+      questions: [],
     });
 
     expect(payload.instrumentId).toBe(INSTRUMENT_ID);
@@ -131,6 +132,7 @@ describe("buildPublicSubmissionPayload — el envío es uno solo y va completo",
         instrumentId: INSTRUMENT_ID,
         consent: { ...acceptedConsent, acceptedDataProcessing: false },
         answers,
+        questions: [],
       }),
     ).toThrow(/tratamiento de datos/i);
   });
@@ -149,6 +151,7 @@ describe("buildPublicSubmissionPayload — el envío es uno solo y va completo",
           attachmentId: "550e8400-e29b-41d4-a716-4466554400bb",
         } as unknown as (typeof answers)["q-1"],
       },
+      questions: [],
     });
 
     expect(
@@ -161,6 +164,7 @@ describe("buildPublicSubmissionPayload — el envío es uno solo y va completo",
       instrumentId: INSTRUMENT_ID,
       consent: acceptedConsent,
       answers,
+      questions: [],
     });
 
     expect(payload).not.toHaveProperty("campaignSessionId");
@@ -173,6 +177,7 @@ describe("buildPublicSubmissionPayload — el envío es uno solo y va completo",
       instrumentId: INSTRUMENT_ID,
       consent: acceptedConsent,
       answers: { ...answers, "q-4": { questionId: "q-4" } },
+      questions: [],
     });
 
     expect(payload.responses.map((r) => r.questionId)).toEqual(["q-1", "q-2"]);
@@ -184,6 +189,7 @@ describe("buildPublicSubmissionPayload — el envío es uno solo y va completo",
         instrumentId: INSTRUMENT_ID,
         consent: acceptedConsent,
         answers: {},
+        questions: [],
       }),
     ).toThrow(/respuesta/i);
   });
