@@ -3,86 +3,20 @@ import type {
   CreateResponsePayload,
   InitializeSurveyPayload,
   InstrumentDraftAnswer,
-  InstrumentQuestion,
   SubmitResult,
 } from "@/app/(instrument)/types";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
+import {
+  buildResponsesPayload as buildResponsesPayloadFromAnswers,
+  type FlattenedQuestionItem,
+} from "@/lib/instrument/buildResponsesPayload";
 import { createSurvey, submitBatchResponses } from "@/services/surveys.service";
-import { createOption } from "@/services/options.service";
 import { ApiError } from "@/lib/apiClient";
 import { submitPublicSurvey } from "@/services/public-surveys.service";
 import {
   buildPublicSubmissionPayload,
   type PublicSurveyConsentInput,
 } from "@/lib/public-surveys/publicSurveyPayload";
-
-interface FlattenedQuestionItem {
-  sectionId: string;
-  sectionName: string;
-  sectionOrder: number;
-  question: InstrumentQuestion;
-}
-
-/**
- * Compartido por submitResponses (autenticado) y submitPublicResponses
- * (canal público, spec 79): resuelve las opciones dinámicas de "Otro" antes
- * de armar el payload de envío. `createOption` es un endpoint @Public() en
- * el backend, así que funciona igual sin sesión.
- */
-async function resolveOtherTextAnswers(
-  flattenedQuestions: FlattenedQuestionItem[],
-  answers: Record<string, InstrumentDraftAnswer>,
-): Promise<
-  | { ok: true; answers: Record<string, InstrumentDraftAnswer> }
-  | { ok: false; message: string }
-> {
-  const updatedAnswers = { ...answers };
-
-  for (const { question } of flattenedQuestions) {
-    const answer = answers[question.questionId];
-    if (!answer?.otherText?.trim()) continue;
-
-    const otherOption = question.options.find((o) => o.isOther);
-    if (!otherOption) continue;
-
-    const isMultiple = question.type.name === "multiple_choice";
-    const otherSelected = isMultiple
-      ? (answer.optionIds ?? []).includes(otherOption.optionId)
-      : answer.optionId === otherOption.optionId;
-
-    if (!otherSelected) continue;
-
-    try {
-      const newOption = await createOption(
-        question.questionId,
-        answer.otherText.trim(),
-      );
-      updatedAnswers[question.questionId] = isMultiple
-        ? {
-            ...answer,
-            optionIds: [
-              ...(answer.optionIds ?? []).filter(
-                (id) => id !== otherOption.optionId,
-              ),
-              newOption.optionId,
-            ],
-            otherText: undefined,
-          }
-        : {
-            ...answer,
-            optionId: newOption.optionId,
-            otherText: undefined,
-          };
-    } catch {
-      return {
-        ok: false,
-        message: "Error al guardar la nueva opción. Intenta nuevamente.",
-      };
-    }
-  }
-
-  return { ok: true, answers: updatedAnswers };
-}
 
 // Spec 79 — resultado del envío público. Deliberadamente distinto de
 // SubmitResult: no hay "session_expired" (no hay sesión que expire) y sí
@@ -211,6 +145,9 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
     resetSurvey: () => set(initialState),
 
+    // Spec 86 — la lógica vive en lib/instrument/buildResponsesPayload
+    // (función pura); la fila de "Otros" ya lleva su texto en textValue, así
+    // que no se crean opciones nuevas antes del envío.
     buildResponsesPayload: () => {
       const { surveyId, flattenedQuestions, answers } = get();
 
@@ -218,75 +155,19 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         return [];
       }
 
-      const payload: CreateResponsePayload[] = [];
-
-      flattenedQuestions
-        .filter(({ question }) => isQuestionVisible(question, answers))
-        .forEach(({ question }) => {
-          const answer = answers[question.questionId];
-
-          if (!answer) {
-            return;
-          }
-
-          if (question.type.name === "multiple_choice") {
-            const selectedOptionIds = answer.optionIds ?? [];
-
-            selectedOptionIds.forEach((optionId) => {
-              payload.push({
-                surveyId,
-                questionId: question.questionId,
-                optionId,
-              });
-            });
-
-            return;
-          }
-
-          const trimmedText = answer.textValue?.trim();
-          const item = {
-            surveyId,
-            questionId: answer.questionId,
-            ...(answer.optionId !== undefined && { optionId: answer.optionId }),
-            ...(trimmedText ? { textValue: trimmedText } : {}),
-            ...(answer.numericValue !== undefined && { numericValue: answer.numericValue }),
-            ...(answer.booleanValue !== undefined && { booleanValue: answer.booleanValue }),
-          };
-
-          const hasValue =
-            "optionId" in item ||
-            "textValue" in item ||
-            "numericValue" in item ||
-            "booleanValue" in item;
-
-          if (hasValue) payload.push(item);
-        });
-
-      return payload;
+      return buildResponsesPayloadFromAnswers(surveyId, flattenedQuestions, answers);
     },
 
     submitResponses: async (
       campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
     ): Promise<SubmitResult> => {
-      const { instrumentId, flattenedQuestions, answers, buildResponsesPayload } = get();
+      const { instrumentId, buildResponsesPayload } = get();
 
       if (!instrumentId) {
         return { outcome: "error", message: "No hay encuesta activa" };
       }
 
       set({ submitting: true, error: undefined });
-
-      const otherTextResult = await resolveOtherTextAnswers(
-        flattenedQuestions,
-        answers,
-      );
-      if (!otherTextResult.ok) {
-        set({ error: otherTextResult.message, submitting: false });
-        return { outcome: "error", message: otherTextResult.message };
-      }
-      const updatedAnswers = otherTextResult.answers;
-
-      set({ answers: updatedAnswers });
 
       // Obtener surveyId: usar el existente (overwrite) o crear uno nuevo
       let surveyId: string;
@@ -358,23 +239,13 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       set({ submitting: true, error: undefined });
 
-      const otherTextResult = await resolveOtherTextAnswers(
-        flattenedQuestions,
-        answers,
-      );
-      if (!otherTextResult.ok) {
-        set({ error: otherTextResult.message, submitting: false });
-        return { outcome: "error", message: otherTextResult.message };
-      }
-      const updatedAnswers = otherTextResult.answers;
-      set({ answers: updatedAnswers });
-
       let payload;
       try {
         payload = buildPublicSubmissionPayload({
           instrumentId,
           consent,
-          answers: updatedAnswers,
+          answers,
+          questions: flattenedQuestions.map(({ question }) => question),
         });
       } catch (e) {
         const message =

@@ -1,9 +1,13 @@
-import type { InstrumentDraftAnswer } from "@/app/(instrument)/types";
+import type {
+  InstrumentDraftAnswer,
+  InstrumentQuestion,
+} from "@/app/(instrument)/types";
+import { findOtherOptionId, getOtherTextValue } from "@/lib/instrument/otherOption";
 
 /**
  * Spec 79 — arma el envío único y atómico de una encuesta pública
  * (POST /api/public/surveys). A diferencia de
- * useInstrumentSurveyStore.buildResponsesPayload, ninguna respuesta lleva
+ * lib/instrument/buildResponsesPayload, ninguna respuesta lleva
  * `surveyId`: la encuesta no existe todavía en el momento del envío, la crea
  * el propio backend dentro de la misma transacción.
  *
@@ -45,12 +49,18 @@ export interface BuildPublicSubmissionPayloadParams {
   instrumentId: string;
   consent: PublicSurveyConsentInput;
   answers: Record<string, InstrumentDraftAnswer>;
+  /**
+   * Spec 86 — preguntas del instrumento, para identificar la opción isOther
+   * de cada una y enviar su texto en `textValue`.
+   */
+  questions: InstrumentQuestion[];
 }
 
 export function buildPublicSubmissionPayload({
   instrumentId,
   consent,
   answers,
+  questions,
 }: BuildPublicSubmissionPayloadParams): PublicSubmissionPayload {
   if (!consent.acceptedDataProcessing) {
     throw new Error(
@@ -59,18 +69,32 @@ export function buildPublicSubmissionPayload({
   }
 
   const responses: PublicSurveyResponseItem[] = [];
+  const questionsById = new Map(questions.map((q) => [q.questionId, q]));
 
   Object.values(answers).forEach((answer) => {
+    // Spec 86 — texto de "Otros" para la fila de la opción isOther.
+    const question = questionsById.get(answer.questionId);
+    const otherOptionId = question ? findOtherOptionId(question) : undefined;
+    const otherTextValue = question
+      ? getOtherTextValue(question, answer)
+      : undefined;
+
     // multiple_choice: una fila por opción seleccionada, igual que
-    // buildResponsesPayload en useInstrumentSurveyStore.
+    // lib/instrument/buildResponsesPayload.
     if (answer.optionIds && answer.optionIds.length > 0) {
       answer.optionIds.forEach((optionId) => {
-        responses.push({ questionId: answer.questionId, optionId });
+        responses.push({
+          questionId: answer.questionId,
+          optionId,
+          ...(optionId === otherOptionId && otherTextValue
+            ? { textValue: otherTextValue }
+            : {}),
+        });
       });
       return;
     }
 
-    const trimmedText = answer.textValue?.trim();
+    const trimmedText = otherTextValue ?? answer.textValue?.trim();
     const item: PublicSurveyResponseItem = {
       questionId: answer.questionId,
       ...(answer.optionId !== undefined && { optionId: answer.optionId }),
