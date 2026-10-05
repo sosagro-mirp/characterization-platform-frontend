@@ -129,22 +129,23 @@ export default function QuestionNode({
 
   return (
     <div
-      className={`group flex items-center gap-2 border-b border-[var(--border)] py-2 pl-9 pr-3 cursor-pointer transition-colors ${isSelected ? "bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]" : "hover:bg-[var(--surface-muted)]"
+      className={`group relative flex items-start gap-2 border-b border-[var(--border)] py-2 pl-9 pr-3 cursor-pointer transition-colors ${isSelected ? "bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]" : "hover:bg-[var(--surface-muted)]"
         } ${isArchived ? "opacity-60" : ""}`}
       onClick={() =>
         setSelection({ kind: "question", sectionId, questionId: question.questionId })
       }
     >
-      <span className="text-xs text-[var(--text-muted)] w-4 shrink-0">
+      <span className="mt-0.5 w-4 shrink-0 text-xs text-[var(--text-muted)]">
         {question.order}.
       </span>
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        <p className="min-w-0 flex-1 truncate text-sm text-[var(--text-primary)]">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="line-clamp-2 break-words text-sm text-[var(--text-primary)]" title={question.text}>
           {question.text}
           {question.isRequired && (
             <span className="ml-0.5 text-[var(--danger-fg)]"> *</span>
           )}
         </p>
+        <div className="flex flex-wrap items-center gap-1.5">
         {isArchived && (
           <span
             className="shrink-0 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--text-muted)] whitespace-nowrap"
@@ -177,8 +178,13 @@ export default function QuestionNode({
             <GitBranch className="size-3 text-[var(--info-fg)]" aria-hidden="true" />
           </span>
         )}
+        </div>
       </div>
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      {/* Acciones superpuestas: no reservan ancho en la fila, así el texto y las
+          etiquetas conservan todo el espacio del panel (420px). */}
+      <div
+        className={`absolute right-1 top-1 z-10 flex items-center gap-0.5 rounded-md border border-[var(--border)] bg-[var(--surface)] px-0.5 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${isSelected ? "opacity-100" : "opacity-0"}`}
+      >
         <button
           type="button"
           disabled={isFirst}
