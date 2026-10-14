@@ -1,8 +1,9 @@
 import { apiClient } from "@/lib/apiClient";
-import { FarmSummaryForFarmer, UpdateFarmRequest } from "@/app/(admin)/types";
+import { FarmDetail, FarmSummaryForFarmer, UpdateFarmRequest } from "@/app/(admin)/types";
 
-export function getFarm(id: string): Promise<FarmSummaryForFarmer> {
-  return apiClient.get<FarmSummaryForFarmer>(`/api/farms/${id}`);
+// Spec 94: incluye `farmers[]` (productores vinculados, con rol) y `farmCrops`.
+export function getFarm(id: string): Promise<FarmDetail> {
+  return apiClient.get<FarmDetail>(`/api/farms/${id}`);
 }
 
 export function updateFarm(

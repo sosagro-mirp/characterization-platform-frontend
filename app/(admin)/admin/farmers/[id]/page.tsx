@@ -9,11 +9,16 @@ import {
   getFarmer,
   updateFarmer,
 } from "@/services/farmers.service";
-import { updateFarm } from "@/services/farms.service";
+import { getFarm, updateFarm } from "@/services/farms.service";
 import { getFarmerConsentStatus } from "@/services/consents.service";
 import type { ConsentStatus } from "@/lib/consents/resolveConsentRequirement";
 import { listCrops } from "@/services/types-of-crops.service";
 import { CropSummary } from "@/app/(instrument)/types";
+import {
+  presentFarmerFarms,
+  primaryFarm,
+  sharedFarmCropsWarning,
+} from "@/lib/farmers/farmerFarms";
 import { SurveysTab } from "./SurveysTab";
 import DeleteFarmerDialog from "./DeleteFarmerDialog";
 import AdminOnly from "@/components/admin/AdminOnly";
@@ -55,6 +60,43 @@ export default function EditFarmerPage() {
   const [vereda, setVereda] = useState("");
   const [altitude, setAltitude] = useState("");
   const [selectedCropIds, setSelectedCropIds] = useState<string[]>([]);
+  // Spec 94 — aviso si la finca principal la comparten otros productores.
+  const [sharedWarning, setSharedWarning] = useState<string | null>(null);
+
+  // Fuente única de la finca principal (spec 94): `farms` con respaldo al alias `farm`.
+  function principalFarmId(f: FarmerDetail): string | undefined {
+    return primaryFarm(f.farms ?? [])?.farmId ?? f.farm?.farmId;
+  }
+
+  // Carga el aviso de finca compartida sin retrasar la ficha.
+  function refreshSharedWarning(f: FarmerDetail, isCancelled: () => boolean) {
+    const principalId = principalFarmId(f);
+    if (!principalId) {
+      setSharedWarning(null);
+      return;
+    }
+    getFarm(principalId)
+      .then((detail) => {
+        if (!isCancelled()) setSharedWarning(sharedFarmCropsWarning(detail, f.id));
+      })
+      .catch(() => {
+        // Sin el detalle no se puede avisar; la edición sigue disponible.
+      });
+  }
+
+  function applyFarmer(f: FarmerDetail) {
+    setFarmer(f);
+    setName(f.name ?? "");
+    setDocumentId(f.documentId ?? "");
+    setPhone(f.phone ?? "");
+    setEmail(f.email ?? "");
+    if (f.farm) {
+      setFarmName(f.farm.name ?? "");
+      setVereda(f.farm.vereda ?? "");
+      setAltitude(f.farm.altitude != null ? String(f.farm.altitude) : "");
+      setSelectedCropIds((f.farm.crops ?? []).map((c) => c.cropId));
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -66,19 +108,10 @@ export default function EditFarmerPage() {
           getFarmerConsentStatus(id),
         ]);
         if (cancelled) return;
-        setFarmer(f);
         setCrops(c);
         setConsentStatus(consent);
-        setName(f.name ?? "");
-        setDocumentId(f.documentId ?? "");
-        setPhone(f.phone ?? "");
-        setEmail(f.email ?? "");
-        if (f.farm) {
-          setFarmName(f.farm.name ?? "");
-          setVereda(f.farm.vereda ?? "");
-          setAltitude(f.farm.altitude != null ? String(f.farm.altitude) : "");
-          setSelectedCropIds((f.farm.crops ?? []).map((c) => c.cropId));
-        }
+        applyFarmer(f);
+        refreshSharedWarning(f, () => cancelled);
       } catch (err) {
         if (!cancelled)
           setError(err instanceof Error ? err.message : "Error al cargar agricultor.");
@@ -88,6 +121,7 @@ export default function EditFarmerPage() {
     }
     load();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   function toggleCrop(cropId: string) {
@@ -110,15 +144,21 @@ export default function EditFarmerPage() {
       };
       await updateFarmer(id, farmerPayload);
 
-      if (farmer.farm) {
+      const principalId = principalFarmId(farmer);
+      if (principalId) {
         const farmPayload: UpdateFarmRequest = {
           name: farmName.trim() || undefined,
           vereda: vereda.trim() || undefined,
           altitude: altitude !== "" ? Number(altitude) : undefined,
           cropIds: selectedCropIds,
         };
-        await updateFarm(farmer.farm.farmId, farmPayload);
+        await updateFarm(principalId, farmPayload);
       }
+
+      // Recarga el productor para que «Fincas del agricultor» refleje lo guardado.
+      const fresh = await getFarmer(id);
+      applyFarmer(fresh);
+      refreshSharedWarning(fresh, () => false);
 
       setSuccess(true);
     } catch (err) {
@@ -151,6 +191,8 @@ export default function EditFarmerPage() {
       </p>
     );
   }
+
+  const presentedFarms = presentFarmerFarms(farmer.farms ?? []);
 
   const locationParts = [
     farmer.documentId ? `CC ${farmer.documentId}` : null,
@@ -287,6 +329,11 @@ export default function EditFarmerPage() {
 
                   <div>
                     <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">Cultivos</p>
+                    {sharedWarning && (
+                      <p className="mb-2 rounded-md border border-[var(--warning-fg)]/30 bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--warning-fg)]">
+                        {sharedWarning}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-1.5">
                       {crops.map((crop) => {
                         const selected = selectedCropIds.includes(crop.cropId);
@@ -311,6 +358,41 @@ export default function EditFarmerPage() {
               </section>
             )}
           </div>
+
+          {/* Spec 94 — todas las fincas del productor (solo lectura) */}
+          {presentedFarms.length > 0 && (
+            <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+              <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2.5">
+                <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                  Fincas del agricultor
+                </h2>
+              </div>
+              <ul className="divide-y divide-[var(--border)]">
+                {presentedFarms.map((f) => (
+                  <li key={f.farmId} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                        {f.name}
+                      </p>
+                      <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
+                        {[f.vereda, f.townName].filter(Boolean).join(" · ") || "Sin ubicación"}
+                        {" · "}
+                        {f.cropNames.length > 0 ? f.cropNames.join(", ") : "Sin cultivos"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-primary)]">
+                      {f.roleLabel}
+                    </span>
+                    {f.isPrimary && (
+                      <span className="shrink-0 rounded-full bg-[var(--brand-subtle-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-subtle-fg)]">
+                        Principal
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Acciones */}
           <div className="flex gap-2">

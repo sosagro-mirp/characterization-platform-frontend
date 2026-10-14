@@ -1,4 +1,4 @@
-import type { FarmerDeletionPreview } from "@/app/(admin)/types";
+import type { FarmerDeletionFarmInfo, FarmerDeletionPreview } from "@/app/(admin)/types";
 
 export type { FarmerDeletionPreview };
 
@@ -33,7 +33,7 @@ export function summarizeDeletionPreview(
   preview: FarmerDeletionPreview,
 ): string[] {
   const lines: string[] = [];
-  const { counts, farm, preserved } = preview;
+  const { counts, preserved } = preview;
 
   if (counts.campaignSessions > 0) {
     lines.push(pluralLine(counts.campaignSessions, "sesión de campaña", "sesiones de campaña"));
@@ -68,11 +68,17 @@ export function summarizeDeletionPreview(
     );
   }
 
-  if (farm) {
+  // Spec 94: `farms[]` trae todas las fincas; `farm` (la principal) puede venir
+  // también ahí, así que se deduplica por `farmId`.
+  const farmsById = new Map<string, FarmerDeletionFarmInfo>();
+  for (const f of [preview.farm, ...(preview.farms ?? [])]) {
+    if (f && !farmsById.has(f.farmId)) farmsById.set(f.farmId, f);
+  }
+  for (const f of farmsById.values()) {
     lines.push(
-      farm.willBeDeleted
-        ? `La finca "${farm.name}" se eliminará (no la comparte ningún otro agricultor).`
-        : `La finca "${farm.name}" es compartida con otro agricultor: no se eliminará.`,
+      f.willBeDeleted
+        ? `La finca "${f.name}" se eliminará (no la comparte ningún otro agricultor).`
+        : `La finca "${f.name}" es compartida con otro agricultor: no se eliminará.`,
     );
   }
 
