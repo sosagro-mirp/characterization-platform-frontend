@@ -315,13 +315,51 @@ export interface FarmSummaryForFarmer {
   crops: { cropId: string; name: string }[];
 }
 
+/** Spec 94 — catálogo de roles del productor en una finca (D-H3-3). */
+export type FarmRole = "owner" | "producer" | "manager" | "worker" | "family" | "other";
+
+/** Spec 94 — cultivo de finca (`FarmCrop`) con id propio. */
+export interface FarmCropSummary {
+  farmCropId: string;
+  cropId: string;
+  name: string;
+}
+
+/** Spec 94 — elemento de `farms[]` en `GET /farmers/:id`. */
+export interface FarmerFarm {
+  farmId: string;
+  name: string;
+  vereda: string | null;
+  town: { townId: string; name: string } | null;
+  role: FarmRole;
+  isPrimary: boolean;
+  crops: FarmCropSummary[];
+}
+
+/** Spec 94 — productor vinculado a una finca (`farmers[]` en `GET /farms/:id`). */
+export interface FarmLinkedFarmer {
+  farmerId: string;
+  name: string;
+  role: FarmRole;
+  isPrimary: boolean;
+}
+
+/** Spec 94 — `GET /farms/:id`: la finca con sus productores y cultivos de finca. */
+export interface FarmDetail extends FarmSummaryForFarmer {
+  farmers: FarmLinkedFarmer[];
+  farmCrops?: FarmCropSummary[];
+}
+
 export interface FarmerDetail {
   id: string;
   name: string;
   documentId: string | null;
   phone: string | null;
   email: string | null;
+  /** La finca principal (alias deprecado hasta H8; ver `farms`). */
   farm: FarmSummaryForFarmer | null;
+  /** Spec 94 — todas las fincas del productor, con rol y marca de principal. */
+  farms?: FarmerFarm[];
   createdAt: string;
   /**
    * Spec 78, Fase 13 (cambio de alcance 2026-08-28) — true si el agricultor
@@ -371,6 +409,8 @@ export interface FarmerDeletionPreview {
   documentId: string | null;
   counts: FarmerDeletionCounts;
   farm: FarmerDeletionFarmInfo | null;
+  /** Spec 94 — todas las fincas del productor (la principal también viene en `farm`). */
+  farms?: FarmerDeletionFarmInfo[];
   preserved: { changeRequests: number };
 }
 
@@ -422,6 +462,9 @@ export interface SurveyListItem {
   createdAt: string;
   updatedAt: string;
   instruments: InstrumentSummaryForSurvey[];
+  /** Spec 94 — finca y cultivo a los que quedó anclada la encuesta. */
+  farm?: { farmId: string; name: string } | null;
+  crop?: { cropId: string; name: string } | null;
 }
 
 export interface SurveyResponseItem {

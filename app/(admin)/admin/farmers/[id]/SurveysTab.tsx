@@ -106,6 +106,11 @@ export function SurveysTab({ farmerId }: { farmerId: string }) {
                 <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
                   Aplicada el {formatDate(survey.createdAt)}
                 </p>
+                {(survey.farm || survey.crop) && (
+                  <p className="mt-0.5 truncate text-[10.5px] text-[var(--text-muted)]">
+                    {[survey.farm?.name, survey.crop?.name].filter(Boolean).join(" · ")}
+                  </p>
+                )}
               </div>
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap ${
