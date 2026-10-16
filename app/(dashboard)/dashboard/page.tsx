@@ -16,10 +16,18 @@ import CategoryView from "../components/CategoryView";
 import DigitalDemandView from "../components/DigitalDemandView";
 import CategoryInactiveCard from "../components/CategoryInactiveCard";
 import DashboardUnavailableNotice from "../components/DashboardUnavailableNotice";
+import DashboardUnderConstruction from "../components/DashboardUnderConstruction";
 
 export const metadata: Metadata = {
   title: "Explorar datos",
 };
+
+/**
+ * Mientras sea `true`, la página muestra solo el aviso de «en construcción» y
+ * no consulta la API. Volver a `false` al corregir `numeric_with_unit` en el
+ * dashboard (ver `spec/backlog.md`, incidente del 2026-10-16).
+ */
+const DASHBOARD_UNDER_CONSTRUCTION = true;
 
 /** Superconjunto de `DashboardFilters` + `view`/`categoryId` (D6) — Next no
  * valida esta forma en tiempo de ejecución, es solo el contrato asumido.
@@ -36,6 +44,10 @@ interface DashboardPageProps {
 export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
+  if (DASHBOARD_UNDER_CONSTRUCTION) {
+    return <DashboardUnderConstruction />;
+  }
+
   const state = parseDashboardParams(await searchParams);
   const categories = await fetchCategories();
 
