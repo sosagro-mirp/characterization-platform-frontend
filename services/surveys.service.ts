@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import type {
   ProcessBody,
   ProcessPreview,
+  ProcessPublicResult,
 } from "@/lib/public-submissions/processPreview";
 import type {
   CreateResponsePayload,
@@ -44,6 +45,43 @@ export function extractFarmer(
   return apiClient.post<ExtractFarmerResult>(
     `/api/surveys/${surveyId}/extract-farmer`,
     resolution ? { resolution } : {},
+  );
+}
+
+/** Spec 95 — estados de `GET /surveys/:id/extraction`. */
+export type ExtractionStatus =
+  | "done"
+  | "collision"
+  | "no_identity"
+  | "pending_alias"
+  | "not_applicable"
+  | "awaiting_review"
+  | "error"
+  | "backfilled";
+
+export interface SurveyExtraction {
+  status: ExtractionStatus | null;
+  farmerId: string | null;
+  farmerName: string | null;
+  existed: boolean | null;
+  clientFarmerId: string | null;
+  farm: { farmId: string; name: string } | null;
+  farmCropId: string | null;
+  crops: { cropId: string; name: string }[];
+  collision?: {
+    documentId: string;
+    submittedName: string;
+    existingFarmer: { farmerId: string; name: string };
+  };
+  openDiscrepancies: number;
+  extractedAt: string | null;
+}
+
+/** Spec 95 (D-H3-12) — resultado de la extracción que hizo el batch; la web lo consulta en vez de llamar a `extract-*`. */
+export function getExtraction(surveyId: string): Promise<SurveyExtraction> {
+  return apiClient.get<SurveyExtraction>(
+    `/api/surveys/${surveyId}/extraction`,
+    { cache: "no-store" },
   );
 }
 
@@ -143,8 +181,8 @@ export function getProcessPreview(
 export function processPublicSubmission(
   surveyId: string,
   body: ProcessBody,
-): Promise<ExtractFarmerResult> {
-  return apiClient.post<ExtractFarmerResult>(
+): Promise<ProcessPublicResult> {
+  return apiClient.post<ProcessPublicResult>(
     `/api/surveys/${surveyId}/process-public`,
     body,
   );

@@ -8,13 +8,13 @@ import { getInstrumentByCode } from "@/services/instruments.service";
 import {
   checkDuplicate,
   extractFarmer,
-  extractCrops,
+  getExtraction,
   overwriteSurvey,
   skipStep,
 } from "@/services/surveys.service";
 import {
   CollisionPending,
-  collisionFromError,
+  completeAfterBatch,
   resolveCollisionFlow,
   resolveRegistrationStart,
 } from "@/lib/campaign-session/preSurveyFlow";
@@ -98,22 +98,17 @@ export default function CampaignSessionPage() {
             return;
           }
 
-          let farmerResult;
-          try {
-            farmerResult = await extractFarmer(completedSurveyId);
-          } catch (err) {
-            const collision = collisionFromError(err, completedSurveyId, "registro_pending");
-            if (collision) {
-              if (!cancelled) setCollisionPending(collision);
-              return;
-            }
-            throw err;
+          // Spec 95: el batch ya extrajo productor, finca y cultivos.
+          const outcome = await completeAfterBatch(
+            completedSurveyId,
+            "registro_pending",
+            { getExtraction, getInstrumentByCode, onFarmer: setFarmer },
+          );
+          if (cancelled) return;
+          if (outcome.phase === "collision") {
+            setCollisionPending(outcome.pending);
+            return;
           }
-          if (cancelled) return;
-          setFarmer(farmerResult.farmer.id, farmerResult.farmer.name);
-
-          await extractCrops(completedSurveyId);
-          if (cancelled) return;
           setPreSurveyPhase("done");
         }
 
@@ -128,26 +123,22 @@ export default function CampaignSessionPage() {
             );
             return;
           }
-          let result;
-          try {
-            result = await extractFarmer(completedSurveyId);
-          } catch (err) {
-            const collision = collisionFromError(err, completedSurveyId, "s1_pending");
-            if (collision) {
-              if (!cancelled) setCollisionPending(collision);
-              return;
-            }
-            throw err;
-          }
-          if (cancelled) return;
-          setFarmer(result.farmer.id, result.farmer.name);
-
-          const s2 = await getInstrumentByCode("S2");
-          if (cancelled) return;
-          setPreSurveyPhase("s2_pending");
-          router.replace(
-            `/instrument/${s2.instrumentId}?campaignSessionId=${sessionId}`,
+          const outcome = await completeAfterBatch(
+            completedSurveyId,
+            "s1_pending",
+            { getExtraction, getInstrumentByCode, onFarmer: setFarmer },
           );
+          if (cancelled) return;
+          if (outcome.phase === "collision") {
+            setCollisionPending(outcome.pending);
+            return;
+          }
+          if (outcome.phase === "s2_pending") {
+            setPreSurveyPhase("s2_pending");
+            router.replace(
+              `/instrument/${outcome.instrumentId}?campaignSessionId=${sessionId}`,
+            );
+          }
           return;
         }
 
@@ -162,8 +153,14 @@ export default function CampaignSessionPage() {
             );
             return;
           }
-          await extractCrops(completedSurveyId);
+          // Spec 95: el batch ya extrajo los cultivos; solo se confirma que no falló.
+          const s2Extraction = await getExtraction(completedSurveyId);
           if (cancelled) return;
+          if (s2Extraction.status === "error") {
+            throw new Error(
+              "No se pudieron registrar los cultivos de la encuesta. Inténtalo de nuevo.",
+            );
+          }
           setPreSurveyPhase("done");
         }
 
@@ -274,7 +271,6 @@ export default function CampaignSessionPage() {
     try {
       const outcome = await resolveCollisionFlow(collisionPending, resolution, {
         extractFarmer,
-        extractCrops,
         getInstrumentByCode,
         onFarmer: setFarmer,
       });

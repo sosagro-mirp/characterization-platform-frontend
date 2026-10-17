@@ -10,11 +10,17 @@ import {
   type FarmMode,
   type ProcessPreview,
 } from "@/lib/public-submissions/processPreview";
+import {
+  FARM_ROLE_OPTIONS,
+  type FarmRole,
+} from "@/lib/farmers/farmerFarms";
 
 export interface ProcessDecision {
   townId?: string;
   farmMode: FarmMode;
   farmId?: string;
+  /** Spec 95 — rol del productor en la finca; `undefined` deja el del backend. */
+  role?: FarmRole;
   /** Verdadero cuando el panel cargó y las decisiones obligatorias están completas. */
   ready: boolean;
   /** Qué falta cuando `ready` es falso (para mostrarlo bajo el botón). */
@@ -57,6 +63,8 @@ export function ProcessPreviewPanel({
   const [townId, setTownId] = useState("");
   const [farmMode, setFarmMode] = useState<FarmMode>("create");
   const [farmId, setFarmId] = useState("");
+  // Spec 95 — `null` = no se tocó el selector: el backend usa su rol por defecto.
+  const [roleChoice, setRoleChoice] = useState<FarmRole | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,6 +144,10 @@ export function ProcessPreviewPanel({
       : undefined
     : linkedFarm?.farmId;
 
+  // El rol solo se envía cuando se vincula a una finca existente.
+  const role =
+    effectiveMode === "link" && roleChoice ? roleChoice : undefined;
+
   const blockReason = error
     ? "Reintenta la vista previa para poder crear el agricultor."
     : describeBlockReason({
@@ -154,6 +166,7 @@ export function ProcessPreviewPanel({
       townId: townId || undefined,
       farmMode: effectiveMode,
       farmId: effectiveMode === "link" ? effectiveFarmId : undefined,
+      role,
       ready,
       blockReason,
     });
@@ -161,6 +174,7 @@ export function ProcessPreviewPanel({
     townId,
     effectiveMode,
     effectiveFarmId,
+    role,
     ready,
     blockReason,
     onDecisionChange,
@@ -348,6 +362,29 @@ export function ProcessPreviewPanel({
         </div>
       )}
 
+      {effectiveMode === "link" && (
+        <div className="space-y-1">
+          <label
+            htmlFor="preview-role"
+            className="block text-xs font-medium text-[var(--text-primary)]"
+          >
+            Rol del productor en la finca
+          </label>
+          <select
+            id="preview-role"
+            value={roleChoice ?? description.defaultRole}
+            onChange={(e) => setRoleChoice(e.target.value as FarmRole)}
+            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          >
+            {FARM_ROLE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="text-xs">
         <p className="font-medium text-[var(--text-primary)]">Cultivos</p>
         {description.crops.length > 0 ? (
@@ -364,6 +401,22 @@ export function ProcessPreviewPanel({
           </p>
         )}
       </div>
+
+      {description.discrepancies.length > 0 && (
+        <div className="text-xs">
+          <p className="font-medium text-[var(--text-primary)]">
+            Diferencias con lo ya registrado (quedarán como discrepancias para
+            revisar)
+          </p>
+          <ul className="list-disc pl-5 text-[var(--text-primary)]">
+            {description.discrepancies.map((d, i) => (
+              <li key={`${d.label}-${i}`}>
+                {d.label}: actual «{d.currentText}», enviado «{d.submittedText}»
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {description.fieldsToComplete.length > 0 && (
         <div className="text-xs">
