@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import { CreateFarmerPayload, FarmerSearchResult } from "@/app/(instrument)/types";
+import type { Discrepancy } from "@/lib/farmers/farmerFarms";
 import {
   FarmerDetail,
   FarmerDeletionPreview,
@@ -44,4 +45,16 @@ export function deleteFarmerCascade(
   id: string,
 ): Promise<FarmerDeletionPreview> {
   return apiClient.delete<FarmerDeletionPreview>(`/api/farmers/${id}/cascade`);
+}
+
+// Spec 95 — discrepancias de extracción (solo ADMIN y RESEARCHER). En la web
+// solo se listan; aplicar o descartar queda para el spec 96/H5.
+export function getFarmerDiscrepancies(
+  farmerId: string,
+  status: Discrepancy["status"] = "open",
+): Promise<Discrepancy[]> {
+  return apiClient.get<Discrepancy[]>(
+    `/api/farmers/${farmerId}/discrepancies?status=${status}`,
+    { cache: "no-store" },
+  );
 }

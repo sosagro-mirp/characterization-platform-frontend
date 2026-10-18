@@ -18,7 +18,10 @@ import {
   ProcessPreviewPanel,
   type ProcessDecision,
 } from "@/components/admin/public-submissions/ProcessPreviewPanel";
-import { buildProcessBody } from "@/lib/public-submissions/processPreview";
+import {
+  buildProcessBody,
+  describeProcessResult,
+} from "@/lib/public-submissions/processPreview";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -53,6 +56,9 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
   const [result, setResult] = useState<{
     farmerId: string;
     existed: boolean;
+    farmName: string | null;
+    cropNames: string[];
+    roleLabel: string | null;
   } | null>(null);
   const handleDecisionChange = useCallback(
     (d: ProcessDecision) => setDecision(d),
@@ -97,10 +103,18 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
           townId: decision.townId,
           farmMode: decision.farmMode,
           farmId: decision.farmId,
+          role: decision.role,
           resolution,
         }),
       );
-      setResult({ farmerId: res.farmer.id, existed: res.existed });
+      const summary = describeProcessResult(res);
+      setResult({
+        farmerId: res.farmer.id,
+        existed: res.existed,
+        farmName: summary.farmName,
+        cropNames: summary.cropNames,
+        roleLabel: summary.roleLabel,
+      });
       setCollision(null);
       setActionState("processed");
     } catch (err) {
@@ -193,6 +207,17 @@ export default function PublicSubmissionDetailPage({ params }: PageProps) {
                 ? "El envío se vinculó a un productor que ya existía."
                 : "El envío fue procesado: se creó un productor nuevo."
               : "El envío fue descartado. Sus respuestas se conservan, pero salió de la bandeja de pendientes."}
+            {actionState === "processed" && result?.farmName && (
+              <>
+                {" "}
+                Finca: {result.farmName}
+                {result.roleLabel ? ` (${result.roleLabel})` : ""}
+                {result.cropNames.length > 0
+                  ? `. Cultivos: ${result.cropNames.join(", ")}`
+                  : ""}
+                .
+              </>
+            )}
             {actionState === "processed" && result?.farmerId && (
               <>
                 {" "}

@@ -4,6 +4,9 @@
  * cuerpo de `POST /api/surveys/:id/process-public`.
  */
 
+import { FARM_ROLES, farmRoleLabel, DEFAULT_FARM_ROLE } from "@/lib/farmers/farmerFarms";
+import type { FarmRole } from "@/lib/farmers/farmerFarms";
+
 export type DocumentStatus = "new" | "same_person_match" | "collision";
 export type FarmMode = "create" | "link";
 export type CollisionResolution = "same_person" | "separate_person";
@@ -41,6 +44,18 @@ export interface ProcessPreview {
     value: unknown;
   }[];
   warnings: { code: string; message?: string }[];
+  /** Spec 95 — rol que tendría el productor en la finca. */
+  role?: string;
+  /** Spec 95 — cultivos que se sumarían a la finca. */
+  farmCrops?: { cropId: string; name: string }[];
+  /** Spec 95 — valores que difieren de los guardados y quedarían como discrepancias. */
+  discrepancies?: {
+    entity: "farmer" | "farm";
+    field: string;
+    systemField: string | null;
+    currentValue: unknown;
+    submittedValue: unknown;
+  }[];
 }
 
 export interface PreviewWarning {
@@ -70,6 +85,12 @@ export interface PreviewDescription {
   unmappedCrops: string[];
   fieldsToComplete: string[];
   warnings: PreviewWarning[];
+  /** Spec 95 — rol propuesto (el del backend o `producer`). */
+  defaultRole: FarmRole;
+  /** Spec 95 — cultivos que se sumarían a la finca (cae en los reconocidos). */
+  farmCropNames: string[];
+  /** Spec 95 — diferencias que quedarían como discrepancias, en texto legible. */
+  discrepancies: { label: string; currentText: string; submittedText: string }[];
 }
 
 const WARNING_MESSAGES: Record<string, string> = {
@@ -137,13 +158,46 @@ export function describePreview(preview: ProcessPreview): PreviewDescription {
       (f) => `${f.entity}.${f.field}`,
     ),
     warnings: preview.warnings.map((w) => describeWarning(w.code, w.message)),
+    defaultRole: isFarmRole(preview.role) ? preview.role : DEFAULT_FARM_ROLE,
+    farmCropNames: (preview.farmCrops ?? preview.crops.resolved).map(
+      (c) => c.name,
+    ),
+    discrepancies: (preview.discrepancies ?? []).map((d) => ({
+      label: `${d.entity === "farmer" ? "Productor" : "Finca"}: ${
+        FIELD_LABEL_BY_KEY[d.systemField ?? `${d.entity}.${d.field}`] ??
+        d.field
+      }`,
+      currentText: textOrDash(d.currentValue),
+      submittedText: textOrDash(d.submittedValue),
+    })),
   };
 }
+
+function isFarmRole(value: unknown): value is FarmRole {
+  return typeof value === "string" && (FARM_ROLES as readonly string[]).includes(value);
+}
+
+function textOrDash(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "—";
+  return typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
+const FIELD_LABEL_BY_KEY: Record<string, string> = {
+  "farmer.name": "nombre",
+  "farmer.phone": "teléfono",
+  "farm.name": "nombre",
+  "farm.vereda": "vereda",
+  "farm.area": "área",
+  "farm.corregimiento": "corregimiento",
+  "farm.townId": "municipio",
+  "farm.altitude": "altitud",
+};
 
 export interface ProcessBody {
   farm: { mode: FarmMode; farmId?: string };
   townId?: string;
   resolution?: CollisionResolution;
+  role?: FarmRole;
 }
 
 export function buildProcessBody(input: {
@@ -151,6 +205,7 @@ export function buildProcessBody(input: {
   resolution?: CollisionResolution;
   farmMode?: FarmMode;
   farmId?: string;
+  role?: string;
 }): ProcessBody {
   const mode = input.farmMode ?? "create";
   if (mode === "link" && !input.farmId) {
@@ -161,7 +216,36 @@ export function buildProcessBody(input: {
   };
   if (input.townId) body.townId = input.townId;
   if (input.resolution) body.resolution = input.resolution;
+  if (input.role) {
+    if (!isFarmRole(input.role)) {
+      throw new Error("El rol elegido no es válido.");
+    }
+    body.role = input.role;
+  }
   return body;
+}
+
+/** Respuesta de `process-public` (spec 95 agrega `farm`, `farmCrops` y `role`). */
+export interface ProcessPublicResult {
+  farmer: { id: string; name: string };
+  existed: boolean;
+  farm: { farmId: string; name: string } | null;
+  farmCrops: { farmCropId: string; cropId: string; name: string }[];
+  role: FarmRole | null;
+}
+
+export function describeProcessResult(result: ProcessPublicResult): {
+  farmerHref: string;
+  farmName: string | null;
+  cropNames: string[];
+  roleLabel: string | null;
+} {
+  return {
+    farmerHref: `/admin/farmers/${result.farmer.id}`,
+    farmName: result.farm?.name ?? null,
+    cropNames: (result.farmCrops ?? []).map((c) => c.name),
+    roleLabel: result.role ? farmRoleLabel(result.role) : null,
+  };
 }
 
 /** Motivo por el que "Crear agricultor" está deshabilitado, o `null` si no falta nada. */
