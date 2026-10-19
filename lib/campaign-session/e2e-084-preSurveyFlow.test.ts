@@ -118,7 +118,7 @@ describe("resolveCollisionFlow — reanudación tras el diálogo", () => {
     phase: "registro_pending",
   };
 
-  it("Registro: reenvía la resolución, extrae cultivos de la misma encuesta y termina", async () => {
+  it("Registro: reenvía la resolución y termina (spec 95: extract-farmer ya extrae los cultivos)", async () => {
     const d = deps();
 
     await expect(resolveCollisionFlow(registro, "same_person", d)).resolves.toEqual({
@@ -126,7 +126,7 @@ describe("resolveCollisionFlow — reanudación tras el diálogo", () => {
     });
     expect(d.extractFarmer).toHaveBeenCalledWith("survey-reg", "same_person");
     expect(d.onFarmer).toHaveBeenCalledWith("farmer-1", "Rosalba TEST");
-    expect(d.extractCrops).toHaveBeenCalledWith("survey-reg");
+    expect(d.extractCrops).not.toHaveBeenCalled();
     expect(d.getInstrumentByCode).not.toHaveBeenCalled();
   });
 
