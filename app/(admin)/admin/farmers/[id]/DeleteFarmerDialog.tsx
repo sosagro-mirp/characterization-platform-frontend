@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FarmerDeletionPreview } from "@/app/(admin)/types";
 import { getFarmerDeletionPreview } from "@/services/farmers.service";
 import {
+  isDeletionBlocked,
   isDeletionConfirmed,
   summarizeDeletionPreview,
 } from "@/lib/farmers/cascadeDeletion";
@@ -64,7 +65,9 @@ export default function DeleteFarmerDialog({
   }, [farmerId]);
 
   const confirmationTarget = preview?.documentId ?? preview?.name ?? "";
-  const canConfirm = !!preview && isDeletionConfirmed(typed, preview);
+  const blocked = !!preview && isDeletionBlocked(preview);
+  const canConfirm =
+    !!preview && !blocked && isDeletionConfirmed(typed, preview);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -78,8 +81,8 @@ export default function DeleteFarmerDialog({
           Eliminar agricultor
         </h2>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Esta acción es irreversible: borra al agricultor y todos sus datos
-          de campo asociados.
+          Esta acción es irreversible: borra al agricultor y todos sus datos de
+          campo asociados.
         </p>
 
         {loadingPreview && (
@@ -91,6 +94,13 @@ export default function DeleteFarmerDialog({
         {previewError && (
           <p className="mt-4 text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
             {previewError}
+          </p>
+        )}
+
+        {!loadingPreview && blocked && (
+          <p className="mt-4 rounded-lg bg-[var(--warning-bg)] px-3 py-2 text-sm text-[var(--warning-fg)]">
+            No se puede borrar: una de sus fincas tiene decisiones de la
+            selección de unidades productivas.
           </p>
         )}
 
