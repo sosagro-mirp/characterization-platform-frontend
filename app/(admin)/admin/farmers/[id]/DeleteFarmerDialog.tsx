@@ -97,6 +97,13 @@ export default function DeleteFarmerDialog({
           </p>
         )}
 
+        {!loadingPreview && blocked && (
+          <p className="mt-4 rounded-lg bg-[var(--warning-bg)] px-3 py-2 text-sm text-[var(--warning-fg)]">
+            No se puede borrar: una de sus fincas tiene decisiones de la
+            selección de unidades productivas.
+          </p>
+        )}
+
         {!loadingPreview && preview && (
           <div className="mt-4 space-y-3">
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
