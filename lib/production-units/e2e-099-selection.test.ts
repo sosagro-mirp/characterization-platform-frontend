@@ -29,22 +29,42 @@ async function loadSelection(): Promise<SelectionModule> {
 }
 
 const ROWS: Row[] = [
-  { farmId: "a", selection: { status: "included" }, coverage: { i1: { status: "aplicado" } } },
-  { farmId: "b", selection: { status: "excluded" }, coverage: { i1: { status: "falta" } } },
-  { farmId: "c", selection: { status: "in_review" }, coverage: { i1: { status: "parcial" } } },
-  { farmId: "d", selection: null, coverage: { i1: { status: "no_aplica" }, i2: { status: "falta" } } },
+  {
+    farmId: "a",
+    selection: { status: "included" },
+    coverage: { i1: { status: "aplicado" } },
+  },
+  {
+    farmId: "b",
+    selection: { status: "excluded" },
+    coverage: { i1: { status: "falta" } },
+  },
+  {
+    farmId: "c",
+    selection: { status: "in_review" },
+    coverage: { i1: { status: "parcial" } },
+  },
+  {
+    farmId: "d",
+    selection: null,
+    coverage: { i1: { status: "no_aplica" }, i2: { status: "falta" } },
+  },
 ];
 
 describe("Spec 99 — selección", () => {
   it("C09 — filtra por decisión", async () => {
     const { filterBySelection } = await loadSelection();
-    const ids = filterBySelection(ROWS, ["included", "in_review"]).map((r) => r.farmId);
+    const ids = filterBySelection(ROWS, ["included", "in_review"]).map(
+      (r) => r.farmId,
+    );
     expect(ids).toEqual(["a", "c"]);
   });
 
   it("C09 — filtra las fincas sin decisión", async () => {
     const { filterBySelection } = await loadSelection();
-    expect(filterBySelection(ROWS, ["none"]).map((r) => r.farmId)).toEqual(["d"]);
+    expect(filterBySelection(ROWS, ["none"]).map((r) => r.farmId)).toEqual([
+      "d",
+    ]);
   });
 
   it("C07 — la meta avisa solo al superarla", async () => {

@@ -90,13 +90,21 @@ describe("Spec 98 — filtros de unidades productivas", () => {
 
   it("filtra por departamento y municipio", async () => {
     const { applyUnitFilters } = await loadFilters();
-    expect(ids(applyUnitFilters(ROWS, { departmentIds: ["d-ant"] }))).toEqual(["a", "b"]);
-    expect(ids(applyUnitFilters(ROWS, { townIds: ["t-jardin"] }))).toEqual(["b"]);
+    expect(ids(applyUnitFilters(ROWS, { departmentIds: ["d-ant"] }))).toEqual([
+      "a",
+      "b",
+    ]);
+    expect(ids(applyUnitFilters(ROWS, { townIds: ["t-jardin"] }))).toEqual([
+      "b",
+    ]);
   });
 
   it("una finca con dos cultivos aparece al filtrar por cualquiera", async () => {
     const { applyUnitFilters } = await loadFilters();
-    expect(ids(applyUnitFilters(ROWS, { cropIds: ["c-cacao"] }))).toEqual(["b", "c"]);
+    expect(ids(applyUnitFilters(ROWS, { cropIds: ["c-cacao"] }))).toEqual([
+      "b",
+      "c",
+    ]);
   });
 
   it("filtra por instrumento y uno o más estados", async () => {
@@ -119,8 +127,12 @@ describe("Spec 98 — filtros de unidades productivas", () => {
 
   it("el filtro de columna ignora mayúsculas y tildes", async () => {
     const { applyUnitFilters } = await loadFilters();
-    expect(ids(applyUnitFilters(ROWS, { columns: { town: "jardin" } }))).toEqual(["b"]);
-    expect(ids(applyUnitFilters(ROWS, { columns: { name: "ESPERANZA" } }))).toEqual(["a"]);
+    expect(
+      ids(applyUnitFilters(ROWS, { columns: { town: "jardin" } })),
+    ).toEqual(["b"]);
+    expect(
+      ids(applyUnitFilters(ROWS, { columns: { name: "ESPERANZA" } })),
+    ).toEqual(["a"]);
   });
 
   it("no modifica las filas de entrada", async () => {

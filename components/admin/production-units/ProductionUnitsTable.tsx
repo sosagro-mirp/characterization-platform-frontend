@@ -1,6 +1,7 @@
 "use client";
 
 import type { CoverageColumn, UnitRow } from "@/lib/production-units/types";
+import { SELECTION_LABELS } from "@/lib/production-units/selection";
 import { StatusChip } from "./StatusChip";
 
 interface ProductionUnitsTableProps {
@@ -8,6 +9,7 @@ interface ProductionUnitsTableProps {
   columns: CoverageColumn[];
   columnFilters: Record<string, string>;
   onColumnFilter: (key: string, value: string) => void;
+  onDecide: (row: UnitRow) => void;
 }
 
 const FIXED: { key: string; label: string }[] = [
@@ -31,6 +33,7 @@ export function ProductionUnitsTable({
   columns,
   columnFilters,
   onColumnFilter,
+  onDecide,
 }: ProductionUnitsTableProps) {
   return (
     <div className="overflow-auto rounded-md border border-[var(--border)] bg-[var(--surface)] max-h-[60vh]">
@@ -42,6 +45,7 @@ export function ProductionUnitsTable({
                 {c.label}
               </th>
             ))}
+            <th className="px-3 py-2.5 text-left align-top">Decisión</th>
             <th className="px-3 py-2.5 text-left align-top">Encuestas</th>
             {columns.map((c) => (
               <th
@@ -67,6 +71,7 @@ export function ProductionUnitsTable({
               </th>
             ))}
             <th />
+            <th />
             {columns.map((c) => (
               <th key={c.instrumentId} />
             ))}
@@ -79,7 +84,9 @@ export function ProductionUnitsTable({
                 {row.name}
                 {row.warnings?.length ? (
                   <span className="ml-2 text-[10.5px] font-normal text-[var(--warning-fg)]">
-                    {row.warnings.map((w) => WARNING_LABELS[w] ?? w).join(" · ")}
+                    {row.warnings
+                      .map((w) => WARNING_LABELS[w] ?? w)
+                      .join(" · ")}
                   </span>
                 ) : null}
               </td>
@@ -90,12 +97,26 @@ export function ProductionUnitsTable({
                 {row.town?.name ?? "—"}
               </td>
               <td className="px-3 py-2.5 text-[var(--text-muted)]">
-                {row.crops.length ? row.crops.map((c) => c.name).join(", ") : "—"}
+                {row.crops.length
+                  ? row.crops.map((c) => c.name).join(", ")
+                  : "—"}
               </td>
               <td className="px-3 py-2.5 text-[var(--text-muted)]">
                 {row.farmers?.length
                   ? row.farmers.map((f) => f.name).join(", ")
                   : "—"}
+              </td>
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={() => onDecide(row)}
+                  title={row.selection?.reason ?? "Registrar decisión"}
+                  className="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-[10.5px] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
+                >
+                  {row.selection
+                    ? SELECTION_LABELS[row.selection.status]
+                    : "Sin decisión"}
+                </button>
               </td>
               <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap">
                 {row.totalSurveys ?? 0}

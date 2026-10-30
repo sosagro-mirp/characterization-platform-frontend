@@ -1,12 +1,9 @@
+import { filterBySelection } from "./selection";
 import type { UnitFilters, UnitRow } from "./types";
 
 /** Minúsculas y sin tildes, para que "jardin" encuentre "Jardín". */
 export function normalizeText(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
 /** Nombre del archivo exportado; `CORS` no expone Content-Disposition, así que se arma aquí. */
@@ -29,14 +26,18 @@ export function applyUnitFilters(
   rows: UnitRow[],
   filters: UnitFilters,
 ): UnitRow[] {
-  const { departmentIds, townIds, cropIds, instrument, columns } = filters;
+  const { departmentIds, townIds, cropIds, instrument, columns, selection } =
+    filters;
   const columnTerms = Object.entries(columns ?? {})
     .map(([key, value]) => [key, normalizeText(value)] as const)
     .filter(([key, value]) => value !== "" && key in COLUMN_TEXT);
 
-  return rows.filter((row) => {
+  return filterBySelection(rows, selection ?? []).filter((row) => {
     if (departmentIds?.length) {
-      if (!row.department || !departmentIds.includes(row.department.departmentId)) {
+      if (
+        !row.department ||
+        !departmentIds.includes(row.department.departmentId)
+      ) {
         return false;
       }
     }
