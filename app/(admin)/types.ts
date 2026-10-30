@@ -409,6 +409,8 @@ export interface FarmerDeletionFarmInfo {
   name: string;
   shared: boolean;
   willBeDeleted: boolean;
+  /** Spec 99: la finca tiene decisiones de selección y no se puede borrar. */
+  blockedBy?: "selection";
 }
 
 export interface FarmerDeletionPreview {

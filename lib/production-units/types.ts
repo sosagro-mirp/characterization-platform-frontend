@@ -35,6 +35,16 @@ export interface UnitFarmer {
   consentPending?: boolean;
 }
 
+export type SelectionStatus = "included" | "excluded" | "in_review";
+
+/** Decisión vigente (spec 99); `null` en la fila = sin decisión. */
+export interface UnitSelection {
+  status: SelectionStatus;
+  reason: string;
+  version: number;
+  updatedAt: string;
+}
+
 export interface UnitRow {
   farmId: string;
   name: string;
@@ -47,6 +57,7 @@ export interface UnitRow {
   unsyncedWithResponses?: number;
   coverage: Record<string, CoverageCell>;
   warnings?: string[];
+  selection?: UnitSelection | null;
 }
 
 export interface UnlocatedSurvey {
@@ -83,4 +94,6 @@ export interface UnitFilters {
   instrument?: { instrumentId: string; statuses: CoverageStatus[] } | null;
   /** Texto por columna: `name`, `department`, `town`, `crops`, `farmers`. */
   columns?: Record<string, string>;
+  /** Decisiones a mostrar; `none` = sin decisión. Vacío = todas. */
+  selection?: (SelectionStatus | "none")[];
 }

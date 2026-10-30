@@ -2,17 +2,33 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
+import { SelectionCounter } from "@/components/admin/production-units/SelectionCounter";
+import { SelectionDialog } from "@/components/admin/production-units/SelectionDialog";
 import { ProductionUnitsTable } from "@/components/admin/production-units/ProductionUnitsTable";
 import { STATUS_LABELS } from "@/components/admin/production-units/StatusChip";
-import { applyUnitFilters, exportFileName } from "@/lib/production-units/filters";
+import {
+  applyUnitFilters,
+  exportFileName,
+} from "@/lib/production-units/filters";
+import {
+  NO_DECISION_LABEL,
+  SELECTION_LABELS,
+} from "@/lib/production-units/selection";
 import type {
   CoverageStatus,
   ProductionUnitsResponse,
+  SelectionStatus,
+  UnitRow,
 } from "@/lib/production-units/types";
 import {
   exportProductionUnits,
   getProductionUnits,
 } from "@/services/production-units.service";
+import {
+  exportSelection,
+  getSelectionSummary,
+  type SelectionSummary,
+} from "@/services/unit-selections.service";
 
 const selectClass =
   "rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]";
@@ -34,27 +50,72 @@ export default function ProductionUnitsPage() {
   const [cropId, setCropId] = useState("");
   const [instrumentId, setInstrumentId] = useState("");
   const [statuses, setStatuses] = useState<CoverageStatus[]>([]);
-  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>(
+    {},
+  );
   const [showUnlocated, setShowUnlocated] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [selectionFilter, setSelectionFilter] = useState<
+    (SelectionStatus | "none")[]
+  >([]);
+  const [summary, setSummary] = useState<SelectionSummary | null>(null);
+  const [deciding, setDeciding] = useState<UnitRow | null>(null);
+
+  const load = () => {
     getProductionUnits()
       .then(setData)
       .catch((err) =>
         setError(
-          err instanceof Error ? err.message : "Error al cargar las unidades productivas.",
+          err instanceof Error
+            ? err.message
+            : "Error al cargar las unidades productivas.",
         ),
       );
-  }, []);
+    getSelectionSummary()
+      .then(setSummary)
+      .catch(() => setSummary(null));
+  };
+
+  useEffect(load, []);
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  };
+
+  const handleExportSelection = async () => {
+    setExportError(null);
+    try {
+      const blob = await exportSelection();
+      downloadBlob(
+        blob,
+        exportFileName().replace("unidades-productivas", "seleccion-unidades"),
+      );
+    } catch (err) {
+      setExportError(
+        err instanceof Error ? err.message : "No se pudo generar el Excel.",
+      );
+    }
+  };
 
   const options = useMemo(() => {
     const departments = new Map<string, string>();
-    const towns = new Map<string, { name: string; departmentId: string | null }>();
+    const towns = new Map<
+      string,
+      { name: string; departmentId: string | null }
+    >();
     const crops = new Map<string, string>();
     for (const row of data?.rows ?? []) {
-      if (row.department) departments.set(row.department.departmentId, row.department.name);
+      if (row.department)
+        departments.set(row.department.departmentId, row.department.name);
       if (row.town) {
         towns.set(row.town.townId, {
           name: row.town.name,
@@ -84,8 +145,18 @@ export default function ProductionUnitsPage() {
         instrument:
           instrumentId && statuses.length ? { instrumentId, statuses } : null,
         columns: columnFilters,
+        selection: selectionFilter,
       }),
-    [data, departmentId, townId, cropId, instrumentId, statuses, columnFilters],
+    [
+      data,
+      departmentId,
+      townId,
+      cropId,
+      instrumentId,
+      statuses,
+      columnFilters,
+      selectionFilter,
+    ],
   );
 
   const toggleStatus = (status: CoverageStatus) =>
@@ -104,7 +175,15 @@ export default function ProductionUnitsPage() {
     try {
       const blob = await exportProductionUnits(
         filtered.map((r) => r.farmId),
-        { departmentId, townId, cropId, instrumentId, statuses, columns: columnFilters },
+        {
+          departmentId,
+          townId,
+          cropId,
+          instrumentId,
+          statuses,
+          columns: columnFilters,
+          selection: selectionFilter,
+        },
       );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -131,6 +210,7 @@ export default function ProductionUnitsPage() {
     setInstrumentId("");
     setStatuses([]);
     setColumnFilters({});
+    setSelectionFilter([]);
   };
 
   return (
@@ -165,6 +245,8 @@ export default function ProductionUnitsPage() {
       {!data && !error && (
         <p className="text-sm text-[var(--text-muted)]">Cargando…</p>
       )}
+
+      {summary && <SelectionCounter summary={summary} />}
 
       {data && (
         <>
@@ -225,7 +307,11 @@ export default function ProductionUnitsPage() {
               ))}
             </select>
             {instrumentId && (
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Estado">
+              <div
+                className="flex flex-wrap gap-1.5"
+                role="group"
+                aria-label="Estado"
+              >
                 {STATUSES.map((status) => {
                   const on = statuses.includes(status);
                   return (
@@ -246,6 +332,41 @@ export default function ProductionUnitsPage() {
                 })}
               </div>
             )}
+            <div
+              className="flex flex-wrap gap-1.5"
+              role="group"
+              aria-label="Decisión"
+            >
+              {(
+                [
+                  ...(Object.keys(SELECTION_LABELS) as SelectionStatus[]),
+                  "none",
+                ] as const
+              ).map((s) => {
+                const on = selectionFilter.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() =>
+                      setSelectionFilter((cur) =>
+                        cur.includes(s)
+                          ? cur.filter((x) => x !== s)
+                          : [...cur, s],
+                      )
+                    }
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                      on
+                        ? "border-brand bg-brand-subtle-bg text-brand-subtle-fg"
+                        : "border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                    }`}
+                  >
+                    {s === "none" ? NO_DECISION_LABEL : SELECTION_LABELS[s]}
+                  </button>
+                );
+              })}
+            </div>
             <button
               type="button"
               onClick={clear}
@@ -260,7 +381,17 @@ export default function ProductionUnitsPage() {
               className="ml-auto flex items-center gap-1.5 rounded-md bg-[var(--brand)] px-4 py-2 text-xs font-medium text-[var(--brand-foreground)] transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-50"
             >
               <Download className="size-3.5" aria-hidden="true" />
-              {exporting ? "Generando…" : `Exportar a Excel (${filtered.length})`}
+              {exporting
+                ? "Generando…"
+                : `Exportar a Excel (${filtered.length})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleExportSelection()}
+              className="flex items-center gap-1.5 rounded-md border border-[var(--border)] px-4 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
+            >
+              <Download className="size-3.5" aria-hidden="true" />
+              Exportar selección
             </button>
           </div>
 
@@ -285,6 +416,7 @@ export default function ProductionUnitsPage() {
               onColumnFilter={(key, value) =>
                 setColumnFilters((current) => ({ ...current, [key]: value }))
               }
+              onDecide={setDeciding}
             />
           ) : (
             <p className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-12 text-center text-sm text-[var(--text-muted)]">
@@ -293,8 +425,9 @@ export default function ProductionUnitsPage() {
           )}
 
           <p className="text-[11px] text-[var(--text-muted)]">
-            * La celda usa una encuesta fuera del alcance declarado o con cultivo
-            o finca inferidos. Pasa el cursor sobre el estado para ver el detalle.
+            * La celda usa una encuesta fuera del alcance declarado o con
+            cultivo o finca inferidos. Pasa el cursor sobre el estado para ver
+            el detalle.
           </p>
 
           <section>
@@ -330,7 +463,9 @@ export default function ProductionUnitsPage() {
                             {s.surveyId.slice(0, 8)} ·{" "}
                             {new Date(s.createdAt).toLocaleDateString("es-CO")}
                           </td>
-                          <td className="px-3 py-2.5">{s.respondentName ?? "—"}</td>
+                          <td className="px-3 py-2.5">
+                            {s.respondentName ?? "—"}
+                          </td>
                           <td className="px-3 py-2.5 text-[var(--text-muted)]">
                             {s.origin === "public" ? "Pública" : "Campo"}
                           </td>
@@ -349,6 +484,22 @@ export default function ProductionUnitsPage() {
             )}
           </section>
         </>
+      )}
+      {deciding && data && (
+        <SelectionDialog
+          key={deciding.farmId}
+          row={deciding}
+          columns={data.instruments}
+          onClose={() => setDeciding(null)}
+          onSaved={() => {
+            setDeciding(null);
+            load();
+          }}
+          onConflict={() => {
+            setDeciding(null);
+            load();
+          }}
+        />
       )}
     </div>
   );

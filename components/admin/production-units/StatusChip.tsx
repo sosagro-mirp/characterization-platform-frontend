@@ -1,4 +1,7 @@
-import type { CoverageCell, CoverageStatus } from "@/lib/production-units/types";
+import type {
+  CoverageCell,
+  CoverageStatus,
+} from "@/lib/production-units/types";
 
 const STYLES: Record<CoverageStatus, { label: string; className: string }> = {
   aplicado: {
@@ -27,7 +30,11 @@ export const STATUS_LABELS: Record<CoverageStatus, string> = {
 };
 
 function detail(cell: CoverageCell): string | null {
-  if (cell.totalFarmers && cell.totalFarmers > 1 && cell.coveredFarmers !== undefined) {
+  if (
+    cell.totalFarmers &&
+    cell.totalFarmers > 1 &&
+    cell.coveredFarmers !== undefined
+  ) {
     return `${cell.coveredFarmers} de ${cell.totalFarmers}`;
   }
   return null;
@@ -49,7 +56,8 @@ export function StatusChip({ cell }: { cell: CoverageCell | undefined }) {
   if (!cell) return <span className="text-[var(--text-muted)]">—</span>;
   const style = STYLES[cell.status];
   const extra = detail(cell);
-  const marks = cell.outOfScope || cell.inferredCrop || cell.inferredFarm ? "*" : "";
+  const marks =
+    cell.outOfScope || cell.inferredCrop || cell.inferredFarm ? "*" : "";
   return (
     <span
       title={hint(cell)}
