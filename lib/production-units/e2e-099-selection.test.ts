@@ -7,6 +7,11 @@
  * Import dinámico por el mismo motivo que en `e2e-098-filters.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import {
+  isDeletionBlocked,
+  summarizeDeletionPreview,
+  type FarmerDeletionPreview,
+} from "@/lib/farmers/cascadeDeletion";
 
 type SelectionStatus = "included" | "excluded" | "in_review";
 type CoverageStatus = "aplicado" | "parcial" | "falta" | "no_aplica";
@@ -82,5 +87,45 @@ describe("Spec 99 — selección", () => {
   it("C08 — parcial también advierte", async () => {
     const { missingInstruments } = await loadSelection();
     expect(missingInstruments(ROWS[2])).toEqual(["i1"]);
+  });
+});
+
+describe("C11 — vista previa del borrado con decisiones de selección", () => {
+  const baseFarm = {
+    farmId: "f1",
+    name: "La Esperanza",
+    willBeDeleted: true,
+  };
+  const preview = (farms: object[]) =>
+    ({
+      name: "Productor",
+      documentId: "123",
+      farm: null,
+      farms,
+      counts: {
+        campaignSessions: 0,
+        surveys: 0,
+        responses: 0,
+        documentCollisions: 0,
+        relations: 0,
+        consentRecords: 0,
+      },
+      preserved: { changeRequests: 0 },
+    }) as unknown as FarmerDeletionPreview;
+
+  it("bloquea y lo explica cuando una finca tiene decisiones", () => {
+    const blocked = preview([{ ...baseFarm, blockedBy: "selection" }]);
+    expect(isDeletionBlocked(blocked)).toBe(true);
+    expect(summarizeDeletionPreview(blocked)).toEqual([
+      'La finca "La Esperanza" tiene decisiones de selección de unidades productivas: no se puede borrar.',
+    ]);
+  });
+
+  it("no bloquea una finca sin decisiones", () => {
+    const free = preview([baseFarm]);
+    expect(isDeletionBlocked(free)).toBe(false);
+    expect(summarizeDeletionPreview(free)).toEqual([
+      'La finca "La Esperanza" se eliminará (no la comparte ningún otro agricultor).',
+    ]);
   });
 });

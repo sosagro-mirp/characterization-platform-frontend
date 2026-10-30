@@ -94,7 +94,7 @@ export default function ProductionUnitsPage() {
   const handleExportSelection = async () => {
     setExportError(null);
     try {
-      const blob = await exportSelection({ selection: selectionFilter });
+      const blob = await exportSelection();
       downloadBlob(
         blob,
         exportFileName().replace("unidades-productivas", "seleccion-unidades"),

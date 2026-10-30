@@ -52,12 +52,11 @@ export function getSelectionSummary(): Promise<SelectionSummary> {
   });
 }
 
-export function exportSelection(
-  filters: Record<string, unknown>,
-): Promise<Blob> {
+/** El libro trae siempre el resultado completo: el chip de la vista no lo filtra. */
+export function exportSelection(): Promise<Blob> {
   return apiClient.post<Blob>(
     "/api/unit-selections/export",
-    { filters },
+    {},
     { blob: true },
   );
 }
