@@ -57,7 +57,11 @@ export interface UnlocatedSurvey {
   respondentName: string | null;
   responseCount: number;
   instrumentIds: string[];
-  reason: "sin_productor" | "productor_sin_finca" | "productor_varias_fincas";
+  reason:
+    | "sin_productor"
+    | "productor_sin_finca"
+    | "productor_varias_fincas"
+    | "cultivo_ambiguo";
 }
 
 export interface ProductionUnitsResponse {

@@ -23,6 +23,7 @@ const REASONS: Record<string, string> = {
   sin_productor: "Sin productor",
   productor_sin_finca: "Productor sin finca",
   productor_varias_fincas: "Productor con varias fincas",
+  cultivo_ambiguo: "Finca con varios cultivos y encuesta sin cultivo",
 };
 
 export default function ProductionUnitsPage() {
@@ -112,7 +113,8 @@ export default function ProductionUnitsPage() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      URL.revokeObjectURL(url);
+      // Revocar de inmediato corta la descarga en algunos navegadores.
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
     } catch (err) {
       setExportError(
         err instanceof Error ? err.message : "No se pudo generar el Excel.",

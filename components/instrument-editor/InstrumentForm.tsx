@@ -79,10 +79,17 @@ export default function InstrumentForm({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
   const isAdmin = useAuthStore((s) => s.user?.role === "admin");
+  // Spec 98 — el alcance también lo declara RESEARCHER (el backend lo permite).
+  const canEditScope = useAuthStore(
+    (s) => s.user?.role === "admin" || s.user?.role === "researcher",
+  );
+  const [cropsError, setCropsError] = useState(false);
 
   useEffect(() => {
     if (!autoSave) return;
-    listCrops().then(setCrops).catch(() => setCrops([]));
+    listCrops()
+      .then(setCrops)
+      .catch(() => setCropsError(true));
   }, [autoSave]);
 
   const lastPersisted = useRef({
@@ -172,11 +179,12 @@ export default function InstrumentForm({
   };
 
   const toggleScopeCrop = (id: string) => {
-    setScopeCropIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      if (autoSave) void persist({ cropIds: next });
-      return next;
-    });
+    // Sin efectos dentro del updater: en StrictMode se ejecuta dos veces.
+    const next = scopeCropIds.includes(id)
+      ? scopeCropIds.filter((x) => x !== id)
+      : [...scopeCropIds, id];
+    setScopeCropIds(next);
+    if (autoSave) void persist({ cropIds: next });
   };
 
   const handleCoverageGroupBlur = () => {
@@ -339,7 +347,7 @@ export default function InstrumentForm({
         </div>
       )}
 
-      {isAdmin && autoSave && (
+      {canEditScope && autoSave && (
         <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5 space-y-3">
           <div>
             <label
@@ -360,6 +368,12 @@ export default function InstrumentForm({
               <option value="farm_crop">Por cultivo de la finca</option>
             </select>
           </div>
+
+          {scopeLevel === "farm_crop" && cropsError && (
+            <p className="text-[10.5px] text-[var(--danger-fg)]">
+              No se pudo cargar la lista de cultivos. Recarga la página.
+            </p>
+          )}
 
           {scopeLevel === "farm_crop" && crops.length > 0 && (
             <div>
