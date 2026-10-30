@@ -1,4 +1,7 @@
-import type { FarmerDeletionFarmInfo, FarmerDeletionPreview } from "@/app/(admin)/types";
+import type {
+  FarmerDeletionFarmInfo,
+  FarmerDeletionPreview,
+} from "@/app/(admin)/types";
 
 export type { FarmerDeletionPreview };
 
@@ -29,6 +32,13 @@ export function isDeletionConfirmed(
  * líneas vacías. Incluye `consentRecords` (spec 78, criterio "borrado en
  * cascada declara las constancias de consentimiento que se eliminarán").
  */
+/** Spec 99: una finca con decisiones de selección impide el borrado en cascada. */
+export function isDeletionBlocked(preview: FarmerDeletionPreview): boolean {
+  return [preview.farm, ...(preview.farms ?? [])].some(
+    (f) => f?.blockedBy === "selection",
+  );
+}
+
 export function summarizeDeletionPreview(
   preview: FarmerDeletionPreview,
 ): string[] {
@@ -36,7 +46,13 @@ export function summarizeDeletionPreview(
   const { counts, preserved } = preview;
 
   if (counts.campaignSessions > 0) {
-    lines.push(pluralLine(counts.campaignSessions, "sesión de campaña", "sesiones de campaña"));
+    lines.push(
+      pluralLine(
+        counts.campaignSessions,
+        "sesión de campaña",
+        "sesiones de campaña",
+      ),
+    );
   }
   if (counts.surveys > 0) {
     lines.push(pluralLine(counts.surveys, "encuesta", "encuestas"));
@@ -55,7 +71,11 @@ export function summarizeDeletionPreview(
   }
   if (counts.relations > 0) {
     lines.push(
-      pluralLine(counts.relations, "relación asociada (tecnologías, obstáculos, conexiones)", "relaciones asociadas (tecnologías, obstáculos, conexiones)"),
+      pluralLine(
+        counts.relations,
+        "relación asociada (tecnologías, obstáculos, conexiones)",
+        "relaciones asociadas (tecnologías, obstáculos, conexiones)",
+      ),
     );
   }
   if (counts.consentRecords > 0) {
@@ -75,6 +95,12 @@ export function summarizeDeletionPreview(
     if (f && !farmsById.has(f.farmId)) farmsById.set(f.farmId, f);
   }
   for (const f of farmsById.values()) {
+    if (f.blockedBy === "selection") {
+      lines.push(
+        `La finca "${f.name}" tiene decisiones de selección de unidades productivas: no se puede borrar.`,
+      );
+      continue;
+    }
     lines.push(
       f.willBeDeleted
         ? `La finca "${f.name}" se eliminará (no la comparte ningún otro agricultor).`
