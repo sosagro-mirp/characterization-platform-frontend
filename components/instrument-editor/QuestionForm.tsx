@@ -5,6 +5,9 @@ import { GitBranch } from "lucide-react";
 import { QuestionDetail, TypeOfQuestionSummary } from "@/app/(admin)/types";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import OptionsEditor from "./OptionsEditor";
+import { SystemFieldSelect } from "./SystemFieldSelect";
+import { useSystemFieldCatalog } from "@/hooks/useSystemFieldCatalog";
+import { canonicalSystemField } from "@/lib/system-fields/systemFieldOptions";
 import ConfirmDialog from "./ConfirmDialog";
 
 const TYPES_WITH_OPTIONS = ["single_choice", "likert", "multiple_choice", "numeric_with_unit"];
@@ -35,7 +38,9 @@ export default function QuestionForm({
   sectionId,
   questionTypes,
 }: QuestionFormProps) {
-  const { sections, updateQuestionInStore } = useInstrumentEditorStore();
+  const { sections, updateQuestionInStore, saveWarnings } =
+    useInstrumentEditorStore();
+  const { catalog } = useSystemFieldCatalog();
 
   const [text, setText] = useState(question.text);
   const [typeId, setTypeId] = useState(question.type?.typeId ?? "");
@@ -98,9 +103,26 @@ export default function QuestionForm({
 
   const applyTypeChange = async (newTypeId: string) => {
     setTypeId(newTypeId);
+    // Spec 97 — si el destino actual no admite el tipo nuevo, el backend
+    // rechaza el cambio (SYSTEM_FIELD_TYPE_MISMATCH): se quita el destino en
+    // la misma petición.
+    const newTypeName =
+      questionTypes.find((t) => t.typeId === newTypeId)?.name ?? "";
+    const currentDef = question.systemField
+      ? catalog.find(
+          (d) => d.key === canonicalSystemField(catalog, question.systemField!)
+        )
+      : undefined;
+    const dropSystemField =
+      currentDef !== undefined && !currentDef.questionTypes.includes(newTypeName);
     await updateQuestionInStore(sectionId, question.questionId, {
       typeId: newTypeId,
+      ...(dropSystemField && { systemField: null }),
     });
+  };
+
+  const handleSystemFieldChange = async (systemField: string | null) => {
+    await updateQuestionInStore(sectionId, question.questionId, { systemField });
   };
 
   const handleBlurText = async () => {
@@ -249,6 +271,25 @@ export default function QuestionForm({
         </label>
       </div>
 
+      <div className="space-y-2">
+        <SystemFieldSelect
+          id={`systemField-${question.questionId}`}
+          questionTypeName={currentTypeName}
+          value={question.systemField}
+          currentQuestionId={question.questionId}
+          onChange={handleSystemFieldChange}
+        />
+        {saveWarnings.map((message) => (
+          <p
+            key={message}
+            role="status"
+            className="rounded-md bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--warning-fg)]"
+          >
+            {message}
+          </p>
+        ))}
+      </div>
+
       {precedingQuestions.length > 0 && (
         <div className="overflow-hidden rounded-md border border-[var(--info-fg)]/40">
           <div className="flex items-center gap-2 border-b border-[var(--info-fg)]/40 bg-[var(--info-bg)] px-3.5 py-2.5">
@@ -362,6 +403,7 @@ export default function QuestionForm({
           questionId={question.questionId}
           sectionId={sectionId}
           options={question.options}
+          systemField={question.systemField}
         />
       )}
 

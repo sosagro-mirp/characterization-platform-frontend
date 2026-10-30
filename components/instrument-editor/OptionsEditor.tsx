@@ -1,22 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, ArchiveRestore, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Link2, Plus, Trash2 } from "lucide-react";
 import { OptionDetail } from "@/app/(admin)/types";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
 import { ApiError } from "@/lib/apiClient";
 import ConfirmDialog from "./ConfirmDialog";
+import { useSystemFieldCatalog } from "@/hooks/useSystemFieldCatalog";
+import {
+  METADATA_CATALOG_LABELS,
+  useMetadataCatalog,
+} from "@/hooks/useMetadataCatalog";
+import { metadataCatalogFor } from "@/lib/system-fields/systemFieldOptions";
 
 interface OptionsEditorProps {
   questionId: string;
   sectionId: string;
   options: OptionDetail[];
+  /** Destino de la pregunta (spec 97): fija el catálogo al que pueden apuntar las opciones. */
+  systemField?: string | null;
 }
 
 export default function OptionsEditor({
   questionId,
   sectionId,
   options,
+  systemField,
 }: OptionsEditorProps) {
   const {
     addOptions,
@@ -29,6 +38,25 @@ export default function OptionsEditor({
   const [newText, setNewText] = useState("");
   // Spec 84 — 409 al borrar: la opción tiene respuestas. Se ofrece archivar.
   const [archiveInsteadOptionId, setArchiveInsteadOptionId] = useState<string | null>(null);
+
+  // Spec 97 — el destino fija el catálogo (cultivo, municipio…) de `metadataId`.
+  // Solo se abre el selector de una opción a la vez: una pregunta de municipios
+  // tiene más de mil opciones y un selector por fila no sería usable.
+  const { catalog } = useSystemFieldCatalog();
+  const metadataKind = systemField ? metadataCatalogFor(catalog, systemField) : null;
+  const { entries: metadataEntries, loading: metadataLoading } =
+    useMetadataCatalog(metadataKind);
+  const [editingMetadataOptionId, setEditingMetadataOptionId] = useState<string | null>(null);
+  const metadataNameById = new Map(metadataEntries.map((e) => [e.id, e.name]));
+
+  const handleMetadataChange = async (option: OptionDetail, metadataId: string) => {
+    setEditingMetadataOptionId(null);
+    const next = metadataId || null;
+    if (next === (option.metadataId ?? null)) return;
+    await updateOptionInStore(questionId, sectionId, option.optionId, {
+      metadataId: next,
+    });
+  };
 
   const hasOtherOption = options.some((o) => o.isOther);
   const visibleOptions = options.filter((o) => showArchived || !o.archivedAt);
@@ -103,6 +131,45 @@ export default function OptionsEditor({
               onBlur={(e) => handleTextBlur(opt, e.target.value)}
               className="flex-1 border-none bg-transparent text-sm text-[var(--text-primary)] outline-none"
             />
+            {metadataKind && !opt.isOther && (
+              editingMetadataOptionId === opt.optionId ? (
+                <select
+                  autoFocus
+                  value={opt.metadataId ?? ""}
+                  onChange={(e) => handleMetadataChange(opt, e.target.value)}
+                  onBlur={() => setEditingMetadataOptionId(null)}
+                  aria-label={`Vincular opción a ${METADATA_CATALOG_LABELS[metadataKind]}`}
+                  className="max-w-[14rem] shrink-0 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                >
+                  <option value="">Sin vínculo</option>
+                  {metadataEntries.map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {entry.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingMetadataOptionId(opt.optionId)}
+                  disabled={metadataLoading}
+                  className={`flex max-w-[12rem] shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10.5px] whitespace-nowrap transition-colors disabled:opacity-60 ${
+                    opt.metadataId
+                      ? "bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]"
+                      : "border border-dashed border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                  }`}
+                  title={`Vincular esta opción a un ${METADATA_CATALOG_LABELS[metadataKind]} del catálogo`}
+                  aria-label={`Vincular opción a ${METADATA_CATALOG_LABELS[metadataKind]}`}
+                >
+                  <Link2 className="size-3 shrink-0" aria-hidden="true" />
+                  <span className="truncate">
+                    {opt.metadataId
+                      ? (metadataNameById.get(opt.metadataId) ?? "Vinculada")
+                      : `Sin ${METADATA_CATALOG_LABELS[metadataKind]}`}
+                  </span>
+                </button>
+              )
+            )}
             {opt.archivedAt && (
               <span
                 className="shrink-0 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--text-muted)] whitespace-nowrap"
