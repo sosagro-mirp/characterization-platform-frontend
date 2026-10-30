@@ -132,6 +132,10 @@ export interface InstrumentListItem {
   isActive: boolean;
   /** Spec 79 — el instrumento se puede compartir por /encuesta/{instrumentId}. */
   isPublic: boolean;
+  /** Spec 98 — a quién se aplica; null = sin declarar. */
+  scopeLevel?: "farmer" | "farm" | "farm_crop" | null;
+  cropIds?: string[];
+  coverageGroup?: string | null;
   actorTypes: ActorTypeSummary[];
   createdBy?: UserAuditSummary | null;
   updatedBy?: UserAuditSummary | null;
@@ -159,6 +163,10 @@ export interface UpdateInstrumentRequest {
   /** Spec 79 — se rechaza con 422 si el instrumento tiene preguntas multimedia. */
   isPublic?: boolean;
   actorTypeIds?: string[];
+  /** Spec 98 */
+  scopeLevel?: "farmer" | "farm" | "farm_crop" | null;
+  cropIds?: string[];
+  coverageGroup?: string | null;
 }
 
 export interface DuplicateInstrumentRequest {

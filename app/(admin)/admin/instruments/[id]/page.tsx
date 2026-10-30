@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ActorTypeSummary,
+  InstrumentListItem,
   SectionDetail,
   TypeOfQuestionSummary,
 } from "@/app/(admin)/types";
@@ -23,6 +24,9 @@ interface EditorData {
   publishDate: string;
   isActive: boolean;
   isPublic: boolean;
+  scopeLevel?: InstrumentListItem["scopeLevel"];
+  cropIds?: string[];
+  coverageGroup?: string | null;
   actorTypes: ActorTypeSummary[];
   createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
@@ -129,6 +133,9 @@ export default function InstrumentEditorPage({ params }: PageProps) {
           publishDate={editor.publishDate}
           isActive={editor.isActive}
           isPublic={editor.isPublic}
+          scopeLevel={editor.scopeLevel}
+          cropIds={editor.cropIds}
+          coverageGroup={editor.coverageGroup}
           actorTypes={editor.actorTypes}
           createdBy={editor.createdBy}
           updatedBy={editor.updatedBy}

@@ -1,13 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import {
   ActorTypeSummary,
   CreateInstrumentRequest,
+  InstrumentListItem,
   UpdateInstrumentRequest,
 } from "@/app/(admin)/types";
 import { useAuthStore } from "@/store/useAuthStore";
+import { listCrops } from "@/services/types-of-crops.service";
+import type { CropSummary } from "@/app/(instrument)/types";
 import { buildPublicSurveyUrl } from "@/lib/public-surveys/publicSurveyUrl";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 
@@ -19,6 +22,9 @@ interface InstrumentFormProps {
     publishDate: string;
     isActive: boolean;
     isPublic: boolean;
+    scopeLevel?: InstrumentListItem["scopeLevel"];
+    cropIds?: string[];
+    coverageGroup?: string | null;
     actorTypeIds: string[];
   };
   onSubmit: (
@@ -59,9 +65,25 @@ export default function InstrumentForm({
   const [selectedActorTypeIds, setSelectedActorTypeIds] = useState<string[]>(
     initialValues?.actorTypeIds ?? [],
   );
+  // Spec 98 — alcance para la cobertura de unidades productivas.
+  const [scopeLevel, setScopeLevel] = useState<InstrumentListItem["scopeLevel"]>(
+    initialValues?.scopeLevel ?? null,
+  );
+  const [scopeCropIds, setScopeCropIds] = useState<string[]>(
+    initialValues?.cropIds ?? [],
+  );
+  const [coverageGroup, setCoverageGroup] = useState(
+    initialValues?.coverageGroup ?? "",
+  );
+  const [crops, setCrops] = useState<CropSummary[]>([]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
   const isAdmin = useAuthStore((s) => s.user?.role === "admin");
+
+  useEffect(() => {
+    if (!autoSave) return;
+    listCrops().then(setCrops).catch(() => setCrops([]));
+  }, [autoSave]);
 
   const lastPersisted = useRef({
     name: initialValues?.name ?? "",
@@ -140,6 +162,28 @@ export default function InstrumentForm({
   const handleIsActiveChange = (checked: boolean) => {
     setIsActive(checked);
     if (autoSave) void persist({ isActive: checked });
+  };
+
+  const handleScopeLevelChange = (value: string) => {
+    const next = (value || null) as InstrumentListItem["scopeLevel"];
+    setScopeLevel(next);
+    if (next !== "farm_crop") setScopeCropIds([]);
+    if (autoSave) void persist({ scopeLevel: next });
+  };
+
+  const toggleScopeCrop = (id: string) => {
+    setScopeCropIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      if (autoSave) void persist({ cropIds: next });
+      return next;
+    });
+  };
+
+  const handleCoverageGroupBlur = () => {
+    if (!autoSave) return;
+    const trimmed = coverageGroup.trim();
+    if (trimmed === (initialValues?.coverageGroup ?? "")) return;
+    void persist({ coverageGroup: trimmed || null });
   };
 
   const toggleActorType = (id: string) => {
@@ -290,6 +334,80 @@ export default function InstrumentForm({
               >
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isAdmin && autoSave && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5 space-y-3">
+          <div>
+            <label
+              htmlFor="scopeLevel"
+              className="mb-1.5 block text-xs text-[var(--text-muted)]"
+            >
+              Alcance (cobertura de unidades productivas)
+            </label>
+            <select
+              id="scopeLevel"
+              value={scopeLevel ?? ""}
+              onChange={(e) => handleScopeLevelChange(e.target.value)}
+              className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            >
+              <option value="">Sin declarar (no sale en la cobertura)</option>
+              <option value="farmer">Por productor</option>
+              <option value="farm">Por finca</option>
+              <option value="farm_crop">Por cultivo de la finca</option>
+            </select>
+          </div>
+
+          {scopeLevel === "farm_crop" && crops.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs text-[var(--text-muted)]">
+                Cultivos a los que aplica (ninguno = todos)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {crops.map((crop) => (
+                  <button
+                    key={crop.cropId}
+                    type="button"
+                    onClick={() => toggleScopeCrop(crop.cropId)}
+                    aria-pressed={scopeCropIds.includes(crop.cropId)}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                      scopeCropIds.includes(crop.cropId)
+                        ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]"
+                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                    }`}
+                  >
+                    {crop.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {scopeLevel && (
+            <div>
+              <label
+                htmlFor="coverageGroup"
+                className="mb-1.5 block text-xs text-[var(--text-muted)]"
+              >
+                Grupo de cobertura (opcional)
+              </label>
+              <input
+                id="coverageGroup"
+                type="text"
+                maxLength={50}
+                value={coverageGroup}
+                onChange={(e) => setCoverageGroup(e.target.value)}
+                onBlur={handleCoverageGroupBlur}
+                placeholder="Ej. REGISTRO"
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+              />
+              <p className="mt-1 text-[10.5px] text-[var(--text-muted)]">
+                Los instrumentos con el mismo grupo cuentan como una sola
+                columna: basta uno para dar la cobertura por aplicada.
+              </p>
             </div>
           )}
         </div>
