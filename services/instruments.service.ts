@@ -72,6 +72,9 @@ export async function getInstrumentForEditor(id: string): Promise<{
   publishDate: string;
   isActive: boolean;
   isPublic: boolean;
+  scopeLevel?: import("@/app/(admin)/types").InstrumentListItem["scopeLevel"];
+  cropIds?: string[];
+  coverageGroup?: string | null;
   actorTypes: import("@/app/(admin)/types").ActorTypeSummary[];
   createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
@@ -96,6 +99,9 @@ export async function getInstrumentForEditor(id: string): Promise<{
     publishDate: meta.publishDate,
     isActive: meta.isActive,
     isPublic: meta.isPublic,
+    scopeLevel: meta.scopeLevel ?? null,
+    cropIds: meta.cropIds ?? [],
+    coverageGroup: meta.coverageGroup ?? null,
     actorTypes: meta.actorTypes ?? [],
     createdBy: meta.createdBy,
     updatedBy: meta.updatedBy,
