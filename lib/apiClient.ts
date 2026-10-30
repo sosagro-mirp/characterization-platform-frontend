@@ -10,6 +10,8 @@ export interface ApiClientOptions extends Omit<RequestInit, "body"> {
   withAuth?: boolean;
   /** Si es true, no se intenta parsear la respuesta como JSON. */
   raw?: boolean;
+  /** Si es true, devuelve el cuerpo como `Blob` (descarga de archivos). */
+  blob?: boolean;
 }
 
 export class ApiError extends Error {
@@ -73,7 +75,7 @@ export async function apiClient<T = unknown>(
   path: string,
   options: ApiClientOptions = {},
 ): Promise<T> {
-  const { body, withAuth: _withAuth, accessToken: _accessToken, raw, headers, ...rest } =
+  const { body, withAuth: _withAuth, accessToken: _accessToken, raw, blob, headers, ...rest } =
     options;
 
   const finalHeaders = new Headers(headers);
@@ -112,6 +114,10 @@ export async function apiClient<T = unknown>(
   if (!response.ok) {
     const { message, body: errBody } = await parseError(response);
     throw new ApiError(response.status, message, errBody);
+  }
+
+  if (blob && response.status !== 204) {
+    return (await response.blob()) as T;
   }
 
   if (response.status === 204 || raw) {

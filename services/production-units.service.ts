@@ -7,3 +7,15 @@ export function getProductionUnits(): Promise<ProductionUnitsResponse> {
     cache: "no-store",
   });
 }
+
+// Spec 98 — exporta a Excel las fincas pedidas; el backend registra la exportación.
+export function exportProductionUnits(
+  farmIds: string[],
+  filters: Record<string, unknown>,
+): Promise<Blob> {
+  return apiClient.post<Blob>(
+    "/api/production-units/export",
+    { farmIds, filters },
+    { blob: true },
+  );
+}

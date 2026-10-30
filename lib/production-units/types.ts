@@ -32,6 +32,7 @@ export interface UnitFarmer {
   phone: string | null;
   role: string | null;
   isPrimary: boolean;
+  consentPending?: boolean;
 }
 
 export interface UnitRow {
@@ -41,6 +42,7 @@ export interface UnitRow {
   town: { townId: string; name: string } | null;
   crops: { farmCropId?: string; cropId: string; name: string }[];
   farmers?: UnitFarmer[];
+  hasPendingConsent?: boolean;
   totalSurveys?: number;
   unsyncedWithResponses?: number;
   coverage: Record<string, CoverageCell>;

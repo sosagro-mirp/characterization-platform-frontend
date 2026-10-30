@@ -9,6 +9,12 @@ export function normalizeText(value: string): string {
     .trim();
 }
 
+/** Nombre del archivo exportado; `CORS` no expone Content-Disposition, así que se arma aquí. */
+export function exportFileName(date: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `unidades-productivas-${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}.xlsx`;
+}
+
 const COLUMN_TEXT: Record<string, (row: UnitRow) => string> = {
   name: (r) => r.name,
   department: (r) => r.department?.name ?? "",

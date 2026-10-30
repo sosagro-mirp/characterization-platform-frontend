@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Download } from "lucide-react";
 import { ProductionUnitsTable } from "@/components/admin/production-units/ProductionUnitsTable";
 import { STATUS_LABELS } from "@/components/admin/production-units/StatusChip";
-import { applyUnitFilters } from "@/lib/production-units/filters";
+import { applyUnitFilters, exportFileName } from "@/lib/production-units/filters";
 import type {
   CoverageStatus,
   ProductionUnitsResponse,
 } from "@/lib/production-units/types";
-import { getProductionUnits } from "@/services/production-units.service";
+import {
+  exportProductionUnits,
+  getProductionUnits,
+} from "@/services/production-units.service";
 
 const selectClass =
   "rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]";
@@ -31,6 +35,8 @@ export default function ProductionUnitsPage() {
   const [statuses, setStatuses] = useState<CoverageStatus[]>([]);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [showUnlocated, setShowUnlocated] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     getProductionUnits()
@@ -87,6 +93,34 @@ export default function ProductionUnitsPage() {
         ? current.filter((s) => s !== status)
         : [...current, status],
     );
+
+  const pendingConsent = filtered.filter((r) => r.hasPendingConsent).length;
+
+  const handleExport = async () => {
+    if (!filtered.length || exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const blob = await exportProductionUnits(
+        filtered.map((r) => r.farmId),
+        { departmentId, townId, cropId, instrumentId, statuses, columns: columnFilters },
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = exportFileName();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(
+        err instanceof Error ? err.message : "No se pudo generar el Excel.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const clear = () => {
     setDepartmentId("");
@@ -217,7 +251,29 @@ export default function ProductionUnitsPage() {
             >
               Limpiar filtros
             </button>
+            <button
+              type="button"
+              onClick={() => void handleExport()}
+              disabled={exporting || filtered.length === 0}
+              className="ml-auto flex items-center gap-1.5 rounded-md bg-[var(--brand)] px-4 py-2 text-xs font-medium text-[var(--brand-foreground)] transition-colors hover:bg-[var(--brand-hover)] disabled:opacity-50"
+            >
+              <Download className="size-3.5" aria-hidden="true" />
+              {exporting ? "Generando…" : `Exportar a Excel (${filtered.length})`}
+            </button>
           </div>
+
+          {pendingConsent > 0 && (
+            <p className="rounded-lg bg-[var(--warning-bg)] px-3 py-2 text-sm text-[var(--warning-fg)]">
+              {pendingConsent} de las {filtered.length} fincas filtradas tienen
+              el consentimiento pendiente. El Excel las incluye y lo informa en
+              la columna «Consentimiento».
+            </p>
+          )}
+          {exportError && (
+            <p className="rounded-lg bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-fg)]">
+              {exportError}
+            </p>
+          )}
 
           {filtered.length > 0 ? (
             <ProductionUnitsTable
