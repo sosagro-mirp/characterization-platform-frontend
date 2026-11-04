@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useInstrumentEditorStore } from "@/store/useInstrumentEditorStore";
+import { SystemFieldSelect } from "./SystemFieldSelect";
 
 const TYPE_LABELS: Record<string, string> = {
   open_text: "Texto abierto",
@@ -32,6 +33,7 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
   const [isRequired, setIsRequired] = useState(false);
   const [isSelectionCriteria, setIsSelectionCriteria] = useState(false);
   const [isKeyQuestion, setIsKeyQuestion] = useState(false);
+  const [systemField, setSystemField] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -49,9 +51,14 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         isSelectionCriteria,
         isKeyQuestion,
         order: nextOrder,
+        ...(systemField && { systemField }),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al crear la pregunta");
+    } finally {
+      // El store atrapa los errores de guardado (withSave) y no relanza: sin esto el
+      // botón quedaba en «Creando…» tras un 409. Si la pregunta se creó, el formulario
+      // se desmonta al cambiar la selección.
       setSaving(false);
     }
   };
@@ -89,7 +96,11 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
         <select
           required
           value={typeId}
-          onChange={(e) => setTypeId(e.target.value)}
+          onChange={(e) => {
+            setTypeId(e.target.value);
+            // El destino elegido puede no admitir el tipo nuevo.
+            setSystemField(null);
+          }}
           className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] bg-[var(--surface)]"
         >
           <option value="">Seleccionar tipo…</option>
@@ -100,6 +111,14 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
           ))}
         </select>
       </div>
+
+      <SystemFieldSelect
+        id="newSystemField"
+        questionTypeName={questionTypes.find((t) => t.typeId === typeId)?.name ?? ""}
+        value={systemField}
+        currentQuestionId={null}
+        onChange={setSystemField}
+      />
 
       <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
         <label htmlFor="newIsRequired" className="flex items-center gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
