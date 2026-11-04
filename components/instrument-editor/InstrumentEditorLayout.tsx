@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { Settings } from "lucide-react";
 import {
   ActorTypeSummary,
+  InstrumentListItem,
   SectionDetail,
   TypeOfQuestionSummary,
   UserAuditSummary,
@@ -25,6 +26,9 @@ interface InstrumentEditorLayoutProps {
   publishDate: string;
   isActive: boolean;
   isPublic: boolean;
+  scopeLevel?: InstrumentListItem["scopeLevel"];
+  cropIds?: string[];
+  coverageGroup?: string | null;
   actorTypes: ActorTypeSummary[];
   createdBy?: UserAuditSummary | null;
   updatedBy?: UserAuditSummary | null;
@@ -50,6 +54,9 @@ export default function InstrumentEditorLayout({
   publishDate,
   isActive,
   isPublic,
+  scopeLevel,
+  cropIds,
+  coverageGroup,
   actorTypes,
   createdBy,
   updatedBy,
@@ -69,6 +76,9 @@ export default function InstrumentEditorLayout({
     instrumentPublishDate,
     instrumentIsActive,
     instrumentIsPublic,
+    instrumentScopeLevel,
+    instrumentCropIds,
+    instrumentCoverageGroup,
     instrumentActorTypes,
     updateInstrumentMeta,
   } = useInstrumentEditorStore();
@@ -95,6 +105,9 @@ export default function InstrumentEditorLayout({
       publishDate,
       isActive,
       isPublic,
+      scopeLevel: scopeLevel ?? null,
+      cropIds: cropIds ?? [],
+      coverageGroup: coverageGroup ?? null,
       actorTypes,
       sections,
       questionTypes,
@@ -145,6 +158,9 @@ export default function InstrumentEditorLayout({
               publishDate: instrumentPublishDate,
               isActive: instrumentIsActive,
               isPublic: instrumentIsPublic,
+              scopeLevel: instrumentScopeLevel,
+              cropIds: instrumentCropIds,
+              coverageGroup: instrumentCoverageGroup,
               actorTypeIds: instrumentActorTypes.map((a) => a.actorTypeId),
             }}
             instrumentId={instrumentId}

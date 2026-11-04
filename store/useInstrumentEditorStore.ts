@@ -7,6 +7,7 @@ import {
   CreateOptionRequest,
   CreateQuestionRequest,
   CreateSectionRequest,
+  InstrumentListItem,
   OptionDetail,
   QuestionDetail,
   SectionDetail,
@@ -55,6 +56,10 @@ interface InstrumentEditorState {
   instrumentIsActive: boolean;
   /** Spec 79 — este instrumento se puede compartir por /encuesta/{instrumentId}. */
   instrumentIsPublic: boolean;
+  /** Spec 98 — alcance declarado para la cobertura de unidades productivas. */
+  instrumentScopeLevel: InstrumentListItem["scopeLevel"];
+  instrumentCropIds: string[];
+  instrumentCoverageGroup: string | null;
   instrumentActorTypes: ActorTypeSummary[];
   questionTypes: TypeOfQuestionSummary[];
   sections: SectionDetail[];
@@ -73,6 +78,9 @@ interface InstrumentEditorState {
     publishDate: string;
     isActive: boolean;
     isPublic: boolean;
+    scopeLevel?: InstrumentListItem["scopeLevel"];
+    cropIds?: string[];
+    coverageGroup?: string | null;
     actorTypes: ActorTypeSummary[];
     sections: SectionDetail[];
     questionTypes: TypeOfQuestionSummary[];
@@ -179,6 +187,9 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       instrumentPublishDate: "",
       instrumentIsActive: false,
       instrumentIsPublic: false,
+      instrumentScopeLevel: null,
+      instrumentCropIds: [],
+      instrumentCoverageGroup: null,
       instrumentActorTypes: [],
       questionTypes: [],
       sections: [],
@@ -196,6 +207,9 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
           instrumentPublishDate: payload.publishDate,
           instrumentIsActive: payload.isActive,
           instrumentIsPublic: payload.isPublic,
+          instrumentScopeLevel: payload.scopeLevel ?? null,
+          instrumentCropIds: payload.cropIds ?? [],
+          instrumentCoverageGroup: payload.coverageGroup ?? null,
           instrumentActorTypes: payload.actorTypes ?? [],
           questionTypes: payload.questionTypes ?? [],
           sections: payload.sections,
@@ -216,6 +230,9 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
             instrumentPublishDate: updated.publishDate,
             instrumentIsActive: updated.isActive,
             instrumentIsPublic: updated.isPublic,
+            instrumentScopeLevel: updated.scopeLevel ?? null,
+            instrumentCropIds: updated.cropIds ?? [],
+            instrumentCoverageGroup: updated.coverageGroup ?? null,
             instrumentActorTypes: updated.actorTypes,
           });
         });
