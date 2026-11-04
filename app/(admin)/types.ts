@@ -22,6 +22,8 @@ export interface OptionDetail {
   text: string;
   value: number | null;
   isOther: boolean;
+  /** Spec 97 — UUID de la fila del catálogo (cultivo, municipio…) a la que apunta la opción. */
+  metadataId?: string | null;
   /** Spec 84 — solo viene poblado desde `getInstrumentForEditor` (editor-structure). */
   archivedAt?: string | null;
   /** Spec 84 — cuántas respuestas usan esta opción; solo desde editor-structure. */
@@ -34,12 +36,14 @@ export interface CreateOptionRequest {
   text: string;
   value?: number;
   isOther?: boolean;
+  metadataId?: string | null;
 }
 
 export interface UpdateOptionRequest {
   text?: string;
   value?: number | null;
   isOther?: boolean;
+  metadataId?: string | null;
 }
 
 // ── Question ─────────────────────────────────────────────────────────────────
@@ -55,6 +59,13 @@ export interface QuestionDetail {
   options: OptionDetail[];
   conditionQuestionId: string | null;
   conditionValue: string | null;
+  /** Spec 97 — destino del dato, siempre en su clave canónica. */
+  systemField?: string | null;
+  systemFieldLabel?: string | null;
+  isInvertedScale?: boolean;
+  isDigitalDemandItem?: boolean;
+  /** Spec 97 — avisos del guardado (p. ej. el destino ya existe en otro instrumento). */
+  warnings?: { code: string; message: string }[];
   /** Spec 84 — solo viene poblado desde `getInstrumentForEditor` (editor-structure). */
   archivedAt?: string | null;
   /** Spec 84 — cuántas respuestas tiene esta pregunta; solo desde editor-structure. */
@@ -72,6 +83,7 @@ export interface CreateQuestionRequest {
   order: number;
   conditionQuestionId?: string;
   conditionValue?: string;
+  systemField?: string;
 }
 
 export interface UpdateQuestionRequest {
@@ -83,6 +95,8 @@ export interface UpdateQuestionRequest {
   order?: number;
   conditionQuestionId?: string | null;
   conditionValue?: string | null;
+  /** Spec 97 — clave del catálogo de destinos; `null` quita el destino. */
+  systemField?: string | null;
   /** Spec 84 — mueve la pregunta a otra sección del mismo instrumento. */
   targetSectionId?: string;
 }

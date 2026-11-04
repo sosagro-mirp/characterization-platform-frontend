@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { ApiError } from "@/lib/apiClient";
+import { systemFieldErrorMessage } from "@/lib/system-fields/systemFieldOptions";
 import {
   ActorTypeSummary,
   CopyQuestionResponse,
@@ -64,6 +66,8 @@ interface InstrumentEditorState {
   selection: EditorSelection;
   saveStatus: SaveStatus;
   saveError: string | undefined;
+  /** Spec 97 — avisos del último guardado de una pregunta (el destino ya existe en otro instrumento). */
+  saveWarnings: string[];
   /** Spec 84 — muestra preguntas y opciones archivadas en el árbol. */
   showArchived: boolean;
 
@@ -155,15 +159,23 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       set({ saveStatus: status, saveError: error });
 
     const withSave = async (fn: () => Promise<void>) => {
+      set({ saveWarnings: [] });
       setSaveStatus("saving");
       try {
         await fn();
         setSaveStatus("saved");
         setTimeout(() => set({ saveStatus: "idle" }), 2000);
       } catch (err) {
+        // Spec 97 — los errores SYSTEM_FIELD_* llegan con `code`: se muestran en español.
+        const code =
+          err instanceof ApiError &&
+          typeof (err.body as { code?: unknown } | null)?.code === "string"
+            ? ((err.body as { code: string }).code)
+            : null;
         setSaveStatus(
           "error",
-          err instanceof Error ? err.message : "Error al guardar"
+          (code && systemFieldErrorMessage(code)) ||
+            (err instanceof Error ? err.message : "Error al guardar")
         );
       }
     };
@@ -184,6 +196,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
       selection: { kind: "instrument" },
       saveStatus: "idle",
       saveError: undefined,
+      saveWarnings: [],
       showArchived: false,
 
       initialize: (payload) =>
@@ -314,6 +327,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
                 : sec
             ),
             selection: { kind: "question", sectionId, questionId: created.questionId },
+            saveWarnings: (created.warnings ?? []).map((w) => w.message),
           }));
         });
       },
@@ -400,6 +414,7 @@ export const useInstrumentEditorStore = create<InstrumentEditorState>()(
         await withSave(async () => {
           const updated = await updateQuestion(sectionId, questionId, data);
           set((s) => ({
+            saveWarnings: (updated.warnings ?? []).map((w) => w.message),
             sections: s.sections.map((sec) =>
               sec.sectionId === sectionId
                 ? {
