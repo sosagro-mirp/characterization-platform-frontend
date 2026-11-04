@@ -55,6 +55,10 @@ export default function NewQuestionForm({ sectionId }: NewQuestionFormProps) {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al crear la pregunta");
+    } finally {
+      // El store atrapa los errores de guardado (withSave) y no relanza: sin esto el
+      // botón quedaba en «Creando…» tras un 409. Si la pregunta se creó, el formulario
+      // se desmonta al cambiar la selección.
       setSaving(false);
     }
   };
