@@ -7,7 +7,6 @@ import { FarmerDetail, UpdateFarmerRequest, UpdateFarmRequest } from "@/app/(adm
 import {
   deleteFarmerCascade,
   getFarmer,
-  getFarmerDiscrepancies,
   updateFarmer,
 } from "@/services/farmers.service";
 import { getFarm, updateFarm } from "@/services/farms.service";
@@ -19,14 +18,20 @@ import {
   presentFarmerFarms,
   primaryFarm,
   sharedFarmCropsWarning,
-  summarizeOpenDiscrepancies,
-  type DiscrepancySummaryItem,
 } from "@/lib/farmers/farmerFarms";
 import { SurveysTab } from "./SurveysTab";
+import { CoverageTab } from "./CoverageTab";
+import { DiscrepanciesPanel } from "./DiscrepanciesPanel";
 import DeleteFarmerDialog from "./DeleteFarmerDialog";
 import AdminOnly from "@/components/admin/AdminOnly";
 
-type Tab = "datos" | "encuestas";
+type Tab = "datos" | "encuestas" | "cobertura";
+
+const TAB_LABELS: Record<Tab, string> = {
+  datos: "Datos",
+  cobertura: "Cobertura",
+  encuestas: "Encuestas",
+};
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -43,9 +48,8 @@ export default function EditFarmerPage() {
   // Spec 78, Fase 13 — estado exacto de consentimiento (GET /api/farmers/:id
   // no lo trae; solo el listado GET /api/farmers agrega hasPendingConsent).
   const [consentStatus, setConsentStatus] = useState<ConsentStatus | null>(null);
-  // Spec 95 — discrepancias abiertas (solo lectura). `null` = no disponible
-  // (p. ej. el rol no tiene acceso): la sección simplemente no se muestra.
-  const [discrepancies, setDiscrepancies] = useState<DiscrepancySummaryItem[] | null>(null);
+  // Spec 101 — encuesta a abrir al llegar desde la pestaña «Cobertura».
+  const [focusSurveyId, setFocusSurveyId] = useState<string | null>(null);
   const [crops, setCrops] = useState<CropSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -126,13 +130,6 @@ export default function EditFarmerPage() {
       }
     }
     load();
-    getFarmerDiscrepancies(id, "open")
-      .then((d) => {
-        if (!cancelled) setDiscrepancies(summarizeOpenDiscrepancies(d));
-      })
-      .catch(() => {
-        if (!cancelled) setDiscrepancies(null);
-      });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -181,6 +178,13 @@ export default function EditFarmerPage() {
     }
   }
 
+  // Spec 101 — tras aplicar una diferencia, recarga productor y finca.
+  async function reloadFarmer() {
+    const fresh = await getFarmer(id);
+    applyFarmer(fresh);
+    refreshSharedWarning(fresh, () => false);
+  }
+
   async function handleDeleteCascade() {
     setDeleting(true);
     setDeleteError(null);
@@ -206,6 +210,20 @@ export default function EditFarmerPage() {
   }
 
   const presentedFarms = presentFarmerFarms(farmer.farms ?? []);
+
+  // Spec 101 — «Datos» con cambios sin guardar (bloquea resolver diferencias).
+  const isDirty =
+    name !== (farmer.name ?? "") ||
+    documentId !== (farmer.documentId ?? "") ||
+    phone !== (farmer.phone ?? "") ||
+    email !== (farmer.email ?? "") ||
+    (farmer.farm
+      ? farmName !== (farmer.farm.name ?? "") ||
+        vereda !== (farmer.farm.vereda ?? "") ||
+        altitude !== (farmer.farm.altitude != null ? String(farmer.farm.altitude) : "") ||
+        [...selectedCropIds].sort().join() !==
+          (farmer.farm.crops ?? []).map((c) => c.cropId).sort().join()
+      : false);
 
   const locationParts = [
     farmer.documentId ? `CC ${farmer.documentId}` : null,
@@ -239,7 +257,7 @@ export default function EditFarmerPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--border)]">
-        {(["datos", "encuestas"] as Tab[]).map((tab) => (
+        {(["datos", "cobertura", "encuestas"] as Tab[]).map((tab) => (
           <button
             key={tab}
             type="button"
@@ -250,7 +268,7 @@ export default function EditFarmerPage() {
                 : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
-            {tab === "datos" ? "Datos" : "Encuestas"}
+            {TAB_LABELS[tab]}
           </button>
         ))}
       </div>
@@ -407,33 +425,12 @@ export default function EditFarmerPage() {
             </section>
           )}
 
-          {/* Spec 95 — discrepancias abiertas (solo lectura) */}
-          {discrepancies && discrepancies.length > 0 && (
-            <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
-              <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2.5">
-                <h2 className="text-xs font-semibold text-[var(--text-primary)]">
-                  Diferencias por revisar ({discrepancies.length})
-                </h2>
-                <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
-                  Valores enviados en una encuesta que difieren de los ya guardados. No se han aplicado.
-                </p>
-              </div>
-              <ul className="divide-y divide-[var(--border)]">
-                {discrepancies.map((d) => (
-                  <li key={d.discrepancyId} className="px-4 py-3 text-xs">
-                    <p className="font-semibold text-[var(--text-primary)]">
-                      {d.entityLabel}: {d.fieldLabel}
-                    </p>
-                    <p className="mt-0.5 text-[var(--text-muted)]">
-                      Guardado: <span className="text-[var(--text-primary)]">{d.currentText}</span>
-                      {" · "}
-                      Enviado: <span className="text-[var(--text-primary)]">{d.submittedText}</span>
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          {/* Spec 95/101 — diferencias por revisar */}
+          <DiscrepanciesPanel
+            farmerId={id}
+            blocked={isDirty}
+            onApplied={reloadFarmer}
+          />
 
           {/* Acciones */}
           <div className="flex gap-2">
@@ -464,7 +461,19 @@ export default function EditFarmerPage() {
       )}
 
       {/* Tab: Encuestas */}
-      {activeTab === "encuestas" && <SurveysTab farmerId={id} />}
+      {activeTab === "cobertura" && (
+        <CoverageTab
+          farmerId={id}
+          onOpenSurvey={(surveyId) => {
+            setFocusSurveyId(surveyId);
+            setActiveTab("encuestas");
+          }}
+        />
+      )}
+
+      {activeTab === "encuestas" && (
+        <SurveysTab farmerId={id} initialSurveyId={focusSurveyId} />
+      )}
 
       {confirmDelete && (
         <DeleteFarmerDialog

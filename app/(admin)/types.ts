@@ -540,3 +540,109 @@ export interface DocumentCollisionInfo {
   submittedName: string;
   existingFarmer: { farmerId: string; name: string };
 }
+
+// ─── Spec 101 — cobertura por productor (contrato del spec 100) ─────────────
+
+export type FarmerCoverageStatus = "aplicado" | "parcial" | "falta" | "no_aplica";
+export type FarmerScopeLevel = "farmer" | "farm" | "farm_crop";
+export type FarmerCoverageWarning =
+  | "sin_finca"
+  | "sin_cultivo"
+  | "encuestas_sin_ubicar";
+
+export interface FarmerCoverageSummary {
+  applicable: number;
+  applied: number;
+  partial: number;
+  pending: number;
+  notApplicable: number;
+  instrumentsWithoutScope: number;
+}
+
+/** Fila de `GET /api/coverage/farmers`. */
+export interface FarmerCoverageRow {
+  farmerId: string;
+  name: string;
+  documentId: string | null;
+  primaryFarm: {
+    farmId: string;
+    name: string;
+    town: { townId: string; name: string } | null;
+    department: { departmentId: string; name: string } | null;
+  } | null;
+  farmsCount: number;
+  cropIds: string[];
+  hasPendingConsent: boolean;
+  openDiscrepancies: number;
+  summary: FarmerCoverageSummary;
+  statusByInstrument: Record<string, FarmerCoverageStatus>;
+  warnings: FarmerCoverageWarning[];
+}
+
+export interface FarmerCoverageColumn {
+  instrumentId: string;
+  name: string;
+  code: string | null;
+  scopeLevel: FarmerScopeLevel;
+  cropIds: string[];
+  coverageGroup: string | null;
+  memberIds: string[];
+}
+
+export interface FarmerCoverageList {
+  instruments: FarmerCoverageColumn[];
+  rows: FarmerCoverageRow[];
+  summary: { farmers: number; withoutFarm: number; fullyCovered: number };
+}
+
+export interface FarmerCoverageUnit {
+  unitType: FarmerScopeLevel;
+  farmId?: string;
+  farmCropId?: string;
+  label: string;
+  status: FarmerCoverageStatus;
+  surveyId: string | null;
+  surveyCount: number;
+  inferredFarm?: boolean;
+  inferredCrop?: boolean;
+  outOfScope?: boolean;
+  coveredByOtherFarmer?: boolean;
+}
+
+export interface FarmerCoverageInstrument extends FarmerCoverageColumn {
+  status: FarmerCoverageStatus;
+  surveyCount: number;
+  latestSurvey: {
+    surveyId: string;
+    instrumentId: string;
+    createdAt: string;
+    origin: "field" | "public";
+    farmId: string | null;
+    farmCropId: string | null;
+    farmerId: string | null;
+  } | null;
+  units: FarmerCoverageUnit[];
+}
+
+/** Respuesta de `GET /api/farmers/:farmerId/coverage`. */
+export interface FarmerCoverageDetail {
+  farmerId: string;
+  name: string;
+  computedAt: string;
+  summary: FarmerCoverageSummary;
+  farms: {
+    farmId: string;
+    name: string;
+    role: string | null;
+    isPrimary: boolean;
+    town: { townId: string; name: string } | null;
+    crops: { farmCropId: string; cropId: string; name: string }[];
+  }[];
+  instruments: FarmerCoverageInstrument[];
+  warnings: FarmerCoverageWarning[];
+  unlocatedSurveys: {
+    surveyId: string;
+    reason: "productor_varias_fincas" | "cultivo_ambiguo";
+  }[];
+  unsyncedWithResponses: number;
+}

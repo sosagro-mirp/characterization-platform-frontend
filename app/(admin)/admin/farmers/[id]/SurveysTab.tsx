@@ -14,7 +14,14 @@ function formatDate(iso: string) {
   });
 }
 
-export function SurveysTab({ farmerId }: { farmerId: string }) {
+export function SurveysTab({
+  farmerId,
+  initialSurveyId = null,
+}: {
+  farmerId: string;
+  /** Spec 101 — encuesta que se abre al llegar desde «Cobertura». */
+  initialSurveyId?: string | null;
+}) {
   const [surveys, setSurveys] = useState<SurveyListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +46,14 @@ export function SurveysTab({ farmerId }: { farmerId: string }) {
       cancelled = true;
     };
   }, [farmerId]);
+
+  useEffect(() => {
+    if (!initialSurveyId || loading) return;
+    if (!surveys.some((s) => s.surveyId === initialSurveyId)) return;
+    handleExpand(initialSurveyId);
+    // Solo al llegar: no reabrir tras cerrar a mano.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSurveyId, loading]);
 
   async function handleExpand(surveyId: string) {
     if (expandedId === surveyId) {

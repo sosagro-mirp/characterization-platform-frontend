@@ -95,6 +95,14 @@ export interface Discrepancy {
   surveyId: string;
   status: "open" | "applied" | "dismissed";
   createdAt: string;
+  // Spec 100 — lectura enriquecida.
+  liveValue?: unknown;
+  isStale?: boolean;
+  canApply?: boolean;
+  liveLabel?: string | null;
+  currentLabel?: string | null;
+  submittedLabel?: string | null;
+  farmFarmerCount?: number;
 }
 
 export interface DiscrepancySummaryItem {
@@ -125,7 +133,7 @@ const DISCREPANCY_FIELD_LABELS: Record<string, string> = {
   role: "Rol",
 };
 
-function humanizeField(field: string): string {
+export function humanizeDiscrepancyField(field: string): string {
   const known = DISCREPANCY_FIELD_LABELS[field];
   if (known) return known;
   const words = field
@@ -153,7 +161,7 @@ export function summarizeOpenDiscrepancies(
     .map((d) => ({
       discrepancyId: d.discrepancyId,
       entityLabel: ENTITY_LABELS[d.entityType] ?? "Otro",
-      fieldLabel: humanizeField(d.field),
+      fieldLabel: humanizeDiscrepancyField(d.field),
       currentText: valueText(d.currentValue),
       submittedText: valueText(d.submittedValue),
       surveyId: d.surveyId,
