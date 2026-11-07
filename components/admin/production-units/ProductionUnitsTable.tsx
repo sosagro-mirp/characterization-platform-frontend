@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { CoverageColumn, UnitRow } from "@/lib/production-units/types";
 import { SELECTION_LABELS } from "@/lib/production-units/selection";
 import { StatusChip } from "./StatusChip";
@@ -103,7 +104,17 @@ export function ProductionUnitsTable({
               </td>
               <td className="px-3 py-2.5 text-[var(--text-muted)]">
                 {row.farmers?.length
-                  ? row.farmers.map((f) => f.name).join(", ")
+                  ? row.farmers.map((f, i) => (
+                      <span key={f.farmerId}>
+                        {i > 0 && ", "}
+                        <Link
+                          href={`/admin/farmers/${f.farmerId}`}
+                          className="text-[var(--brand)] hover:underline"
+                        >
+                          {f.name}
+                        </Link>
+                      </span>
+                    ))
                   : "—"}
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap">
