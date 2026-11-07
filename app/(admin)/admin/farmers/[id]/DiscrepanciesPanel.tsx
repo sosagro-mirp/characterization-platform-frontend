@@ -60,12 +60,21 @@ export function DiscrepanciesPanel({ farmerId, blocked, onApplied }: Props) {
     setBusy(true);
     setError(null);
     setNotice(null);
+    let resolved = false;
     try {
       await resolveDiscrepancy(discrepancy.discrepancyId, action);
+      resolved = true;
       setPending(null);
       await load();
       if (action === "apply") await onApplied();
     } catch (err) {
+      if (resolved) {
+        // La diferencia sí quedó resuelta; solo falló la recarga posterior.
+        setNotice(
+          "La diferencia se resolvió, pero no se pudo recargar la ficha. Recarga la página para ver los datos actualizados.",
+        );
+        return;
+      }
       setPending(null);
       if (err instanceof ApiError && err.status === 409) {
         setNotice("Esta diferencia ya fue resuelta. Se actualizó la lista.");

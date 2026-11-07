@@ -261,7 +261,11 @@ export default function EditFarmerPage() {
           <button
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              // Solo se abre una encuesta concreta al llegar desde «Cobertura».
+              setFocusSurveyId(null);
+              setActiveTab(tab);
+            }}
             className={`px-4 py-2.5 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
               activeTab === tab
                 ? "border-[var(--brand)] text-[var(--brand)]"
