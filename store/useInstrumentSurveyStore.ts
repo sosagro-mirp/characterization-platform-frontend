@@ -10,7 +10,12 @@ import {
   buildResponsesPayload as buildResponsesPayloadFromAnswers,
   type FlattenedQuestionItem,
 } from "@/lib/instrument/buildResponsesPayload";
-import { createSurvey, submitBatchResponses } from "@/services/surveys.service";
+import {
+  createSurvey,
+  markSurveySynced,
+  submitBatchResponses,
+} from "@/services/surveys.service";
+import { submitAndSync } from "@/lib/surveys/submitAndSync";
 import { ApiError } from "@/lib/apiClient";
 import { submitPublicSurvey } from "@/services/public-surveys.service";
 import {
@@ -208,7 +213,18 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
       }
 
       try {
-        await submitBatchResponses(payload);
+        const { synced } = await submitAndSync(
+          { submitBatch: submitBatchResponses, markSynced: markSurveySynced },
+          surveyId,
+          payload,
+        );
+        if (!synced) {
+          // Las respuestas quedaron guardadas; solo falta la marca. No se
+          // bloquea al encuestador por esto.
+          console.warn(
+            `[surveys] No se pudo marcar la encuesta ${surveyId} como sincronizada`,
+          );
+        }
         set({ submitting: false });
         return { outcome: "submitted" };
       } catch (e) {
