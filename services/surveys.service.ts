@@ -130,6 +130,14 @@ export function submitBatchResponses(responses: CreateResponsePayload[]): Promis
   return apiClient.post<void>("/api/responses/batch", responses);
 }
 
+/**
+ * Marca la encuesta como sincronizada (`sincronized = true`). Sin esta marca la
+ * encuesta no cuenta en la cobertura ni en el dashboard (bug `web-survey-sync`).
+ */
+export function markSurveySynced(surveyId: string): Promise<unknown> {
+  return apiClient.patch(`/api/surveys/${surveyId}/sync`);
+}
+
 export function getSurveysByFarmer(farmerId: string): Promise<SurveyListItem[]> {
   return apiClient.get<SurveyListItem[]>(
     `/api/surveys?farmerId=${farmerId}`,
