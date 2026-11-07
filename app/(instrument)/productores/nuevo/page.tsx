@@ -14,6 +14,7 @@ import {
   type CollisionPending,
 } from "@/lib/campaign-session/preSurveyFlow";
 import {
+  clearPendingConsent,
   registroInstrumentPath,
   savePendingConsent,
 } from "@/lib/pollster/registrationFlow";
@@ -26,6 +27,11 @@ function NuevoProductor() {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const ran = useRef<string | null>(null);
+
+  // Un registro nuevo empieza sin consentimiento pendiente de intentos abandonados.
+  useEffect(() => {
+    if (!completedSurveyId) clearPendingConsent();
+  }, [completedSurveyId]);
 
   // Tras S_REG: confirma la extracción del productor y abre su ficha.
   useEffect(() => {

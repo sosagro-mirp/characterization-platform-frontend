@@ -224,6 +224,10 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
         try {
           await campaignContext.onSurveyCreated(surveyId);
         } catch (e) {
+          if (e instanceof Error && e.message.includes("401")) {
+            set({ submitting: false });
+            return { outcome: "session_expired" };
+          }
           const message =
             e instanceof Error ? e.message : "No se pudo registrar el consentimiento";
           set({ error: message, submitting: false });

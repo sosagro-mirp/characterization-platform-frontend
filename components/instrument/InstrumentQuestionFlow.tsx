@@ -269,6 +269,7 @@ export default function InstrumentQuestionFlow({
 
     const handleConfirmExit = () => {
         setShowExitConfirm(false);
+        if (registroMode) clearPendingConsent();
         router.push(exitPath);
     };
 
