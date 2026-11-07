@@ -7,14 +7,22 @@ import {
   type ConsentDocument,
   type ConsentRecord,
 } from "@/services/consents.service";
-import { buildConsentPayload } from "@/lib/consents/consentSubmission";
+import { buildConsentPayload, type ConsentPayload } from "@/lib/consents/consentSubmission";
 import { isConsentSubmittable } from "@/lib/consents/resolveConsentRequirement";
 
 interface ConsentFormProps {
-  sessionId: string;
+  /** Spec 102 — exactamente un ancla, o ninguna con `onCaptured` (modo diferido). */
+  sessionId?: string;
+  farmerId?: string;
+  surveyId?: string;
+  /**
+   * Modo diferido: no llama al backend; entrega los valores capturados para
+   * registrarlos cuando exista el ancla (p. ej. la encuesta de S_REG).
+   */
+  onCaptured?: (values: ConsentPayload) => void;
   /** Nombre ya conocido del encuestado (flujo "Buscar encuestado"), si aplica. */
   defaultRespondentName?: string;
-  onAccepted: (record: ConsentRecord) => void;
+  onAccepted?: (record: ConsentRecord) => void;
 }
 
 /**
@@ -24,6 +32,9 @@ interface ConsentFormProps {
  */
 export default function ConsentForm({
   sessionId,
+  farmerId,
+  surveyId,
+  onCaptured,
   defaultRespondentName,
   onAccepted,
 }: ConsentFormProps) {
@@ -69,6 +80,8 @@ export default function ConsentForm({
     try {
       const payload = buildConsentPayload({
         sessionId,
+        farmerId,
+        surveyId,
         consentDocumentId: document.consentDocumentId,
         respondentName: respondentName.trim(),
         acceptedDataProcessing,
@@ -78,8 +91,12 @@ export default function ConsentForm({
         acceptedFollowUpContact,
         acceptedAt: new Date(),
       });
+      if (onCaptured) {
+        onCaptured(payload);
+        return;
+      }
       const record = await submitConsent(payload);
-      onAccepted(record);
+      onAccepted?.(record);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo registrar el consentimiento.",

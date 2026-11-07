@@ -21,6 +21,10 @@ export interface CreateSurveyPayload {
   instrumentIds: string[];
   campaignSessionId?: string;
   stepOrder?: number;
+  // Spec 102 — ancla por productor, finca y cultivo de finca (sin campaña).
+  farmerId?: string;
+  farmId?: string;
+  farmCropId?: string;
 }
 
 export interface CreateSurveyResult {

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InstrumentQuestionFlow from '@/components/instrument/InstrumentQuestionFlow';
 import { useCampaignSessionStore } from '@/store/useCampaignSessionStore';
+import type { ApplyContext } from '@/lib/pollster/surveyAnchor';
+import { returnPathAfterSurvey } from '@/lib/pollster/surveyAnchor';
 import type { InstrumentResponse } from '@/app/(instrument)/types';
 
 type LoaderState =
@@ -18,6 +20,8 @@ interface InstrumentLoaderProps {
   stepOrder?: number;
   previewMode?: boolean;
   existingSurveyId?: string;
+  producerContext?: ApplyContext;
+  registroMode?: boolean;
 }
 
 export default function InstrumentLoader({
@@ -27,6 +31,8 @@ export default function InstrumentLoader({
   stepOrder,
   previewMode = false,
   existingSurveyId,
+  producerContext,
+  registroMode = false,
 }: InstrumentLoaderProps) {
   const router = useRouter();
   const clearSession = useCampaignSessionStore((s) => s.clearSession);
@@ -104,6 +110,9 @@ export default function InstrumentLoader({
       stepOrder={stepOrder}
       previewMode={previewMode}
       existingSurveyId={existingSurveyId}
+      producerContext={producerContext}
+      registroMode={registroMode}
+      exitPath={registroMode ? '/productores' : returnPathAfterSurvey(producerContext ?? null)}
       onPreviewComplete={previewMode ? () => router.replace('/admin/instruments') : undefined}
     />
   );

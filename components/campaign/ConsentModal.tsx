@@ -1,12 +1,16 @@
 "use client";
 
 import ConsentForm from "@/components/campaign/ConsentForm";
+import type { ConsentPayload } from "@/lib/consents/consentSubmission";
 import type { ConsentRecord } from "@/services/consents.service";
 
 interface ConsentModalProps {
-  sessionId: string;
+  sessionId?: string;
+  farmerId?: string;
+  surveyId?: string;
+  onCaptured?: (values: ConsentPayload) => void;
   defaultRespondentName?: string;
-  onAccepted: (record: ConsentRecord) => void;
+  onAccepted?: (record: ConsentRecord) => void;
   onClose: () => void;
 }
 
@@ -20,6 +24,9 @@ interface ConsentModalProps {
  */
 export default function ConsentModal({
   sessionId,
+  farmerId,
+  surveyId,
+  onCaptured,
   defaultRespondentName,
   onAccepted,
   onClose,
@@ -60,6 +67,9 @@ export default function ConsentModal({
 
         <ConsentForm
           sessionId={sessionId}
+          farmerId={farmerId}
+          surveyId={surveyId}
+          onCaptured={onCaptured}
           defaultRespondentName={defaultRespondentName}
           onAccepted={onAccepted}
         />

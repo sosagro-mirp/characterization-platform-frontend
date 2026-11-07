@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { MUST_CHANGE_COOKIE, ROLE_COOKIE, SESSION_COOKIE } from "@/lib/sessionCookie";
 import { isSafeRedirectPath } from "@/lib/safeRedirect";
-import { defaultRouteForRole, PANEL_ROLES } from "@/lib/roleRouting";
-
-const PROTECTED_PREFIXES = ["/admin", "/instrument", "/campaign", "/change-password"];
+import { defaultRouteForRole, isProtectedPath, PANEL_ROLES } from "@/lib/roleRouting";
 
 export function middleware(request: NextRequest) {
   // --- MAINTENANCE MODE ---
@@ -20,9 +18,7 @@ export function middleware(request: NextRequest) {
     ? decodeURIComponent(request.cookies.get(ROLE_COOKIE)!.value)
     : null;
 
-  const isProtected = PROTECTED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  const isProtected = isProtectedPath(pathname);
 
   if (isProtected) {
     if (!hasSession) {

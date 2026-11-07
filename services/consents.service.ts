@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
+import { resolveConsentAnchor } from "@/lib/consents/consentAnchor";
 import type { ConsentPayload } from "@/lib/consents/consentSubmission";
 import type { ConsentStatus } from "@/lib/consents/resolveConsentRequirement";
 
@@ -54,6 +55,8 @@ export async function getFarmerConsentStatus(farmerId: string): Promise<ConsentS
 }
 
 export function submitConsent(payload: ConsentPayload): Promise<ConsentRecord> {
+  // Spec 102 — exactamente un ancla; si no, no se envía.
+  resolveConsentAnchor(payload);
   return apiClient.post<ConsentRecord>("/api/consents", payload);
 }
 
