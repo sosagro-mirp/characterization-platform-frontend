@@ -5,7 +5,10 @@
  */
 
 export interface BuildConsentPayloadParams {
-  sessionId: string;
+  // Spec 102 — a lo sumo una ancla; en modo diferido no hay ninguna todavía.
+  sessionId?: string;
+  farmerId?: string;
+  surveyId?: string;
   consentDocumentId: string;
   respondentName: string;
   acceptedDataProcessing: boolean;
@@ -17,7 +20,9 @@ export interface BuildConsentPayloadParams {
 }
 
 export interface ConsentPayload {
-  sessionId: string;
+  sessionId?: string;
+  farmerId?: string;
+  surveyId?: string;
   consentDocumentId: string;
   respondentName: string;
   acceptedDataProcessing: boolean;
@@ -34,7 +39,9 @@ export interface ConsentPayload {
  */
 export function buildConsentPayload(params: BuildConsentPayloadParams): ConsentPayload {
   return {
-    sessionId: params.sessionId,
+    ...(params.sessionId && { sessionId: params.sessionId }),
+    ...(params.farmerId && { farmerId: params.farmerId }),
+    ...(params.surveyId && { surveyId: params.surveyId }),
     consentDocumentId: params.consentDocumentId,
     respondentName: params.respondentName,
     acceptedDataProcessing: params.acceptedDataProcessing,

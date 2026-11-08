@@ -10,6 +10,8 @@ interface SurveyCompletedCardProps {
     ctaText?: string;
     ctaHref?: string;
     campaignSessionId?: string;
+    /** Spec 102 — flujo por productor: ignora el store de campaña. */
+    producerMode?: boolean;
 }
 
 export default function SurveyCompletedCard({
@@ -18,13 +20,14 @@ export default function SurveyCompletedCard({
     ctaText = "Volver al inicio",
     ctaHref = "/campaign",
     campaignSessionId,
+    producerMode = false,
 }: SurveyCompletedCardProps) {
     const sessionIdFromStore = useCampaignSessionStore((s) => s.sessionId);
     const activeCampaignId = useCampaignSessionStore((s) => s.campaignId) ?? null;
     const completedSurveyId = useInstrumentSurveyStore((s) => s.surveyId);
 
     const activeSessionId = campaignSessionId ?? sessionIdFromStore ?? null;
-    const inCampaign = Boolean(activeSessionId && activeCampaignId);
+    const inCampaign = !producerMode && Boolean(activeSessionId && activeCampaignId);
 
     const campaignContinueHref = inCampaign
         ? completedSurveyId

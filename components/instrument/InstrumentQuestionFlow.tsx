@@ -15,6 +15,13 @@ import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
 import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
 import { isAnswerComplete } from "@/lib/instrument/isAnswerComplete";
+import type { ApplyContext } from "@/lib/pollster/surveyAnchor";
+import {
+    afterRegistroPath,
+    clearPendingConsent,
+    loadPendingConsent,
+} from "@/lib/pollster/registrationFlow";
+import { submitConsent } from "@/services/consents.service";
 import ConsentModal from "@/components/campaign/ConsentModal";
 import type { PublicSurveyConsentInput } from "@/lib/public-surveys/publicSurveyPayload";
 
@@ -28,6 +35,12 @@ interface InstrumentQuestionFlowProps {
     stepOrder?: number;
     previewMode?: boolean;
     existingSurveyId?: string;
+    /** Spec 102 — contexto de productor (flujo por productor, sin campaña). */
+    producerContext?: ApplyContext;
+    /** Spec 102 — destino al salir; por defecto /campaign. */
+    exitPath?: string;
+    /** Spec 102 — S_REG de `/productores/nuevo`: registra el consentimiento y vuelve a esa página. */
+    registroMode?: boolean;
     onPreviewComplete?: () => void;
     /**
      * Spec 79 — canal público sin encuestador: envía por
@@ -53,11 +66,15 @@ export default function InstrumentQuestionFlow({
     stepOrder,
     previewMode = false,
     existingSurveyId,
+    producerContext,
+    exitPath = "/campaign",
+    registroMode = false,
     onPreviewComplete,
     publicMode = false,
     publicConsent,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
+    const registroSurveyRef = useRef<string | null>(null);
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -198,13 +215,43 @@ export default function InstrumentQuestionFlow({
                 return;
             }
 
+            // Spec 102 — sin consentimiento pendiente no se crea la encuesta S_REG.
+            if (registroMode && !loadPendingConsent()) {
+                setValidationError(
+                    "Falta el consentimiento del productor. Vuelve a Productores → Nuevo productor.",
+                );
+                return;
+            }
+
             const result = await submitResponses({
                 campaignSessionId,
                 stepOrder,
-                existingSurveyId,
+                // En reintentos del registro se reutiliza la encuesta ya creada.
+                existingSurveyId: existingSurveyId ?? registroSurveyRef.current ?? undefined,
+                producerContext,
+                ...(registroMode && {
+                    onSurveyCreated: async (createdSurveyId: string) => {
+                        registroSurveyRef.current = createdSurveyId;
+                        const pending = loadPendingConsent();
+                        if (!pending) {
+                            throw new Error(
+                                "Falta el consentimiento del productor. Vuelve a Productores → Nuevo productor.",
+                            );
+                        }
+                        await submitConsent({ ...pending, surveyId: createdSurveyId });
+                    },
+                }),
             });
 
             if (result.outcome === "submitted") {
+                if (registroMode) {
+                    const createdId = useInstrumentSurveyStore.getState().surveyId;
+                    clearPendingConsent();
+                    if (createdId) {
+                        router.replace(afterRegistroPath(createdId));
+                        return;
+                    }
+                }
                 setCompleted(true);
             } else if (result.outcome === "session_expired") {
                 setSessionExpired(true);
@@ -222,7 +269,8 @@ export default function InstrumentQuestionFlow({
 
     const handleConfirmExit = () => {
         setShowExitConfirm(false);
-        router.push("/campaign");
+        if (registroMode) clearPendingConsent();
+        router.push(exitPath);
     };
 
     if (completed) {
@@ -281,6 +329,13 @@ export default function InstrumentQuestionFlow({
         return (
             <SurveyCompletedCard
                 campaignSessionId={campaignSessionId}
+                {...(producerContext
+                    ? {
+                          producerMode: true,
+                          ctaText: "Volver al productor",
+                          ctaHref: exitPath,
+                      }
+                    : {})}
             />
         );
     }

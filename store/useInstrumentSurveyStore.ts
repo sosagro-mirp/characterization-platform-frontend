@@ -11,6 +11,11 @@ import {
   type FlattenedQuestionItem,
 } from "@/lib/instrument/buildResponsesPayload";
 import {
+  buildAnchoredSurveyPayload,
+  effectiveScopeLevel,
+  type ApplyContext as AnchorInput,
+} from "@/lib/pollster/surveyAnchor";
+import {
   createSurvey,
   markSurveySynced,
   submitBatchResponses,
@@ -51,7 +56,7 @@ interface InstrumentSurveyState {
   resetSurvey: () => void;
   buildResponsesPayload: () => CreateResponsePayload[];
   submitResponses: (
-    campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
+    campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string; producerContext?: AnchorInput; onSurveyCreated?: (surveyId: string) => Promise<void> },
   ) => Promise<SubmitResult>;
   submitPublicResponses: (
     consent: PublicSurveyConsentInput,
@@ -164,7 +169,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     submitResponses: async (
-      campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string },
+      campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string; producerContext?: AnchorInput; onSurveyCreated?: (surveyId: string) => Promise<void> },
     ): Promise<SubmitResult> => {
       const { instrumentId, buildResponsesPayload } = get();
 
@@ -183,7 +188,15 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
       } else {
         try {
           const surveyData = await createSurvey({
-            instrumentIds: [instrumentId],
+            // Spec 102 — con contexto de productor el ancla se arma y valida por nivel;
+            // si está incompleto lanza y la encuesta no se crea.
+            ...(campaignContext?.producerContext
+              ? buildAnchoredSurveyPayload({
+                  instrumentId,
+                  scopeLevel: effectiveScopeLevel(campaignContext.producerContext),
+                  ...campaignContext.producerContext,
+                })
+              : { instrumentIds: [instrumentId] }),
             ...(campaignContext?.campaignSessionId && { campaignSessionId: campaignContext.campaignSessionId }),
             ...(typeof campaignContext?.stepOrder === "number" && { stepOrder: campaignContext.stepOrder }),
           });
@@ -200,6 +213,23 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
             e instanceof Error
               ? e.message
               : "Error al crear la encuesta en el servidor";
+          set({ error: message, submitting: false });
+          return { outcome: "error", message };
+        }
+      }
+
+      // Spec 102 — p. ej. registrar el consentimiento de un productor nuevo con
+      // el `surveyId` recién creado, antes de enviar las respuestas.
+      if (campaignContext?.onSurveyCreated) {
+        try {
+          await campaignContext.onSurveyCreated(surveyId);
+        } catch (e) {
+          if (e instanceof Error && e.message.includes("401")) {
+            set({ submitting: false });
+            return { outcome: "session_expired" };
+          }
+          const message =
+            e instanceof Error ? e.message : "No se pudo registrar el consentimiento";
           set({ error: message, submitting: false });
           return { outcome: "error", message };
         }

@@ -85,13 +85,13 @@ export default function AdminShell({ children }: AdminShellProps) {
         )}
         <div className="mt-4 border-t border-[var(--border)] pt-4">
           <Link
-            href="/campaign"
+            href="/productores"
             className="block rounded-md px-3 py-2 text-sm font-medium bg-brand hover:scale-105 transition-transform uppercase text-center text-brand-foreground"
           >
             Aplicar encuestas
           </Link>
           <p className="mt-2 px-1 text-xs text-[var(--text-muted)]">
-            Aplica un instrumento directamente a un agricultor desde una campaña activa.
+            Elige un productor y aplica los instrumentos que le faltan.
           </p>
         </div>
 

@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import { SelectionCounter } from "@/components/admin/production-units/SelectionCounter";
 import { SelectionDialog } from "@/components/admin/production-units/SelectionDialog";
 import { ProductionUnitsTable } from "@/components/admin/production-units/ProductionUnitsTable";
-import { STATUS_LABELS } from "@/components/admin/production-units/StatusChip";
+import { STATUS_LABELS } from "@/components/common/StatusChip";
 import {
   applyUnitFilters,
   exportFileName,
