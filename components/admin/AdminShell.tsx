@@ -91,7 +91,7 @@ export default function AdminShell({ children }: AdminShellProps) {
             Aplicar encuestas
           </Link>
           <p className="mt-2 px-1 text-xs text-[var(--text-muted)]">
-            Aplica un instrumento directamente a un agricultor desde una campaña activa.
+            Elige un productor y aplica los instrumentos que le faltan.
           </p>
         </div>
 
