@@ -11,7 +11,7 @@ import type {
 } from "@/app/(admin)/types";
 import { getFarmerCoverage } from "@/services/farmers.service";
 import { getFarmerConsentStatus } from "@/services/consents.service";
-import ConsentModal from "@/components/campaign/ConsentModal";
+import ConsentModal from "@/components/consents/ConsentModal";
 import {
   consentNoticeForFarmer,
   type ConsentNotice,

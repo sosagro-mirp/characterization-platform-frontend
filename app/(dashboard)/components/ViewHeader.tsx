@@ -23,8 +23,7 @@ const RESOLVED_NAME_FILTERS: {
 
 /** Filtros globales (spec 43, D3) cuyo valor ya es el texto a mostrar — no
  * necesitan resolución de nombre en el backend (a diferencia de los UUID de
- * arriba). `campaignId` es la excepción: es un UUID sin `campaignName` en
- * `DashboardMetadataDto` hoy, así que se etiqueta genérico. */
+ * arriba). */
 const VALUE_FILTERS: { paramKey: string; prefix: string }[] = [
   { paramKey: "gender", prefix: "Género" },
   { paramKey: "ageRange", prefix: "Edad" },
@@ -84,11 +83,7 @@ export default function ViewHeader({
     label: `${prefix}: ${searchParams.get(paramKey)}`,
   }));
 
-  const campaignChip = searchParams.get("campaignId")
-    ? [{ paramKey: "campaignId", label: "Campaña activa" }]
-    : [];
-
-  const chips = [...resolvedChips, ...valueChips, ...campaignChip];
+  const chips = [...resolvedChips, ...valueChips];
 
   return (
     <div className="rounded-lg border border-[var(--border)] bg-surface px-4 py-3 space-y-2">

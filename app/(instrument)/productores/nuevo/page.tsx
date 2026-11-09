@@ -4,15 +4,15 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import ConsentForm from "@/components/campaign/ConsentForm";
-import DocumentCollisionDialog from "@/components/campaign/DocumentCollisionDialog";
+import ConsentForm from "@/components/consents/ConsentForm";
+import DocumentCollisionDialog from "@/components/farmers/DocumentCollisionDialog";
 import { getInstrumentByCode } from "@/services/instruments.service";
 import { extractFarmer, getExtraction } from "@/services/surveys.service";
 import {
   completeAfterBatch,
   resolveCollisionFlow,
   type CollisionPending,
-} from "@/lib/campaign-session/preSurveyFlow";
+} from "@/lib/registration/preSurveyFlow";
 import {
   clearPendingConsent,
   registroInstrumentPath,

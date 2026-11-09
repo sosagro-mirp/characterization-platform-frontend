@@ -56,7 +56,7 @@ interface InstrumentSurveyState {
   resetSurvey: () => void;
   buildResponsesPayload: () => CreateResponsePayload[];
   submitResponses: (
-    campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string; producerContext?: AnchorInput; onSurveyCreated?: (surveyId: string) => Promise<void> },
+    surveyContext?: { existingSurveyId?: string; producerContext?: AnchorInput; onSurveyCreated?: (surveyId: string) => Promise<void> },
   ) => Promise<SubmitResult>;
   submitPublicResponses: (
     consent: PublicSurveyConsentInput,
@@ -169,7 +169,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
     },
 
     submitResponses: async (
-      campaignContext?: { campaignSessionId?: string; stepOrder?: number; existingSurveyId?: string; producerContext?: AnchorInput; onSurveyCreated?: (surveyId: string) => Promise<void> },
+      surveyContext?: { existingSurveyId?: string; producerContext?: AnchorInput; onSurveyCreated?: (surveyId: string) => Promise<void> },
     ): Promise<SubmitResult> => {
       const { instrumentId, buildResponsesPayload } = get();
 
@@ -182,23 +182,21 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
       // Obtener surveyId: usar el existente (overwrite) o crear uno nuevo
       let surveyId: string;
 
-      if (campaignContext?.existingSurveyId) {
-        surveyId = campaignContext.existingSurveyId;
+      if (surveyContext?.existingSurveyId) {
+        surveyId = surveyContext.existingSurveyId;
         set({ surveyId });
       } else {
         try {
           const surveyData = await createSurvey({
             // Spec 102 — con contexto de productor el ancla se arma y valida por nivel;
             // si está incompleto lanza y la encuesta no se crea.
-            ...(campaignContext?.producerContext
+            ...(surveyContext?.producerContext
               ? buildAnchoredSurveyPayload({
                   instrumentId,
-                  scopeLevel: effectiveScopeLevel(campaignContext.producerContext),
-                  ...campaignContext.producerContext,
+                  scopeLevel: effectiveScopeLevel(surveyContext.producerContext),
+                  ...surveyContext.producerContext,
                 })
               : { instrumentIds: [instrumentId] }),
-            ...(campaignContext?.campaignSessionId && { campaignSessionId: campaignContext.campaignSessionId }),
-            ...(typeof campaignContext?.stepOrder === "number" && { stepOrder: campaignContext.stepOrder }),
           });
 
           surveyId = surveyData.surveyId;
@@ -220,9 +218,9 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
       // Spec 102 — p. ej. registrar el consentimiento de un productor nuevo con
       // el `surveyId` recién creado, antes de enviar las respuestas.
-      if (campaignContext?.onSurveyCreated) {
+      if (surveyContext?.onSurveyCreated) {
         try {
-          await campaignContext.onSurveyCreated(surveyId);
+          await surveyContext.onSurveyCreated(surveyId);
         } catch (e) {
           if (e instanceof Error && e.message.includes("401")) {
             set({ submitting: false });
@@ -272,7 +270,7 @@ export const useInstrumentSurveyStore = create<InstrumentSurveyState>(
 
     // Spec 79 — envío del canal público: una sola llamada atómica
     // (instrumento + consentimiento + respuestas), sin crear un survey
-    // aparte primero. No hay campaignContext ni existingSurveyId: el canal
+    // aparte primero. No hay surveyContext ni existingSurveyId: el canal
     // público no tiene sesión de campaña ni permite reanudar un borrador.
     submitPublicResponses: async (
       consent: PublicSurveyConsentInput,

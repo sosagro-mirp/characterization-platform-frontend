@@ -232,101 +232,6 @@ export interface UpdateUserRequest {
   roleId?: string;
 }
 
-// ── Campaign / CampaignStep ──────────────────────────────────────────────────
-
-export interface InstrumentRef {
-  instrumentId: string;
-  name: string;
-  isActive: boolean;
-}
-
-export interface QuestionRef {
-  questionId: string;
-  text: string;
-}
-
-export interface CropRef {
-  cropId: string;
-  name: string;
-}
-
-export type ConditionType = "question" | "crop";
-export type LogicalOperator = "AND" | "OR";
-
-export interface StepConditionDetail {
-  conditionId: string;
-  order: number;
-  logicalOperator: LogicalOperator | null;
-  conditionType: ConditionType;
-  conditionQuestion: QuestionRef | null;
-  conditionValue: string | null;
-  conditionCrop: CropRef | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateStepConditionRequest {
-  order: number;
-  logicalOperator?: LogicalOperator;
-  conditionType: ConditionType;
-  conditionQuestionId?: string;
-  conditionValue?: string;
-  conditionCropId?: string;
-}
-
-export interface UpdateStepConditionRequest {
-  order?: number;
-  logicalOperator?: LogicalOperator;
-  conditionType?: ConditionType;
-  conditionQuestionId?: string;
-  conditionValue?: string;
-  conditionCropId?: string;
-}
-
-export interface CampaignStepDetail {
-  stepId: string;
-  order: number;
-  instrument: InstrumentRef;
-  conditions: StepConditionDetail[];
-}
-
-export interface CampaignSummary {
-  campaignId: string;
-  name: string;
-  description: string | null;
-  isActive: boolean;
-  createdBy?: UserAuditSummary | null;
-  updatedBy?: UserAuditSummary | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CampaignDetail extends CampaignSummary {
-  steps: CampaignStepDetail[];
-}
-
-export interface CreateCampaignRequest {
-  name: string;
-  description?: string;
-  isActive?: boolean;
-}
-
-export interface UpdateCampaignRequest {
-  name?: string;
-  description?: string;
-  isActive?: boolean;
-}
-
-export interface CreateCampaignStepRequest {
-  instrumentId: string;
-  order: number;
-}
-
-export interface UpdateCampaignStepRequest {
-  instrumentId?: string;
-  order?: number;
-}
-
 // ── Farmer / Farm (admin edit) ───────────────────────────────────────────────
 
 export interface FarmSummaryForFarmer {
@@ -489,6 +394,8 @@ export interface SurveyListItem {
   /** Spec 94 — finca y cultivo a los que quedó anclada la encuesta. */
   farm?: { farmId: string; name: string } | null;
   crop?: { cropId: string; name: string } | null;
+  /** Spec 104 — campaña de origen (histórico); null si no vino de una campaña. */
+  campaignName?: string | null;
 }
 
 export interface SurveyResponseItem {

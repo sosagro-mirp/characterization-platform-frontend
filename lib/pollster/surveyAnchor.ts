@@ -72,7 +72,7 @@ export function parseApplyContext(params: URLSearchParams): ApplyContext | null 
 }
 
 export function returnPathAfterSurvey(ctx: ApplyContext | null): string {
-  return ctx ? `/productores/${ctx.farmerId}` : "/campaign";
+  return ctx ? `/productores/${ctx.farmerId}` : "/productores";
 }
 
 /** Spec 102 — ¿la URL trae algún dato de productor (válido o no)? */
