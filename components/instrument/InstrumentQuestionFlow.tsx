@@ -267,10 +267,10 @@ export default function InstrumentQuestionFlow({
             );
         }
         if (publicMode) {
-            // No reutiliza SurveyCompletedCard: ese componente consulta
-            // para el flujo interno: ofrece enlaces al sistema (autenticado)
-            // que no tienen sentido para un visitante anónimo. Pantalla final propia, sin enlaces al
-            // sistema interno (criterio de "Puntos delicados", punto 5).
+            // No reutiliza SurveyCompletedCard: ese componente es del flujo
+            // interno y ofrece enlaces al sistema (autenticado) que no tienen
+            // sentido para un visitante anónimo. Pantalla final propia, sin
+            // enlaces al sistema interno (criterio de "Puntos delicados", punto 5).
             return (
                 <section className="w-full max-w-xl mx-auto mt-19 min-h-[calc(100vh-76px)] bg-surface flex flex-col justify-center items-center px-4">
                     <div className="bg-brand max-w-max p-6 rounded-full text-brand-foreground">
