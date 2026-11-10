@@ -100,11 +100,35 @@ export interface AggregationNumeric {
   distribution?: number[];
 }
 
+/** Un grupo por unidad; estadísticas en `null` si el grupo no alcanza el umbral. */
+export interface AggregationUnitGroup {
+  optionId: string;
+  unit: string;
+  count: number;
+  percentage: number;
+  average: number | null;
+  median: number | null;
+  q1: number | null;
+  q3: number | null;
+  min: number | null;
+  max: number | null;
+  stdDev: number | null;
+  distribution?: number[];
+}
+
+/** `numeric_with_unit`: agrupado por unidad, sin convertir entre unidades. */
+export interface AggregationNumericWithUnit {
+  type: "numeric_with_unit";
+  count: number;
+  units: AggregationUnitGroup[];
+}
+
 export type DashboardAggregation =
   | AggregationYesNo
   | AggregationChoices
   | AggregationLikert
-  | AggregationNumeric;
+  | AggregationNumeric
+  | AggregationNumericWithUnit;
 
 export interface DashboardQuestion {
   questionId: string;
