@@ -6,6 +6,7 @@ import {
   LikertChart,
   MultipleChoiceChart,
   NumericChart,
+  NumericWithUnitChart,
   SingleChoiceChart,
   UnsupportedQuestionType,
   YesNoChart,
@@ -19,6 +20,7 @@ const CHART_BY_TYPE: Record<string, ComponentType<{ question: DashboardQuestion 
   likert: LikertChart,
   compliance: ComplianceChart,
   numeric: NumericChart,
+  numeric_with_unit: NumericWithUnitChart,
 };
 
 interface QuestionChartFactoryProps {
