@@ -1,6 +1,6 @@
 "use client";
 
-import ConsentForm from "@/components/campaign/ConsentForm";
+import ConsentForm from "@/components/consents/ConsentForm";
 import type { ConsentPayload } from "@/lib/consents/consentSubmission";
 import type { ConsentRecord } from "@/services/consents.service";
 

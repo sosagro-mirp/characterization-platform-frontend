@@ -48,7 +48,6 @@ describe("Spec 102 — entrada del encuestador", () => {
       expect.arrayContaining([
         "/admin",
         "/instrument",
-        "/campaign",
         "/change-password",
         "/productores",
       ]),

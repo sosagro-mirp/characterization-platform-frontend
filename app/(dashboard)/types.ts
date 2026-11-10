@@ -18,7 +18,6 @@ export interface DashboardFilters {
   profile?: string;
   tenure?: string;
   chainStage?: string;
-  campaignId?: string;
   dateFrom?: string;
   dateTo?: string;
 }

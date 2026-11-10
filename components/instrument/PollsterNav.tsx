@@ -15,25 +15,6 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-function CampaignIcon({ active }: { active: boolean }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={active ? 2 : 1.5}
-      stroke="currentColor"
-      className="size-5"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
-      />
-    </svg>
-  );
-}
-
 function ProducersIcon({ active }: { active: boolean }) {
   return (
     <svg
@@ -89,8 +70,6 @@ export default function PollsterNav() {
 
   const isProducersActive =
     pathname === "/productores" || pathname.startsWith("/productores/");
-  const isCampaignActive =
-    pathname === "/campaign" || pathname.startsWith("/campaign/");
   const isDashboardActive = pathname.startsWith("/admin");
 
   const items: NavItem[] = [
@@ -98,11 +77,6 @@ export default function PollsterNav() {
       label: "Productores",
       href: "/productores",
       icon: <ProducersIcon active={isProducersActive} />,
-    },
-    {
-      label: "Campañas",
-      href: "/campaign",
-      icon: <CampaignIcon active={isCampaignActive} />,
     },
     ...(canAccessPanel
       ? [
@@ -117,7 +91,6 @@ export default function PollsterNav() {
 
   const isActive = (href: string) => {
     if (href === "/productores") return isProducersActive;
-    if (href === "/campaign") return isCampaignActive;
     return isDashboardActive;
   };
 

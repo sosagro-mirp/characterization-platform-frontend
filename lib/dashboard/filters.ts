@@ -28,7 +28,6 @@ const FILTER_KEYS: (keyof DashboardFilters)[] = [
   "profile",
   "tenure",
   "chainStage",
-  "campaignId",
   "dateFrom",
   "dateTo",
 ];

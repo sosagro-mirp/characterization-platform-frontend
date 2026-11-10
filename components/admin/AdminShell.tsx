@@ -46,9 +46,6 @@ export default function AdminShell({ children }: AdminShellProps) {
         <Link href="/admin/instruments" className={navLinkClass("/admin/instruments")}>
           Instrumentos
         </Link>
-        <Link href="/admin/campaigns" className={navLinkClass("/admin/campaigns")}>
-          Campañas
-        </Link>
         <Link href="/admin/farmers" className={navLinkClass("/admin/farmers")}>
           Agricultores
         </Link>

@@ -162,11 +162,11 @@ describe("Spec 102 — contexto de productor en la URL", () => {
     ).toBeNull();
   });
 
-  it("C9 — con contexto vuelve a la ficha; sin él, a campañas", async () => {
+  it("C9 — con contexto vuelve a la ficha; sin él, a Productores (spec 104)", async () => {
     const { returnPathAfterSurvey } = await load();
     expect(returnPathAfterSurvey({ farmerId: FARMER, farmId: FARM })).toBe(
       `/productores/${FARMER}`,
     );
-    expect(returnPathAfterSurvey(null)).toBe("/campaign");
+    expect(returnPathAfterSurvey(null)).toBe("/productores");
   });
 });

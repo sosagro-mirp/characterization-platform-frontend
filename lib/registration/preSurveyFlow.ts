@@ -3,7 +3,7 @@ import type { SurveyExtraction } from "@/services/surveys.service";
 
 /**
  * Spec 84 — decisiones puras del flujo de pre-encuesta web
- * (`app/(instrument)/campaign/[id]/session/[sessionId]/page.tsx`), extraídas
+ * (la antigua página de sesión de campaña (retirada en el spec 104)), extraídas
  * para poder probarlas con Vitest sin montar la página. Las dependencias de
  * red se inyectan; la página les pasa los servicios reales.
  */
