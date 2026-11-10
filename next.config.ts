@@ -12,11 +12,22 @@ const apiOrigin = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");
 
+// Spec 85: la evidencia se sirve por URL firmada desde el endpoint S3 de R2
+// (`https://<bucket>.<cuenta>.r2.cloudflarestorage.com`). Sin este origen en
+// img-src/media-src, el navegador bloquea la foto y el audio del visor.
+const mediaOrigin = (process.env.NEXT_PUBLIC_MEDIA_ORIGIN ?? "").replace(
+  /\/$/,
+  "",
+);
+const withMediaOrigin = (sources: string) =>
+  mediaOrigin ? `${sources} ${mediaOrigin}` : sources;
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src ${withMediaOrigin("'self' data: blob:")}`,
+  `media-src ${withMediaOrigin("'self' blob:")}`,
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin}${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",

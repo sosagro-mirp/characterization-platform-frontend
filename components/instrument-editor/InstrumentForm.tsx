@@ -1,12 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import {
   ActorTypeSummary,
   CreateInstrumentRequest,
+  InstrumentListItem,
   UpdateInstrumentRequest,
 } from "@/app/(admin)/types";
 import { useAuthStore } from "@/store/useAuthStore";
+import { listCrops } from "@/services/types-of-crops.service";
+import type { CropSummary } from "@/app/(instrument)/types";
+import { buildPublicSurveyUrl } from "@/lib/public-surveys/publicSurveyUrl";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
 
 interface InstrumentFormProps {
@@ -16,6 +21,10 @@ interface InstrumentFormProps {
     version: number;
     publishDate: string;
     isActive: boolean;
+    isPublic: boolean;
+    scopeLevel?: InstrumentListItem["scopeLevel"];
+    cropIds?: string[];
+    coverageGroup?: string | null;
     actorTypeIds: string[];
   };
   onSubmit: (
@@ -29,6 +38,10 @@ interface InstrumentFormProps {
    * indicador global del header refleja el estado.
    */
   autoSave?: boolean;
+  /** Spec 79 — necesario para armar la URL pública una vez isPublic está activo. Ausente al crear (el instrumento aún no tiene id). */
+  instrumentId?: string;
+  /** Spec 79, criterio 3 — nombres en español de los tipos de pregunta multimedia presentes; deshabilita el toggle "Enlace público" y explica el motivo. */
+  mediaTypesPresent?: string[];
 }
 
 export default function InstrumentForm({
@@ -37,6 +50,8 @@ export default function InstrumentForm({
   onSubmit,
   submitLabel = "Guardar",
   autoSave = false,
+  instrumentId,
+  mediaTypesPresent = [],
 }: InstrumentFormProps) {
   const [name, setName] = useState(initialValues?.name ?? "");
   const [version, setVersion] = useState(initialValues?.version ?? 1);
@@ -44,12 +59,38 @@ export default function InstrumentForm({
     initialValues?.publishDate ?? new Date().toISOString().slice(0, 10),
   );
   const [isActive, setIsActive] = useState(initialValues?.isActive ?? true);
+  const [isPublic, setIsPublic] = useState(initialValues?.isPublic ?? false);
+  const [publicToggleError, setPublicToggleError] = useState<string>();
+  const [copied, setCopied] = useState(false);
   const [selectedActorTypeIds, setSelectedActorTypeIds] = useState<string[]>(
     initialValues?.actorTypeIds ?? [],
   );
+  // Spec 98 — alcance para la cobertura de unidades productivas.
+  const [scopeLevel, setScopeLevel] = useState<InstrumentListItem["scopeLevel"]>(
+    initialValues?.scopeLevel ?? null,
+  );
+  const [scopeCropIds, setScopeCropIds] = useState<string[]>(
+    initialValues?.cropIds ?? [],
+  );
+  const [coverageGroup, setCoverageGroup] = useState(
+    initialValues?.coverageGroup ?? "",
+  );
+  const [crops, setCrops] = useState<CropSummary[]>([]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
   const isAdmin = useAuthStore((s) => s.user?.role === "admin");
+  // Spec 98 — el alcance también lo declara RESEARCHER (el backend lo permite).
+  const canEditScope = useAuthStore(
+    (s) => s.user?.role === "admin" || s.user?.role === "researcher",
+  );
+  const [cropsError, setCropsError] = useState(false);
+
+  useEffect(() => {
+    if (!autoSave) return;
+    listCrops()
+      .then(setCrops)
+      .catch(() => setCropsError(true));
+  }, [autoSave]);
 
   const lastPersisted = useRef({
     name: initialValues?.name ?? "",
@@ -88,9 +129,69 @@ export default function InstrumentForm({
     void persist({ publishDate });
   };
 
+  // Spec 79, criterio 3 — a diferencia del resto de campos, este necesita su
+  // propio mensaje de error inline: el 422 del backend explica exactamente
+  // qué preguntas bloquean el enlace, y el indicador global del header no es
+  // suficientemente específico para esa explicación. Revierte el checkbox
+  // si el backend rechaza el cambio.
+  const handleIsPublicChange = async (checked: boolean) => {
+    setPublicToggleError(undefined);
+    setIsPublic(checked);
+    if (!autoSave) return;
+    try {
+      await onSubmit({ isPublic: checked });
+    } catch (err) {
+      setIsPublic(!checked);
+      setPublicToggleError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar el enlace público.",
+      );
+    }
+  };
+
+  const publicSurveyUrl =
+    instrumentId && typeof window !== "undefined"
+      ? buildPublicSurveyUrl(window.location.origin, instrumentId)
+      : null;
+
+  const handleCopyUrl = async () => {
+    if (!publicSurveyUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicSurveyUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard no disponible — el usuario puede seleccionar el texto manualmente */
+    }
+  };
+
   const handleIsActiveChange = (checked: boolean) => {
     setIsActive(checked);
     if (autoSave) void persist({ isActive: checked });
+  };
+
+  const handleScopeLevelChange = (value: string) => {
+    const next = (value || null) as InstrumentListItem["scopeLevel"];
+    setScopeLevel(next);
+    if (next !== "farm_crop") setScopeCropIds([]);
+    if (autoSave) void persist({ scopeLevel: next });
+  };
+
+  const toggleScopeCrop = (id: string) => {
+    // Sin efectos dentro del updater: en StrictMode se ejecuta dos veces.
+    const next = scopeCropIds.includes(id)
+      ? scopeCropIds.filter((x) => x !== id)
+      : [...scopeCropIds, id];
+    setScopeCropIds(next);
+    if (autoSave) void persist({ cropIds: next });
+  };
+
+  const handleCoverageGroupBlur = () => {
+    if (!autoSave) return;
+    const trimmed = coverageGroup.trim();
+    if (trimmed === (initialValues?.coverageGroup ?? "")) return;
+    void persist({ coverageGroup: trimmed || null });
   };
 
   const toggleActorType = (id: string) => {
@@ -125,9 +226,9 @@ export default function InstrumentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+        <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
           Nombre
         </label>
         <input
@@ -137,13 +238,13 @@ export default function InstrumentForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={handleNameBlur}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
       </div>
 
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+          <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
             Versión
           </label>
           <input
@@ -153,11 +254,11 @@ export default function InstrumentForm({
             value={version}
             onChange={(e) => setVersion(Number(e.target.value))}
             onBlur={handleVersionBlur}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+          <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
             Fecha de publicación
           </label>
           <input
@@ -166,41 +267,181 @@ export default function InstrumentForm({
             value={publishDate}
             onChange={(e) => setPublishDate(e.target.value)}
             onBlur={handlePublishDateBlur}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
       </div>
 
       {isAdmin && (
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={isActive}
-            onChange={(e) => handleIsActiveChange(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--border)] accent-[var(--brand)]"
-          />
-          <label htmlFor="isActive" className="text-sm text-[var(--text-primary)]">
-            Instrumento activo (visible para encuestadores)
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5">
+          <label htmlFor="isActive" className="flex items-start gap-2.5 text-sm text-[var(--text-primary)] cursor-pointer">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={isActive}
+              onChange={(e) => handleIsActiveChange(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+            />
+            <span>
+              Instrumento activo
+              <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+                Visible para encuestadores.
+              </span>
+            </span>
           </label>
+        </div>
+      )}
+
+      {isAdmin && autoSave && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5 space-y-3">
+          <label
+            htmlFor="isPublic"
+            className={`flex items-start gap-2.5 text-sm text-[var(--text-primary)] ${
+              mediaTypesPresent.length > 0 ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+            }`}
+          >
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={isPublic}
+              disabled={mediaTypesPresent.length > 0}
+              onChange={(e) => void handleIsPublicChange(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)] accent-[var(--brand)]"
+            />
+            <span>
+              Enlace público
+              <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
+                Cualquier persona con el enlace puede responder sin cuenta. Las
+                respuestas quedan pendientes de revisión, sin agricultor asociado.
+              </span>
+            </span>
+          </label>
+
+          {mediaTypesPresent.length > 0 && (
+            <p className="text-[10.5px] text-[var(--warning-fg)]">
+              No se puede activar: este instrumento tiene preguntas de tipo{" "}
+              {mediaTypesPresent.join(", ")}, que requieren el flujo autenticado
+              de subida de archivos.
+            </p>
+          )}
+
+          {publicToggleError && (
+            <p className="text-[10.5px] text-[var(--danger-fg)]">{publicToggleError}</p>
+          )}
+
+          {isPublic && publicSurveyUrl && (
+            <div className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2">
+              <span className="min-w-0 flex-1 truncate text-xs text-[var(--text-primary)]">
+                {publicSurveyUrl}
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleCopyUrl()}
+                aria-label={copied ? "Enlace copiado" : "Copiar enlace público"}
+                className="shrink-0 rounded-md p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {canEditScope && autoSave && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3.5 space-y-3">
+          <div>
+            <label
+              htmlFor="scopeLevel"
+              className="mb-1.5 block text-xs text-[var(--text-muted)]"
+            >
+              Alcance (cobertura de unidades productivas)
+            </label>
+            <select
+              id="scopeLevel"
+              value={scopeLevel ?? ""}
+              onChange={(e) => handleScopeLevelChange(e.target.value)}
+              className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            >
+              <option value="">Sin declarar (no sale en la cobertura)</option>
+              <option value="farmer">Por productor</option>
+              <option value="farm">Por finca</option>
+              <option value="farm_crop">Por cultivo de la finca</option>
+            </select>
+          </div>
+
+          {scopeLevel === "farm_crop" && cropsError && (
+            <p className="text-[10.5px] text-[var(--danger-fg)]">
+              No se pudo cargar la lista de cultivos. Recarga la página.
+            </p>
+          )}
+
+          {scopeLevel === "farm_crop" && crops.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs text-[var(--text-muted)]">
+                Cultivos a los que aplica (ninguno = todos)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {crops.map((crop) => (
+                  <button
+                    key={crop.cropId}
+                    type="button"
+                    onClick={() => toggleScopeCrop(crop.cropId)}
+                    aria-pressed={scopeCropIds.includes(crop.cropId)}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                      scopeCropIds.includes(crop.cropId)
+                        ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]"
+                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                    }`}
+                  >
+                    {crop.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {scopeLevel && (
+            <div>
+              <label
+                htmlFor="coverageGroup"
+                className="mb-1.5 block text-xs text-[var(--text-muted)]"
+              >
+                Grupo de cobertura (opcional)
+              </label>
+              <input
+                id="coverageGroup"
+                type="text"
+                maxLength={50}
+                value={coverageGroup}
+                onChange={(e) => setCoverageGroup(e.target.value)}
+                onBlur={handleCoverageGroupBlur}
+                placeholder="Ej. REGISTRO"
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+              />
+              <p className="mt-1 text-[10.5px] text-[var(--text-muted)]">
+                Los instrumentos con el mismo grupo cuentan como una sola
+                columna: basta uno para dar la cobertura por aplicada.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
       {actorTypes.length > 0 && (
         <div>
-          <p className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+          <p className="mb-2 text-xs text-[var(--text-muted)]">
             Tipos de actor
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {actorTypes.map((at) => (
               <button
                 key={at.actorTypeId}
                 type="button"
                 onClick={() => toggleActorType(at.actorTypeId)}
-                className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                   selectedActorTypeIds.includes(at.actorTypeId)
-                    ? "bg-[var(--brand)] border-[var(--brand)] text-[var(--brand-foreground)]"
-                    : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                    ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]"
+                    : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
                 }`}
               >
                 {at.name}
@@ -210,16 +451,12 @@ export default function InstrumentForm({
         </div>
       )}
 
-      {autoSave ? (
-        <p className="pt-2 text-xs text-[var(--text-muted)]">
-          Los cambios se guardan automáticamente.
-        </p>
-      ) : (
+      {!autoSave && (
         <div className="flex items-center gap-4 pt-2">
           <button
             type="submit"
             disabled={saveStatus === "saving"}
-            className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+            className="rounded-md bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
           >
             {submitLabel}
           </button>

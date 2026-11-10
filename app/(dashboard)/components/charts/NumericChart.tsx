@@ -12,38 +12,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { buildHistogramBins } from "@/lib/dashboard/histogram";
 import { DashboardQuestion } from "../../types";
 import { CATEGORICAL_BAR_COLORS } from "@/lib/dashboard/palette";
 
 interface NumericChartProps {
   question: DashboardQuestion;
-}
-
-interface HistogramBin {
-  label: string;
-  count: number;
-  percentage: number;
-}
-
-/** Algoritmo de Sturges: k = ceil(log2(n) + 1) bins entre min y max. */
-function buildHistogramBins(values: number[], min: number, max: number): HistogramBin[] {
-  const n = values.length;
-  if (n === 0 || max === min) return [];
-
-  const k = Math.max(1, Math.ceil(Math.log2(n) + 1));
-  const binWidth = (max - min) / k;
-  const counts = Array.from({ length: k }, () => 0);
-
-  values.forEach((v) => {
-    const idx = Math.min(k - 1, Math.floor((v - min) / binWidth));
-    counts[idx] += 1;
-  });
-
-  return counts.map((count, i) => ({
-    label: `${(min + i * binWidth).toFixed(1)}–${(min + (i + 1) * binWidth).toFixed(1)}`,
-    count,
-    percentage: (count / n) * 100,
-  }));
 }
 
 /** Recharts pasa x/y/width/value con tipos laxos (`number | string`) en las

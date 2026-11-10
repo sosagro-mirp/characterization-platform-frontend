@@ -1,19 +1,26 @@
 import { apiClient } from "@/lib/apiClient";
 import type {
+  ProcessBody,
+  ProcessPreview,
+  ProcessPublicResult,
+} from "@/lib/public-submissions/processPreview";
+import type {
   CreateResponsePayload,
-  DuplicateCheckResult,
-  ExtractCropsResult,
   ExtractFarmerResult,
 } from "@/app/(instrument)/types";
 import type {
+  PublicSubmissionListItem,
+  PublicSubmissionReviewStatus,
   SurveyListItem,
   SurveyResponsesResult,
 } from "@/app/(admin)/types";
 
 export interface CreateSurveyPayload {
   instrumentIds: string[];
-  campaignSessionId?: string;
-  stepOrder?: number;
+  // Spec 102 — ancla por productor, finca y cultivo de finca (sin campaña).
+  farmerId?: string;
+  farmId?: string;
+  farmCropId?: string;
 }
 
 export interface CreateSurveyResult {
@@ -26,51 +33,68 @@ export function createSurvey(
   return apiClient.post<CreateSurveyResult>("/api/surveys", payload);
 }
 
-export function extractFarmer(surveyId: string): Promise<ExtractFarmerResult> {
+/**
+ * Spec 68 — un 409 significa colisión de `documentId`: el cuerpo trae
+ * `{ documentId, submittedName, existingFarmer: { farmerId, name } }` y hace
+ * falta reintentar con `resolution` declarada.
+ */
+export function extractFarmer(
+  surveyId: string,
+  resolution?: "same_person" | "separate_person",
+): Promise<ExtractFarmerResult> {
   return apiClient.post<ExtractFarmerResult>(
     `/api/surveys/${surveyId}/extract-farmer`,
-    {},
+    resolution ? { resolution } : {},
   );
 }
 
-export function extractCrops(surveyId: string): Promise<ExtractCropsResult> {
-  return apiClient.post<ExtractCropsResult>(
-    `/api/surveys/${surveyId}/extract-crops`,
-    {},
-  );
+/** Spec 95 — estados de `GET /surveys/:id/extraction`. */
+export type ExtractionStatus =
+  | "done"
+  | "collision"
+  | "no_identity"
+  | "pending_alias"
+  | "not_applicable"
+  | "awaiting_review"
+  | "error"
+  | "backfilled";
+
+export interface SurveyExtraction {
+  status: ExtractionStatus | null;
+  farmerId: string | null;
+  farmerName: string | null;
+  existed: boolean | null;
+  clientFarmerId: string | null;
+  farm: { farmId: string; name: string } | null;
+  farmCropId: string | null;
+  crops: { cropId: string; name: string }[];
+  collision?: {
+    documentId: string;
+    submittedName: string;
+    existingFarmer: { farmerId: string; name: string };
+  };
+  openDiscrepancies: number;
+  extractedAt: string | null;
 }
 
-export function checkDuplicate(
-  farmerId: string,
-  instrumentId: string,
-  campaignId: string,
-): Promise<DuplicateCheckResult> {
-  const params = new URLSearchParams({ farmerId, instrumentId, campaignId });
-  return apiClient.get<DuplicateCheckResult>(
-    `/api/surveys/check-duplicate?${params.toString()}`,
+/** Spec 95 (D-H3-12) — resultado de la extracción que hizo el batch; la web lo consulta en vez de llamar a `extract-*`. */
+export function getExtraction(surveyId: string): Promise<SurveyExtraction> {
+  return apiClient.get<SurveyExtraction>(
+    `/api/surveys/${surveyId}/extraction`,
     { cache: "no-store" },
   );
 }
 
-export function overwriteSurvey(payload: {
-  surveyId: string;
-  sessionId: string;
-  instrumentId: string;
-  stepOrder: number;
-}): Promise<{ surveyId: string }> {
-  return apiClient.post<{ surveyId: string }>("/api/surveys/overwrite", payload);
-}
-
-export function skipStep(payload: {
-  sessionId: string;
-  instrumentId: string;
-  stepOrder: number;
-}): Promise<{ surveyId: string }> {
-  return apiClient.post<{ surveyId: string }>("/api/surveys/skip-step", payload);
-}
-
 export function submitBatchResponses(responses: CreateResponsePayload[]): Promise<void> {
   return apiClient.post<void>("/api/responses/batch", responses);
+}
+
+/**
+ * Marca la encuesta como sincronizada (`sincronized = true`). Sin esta marca la
+ * encuesta no cuenta en la cobertura ni en el dashboard (bug `web-survey-sync`).
+ */
+export function markSurveySynced(surveyId: string): Promise<unknown> {
+  return apiClient.patch(`/api/surveys/${surveyId}/sync`);
 }
 
 export function getSurveysByFarmer(farmerId: string): Promise<SurveyListItem[]> {
@@ -84,5 +108,62 @@ export function getSurveyResponses(surveyId: string): Promise<SurveyResponsesRes
   return apiClient.get<SurveyResponsesResult>(
     `/api/surveys/${surveyId}/responses`,
     { cache: "no-store" },
+  );
+}
+
+// ── Bandeja de revisión de envíos públicos (spec 79) ────────────────────────
+
+export function getPublicSubmissions(filters?: {
+  instrumentId?: string;
+  reviewStatus?: PublicSubmissionReviewStatus;
+}): Promise<PublicSubmissionListItem[]> {
+  const params = new URLSearchParams();
+  if (filters?.instrumentId) params.set("instrumentId", filters.instrumentId);
+  if (filters?.reviewStatus) params.set("reviewStatus", filters.reviewStatus);
+  const qs = params.toString();
+  return apiClient.get<PublicSubmissionListItem[]>(
+    `/api/surveys/public-submissions${qs ? `?${qs}` : ""}`,
+    { cache: "no-store" },
+  );
+}
+
+/**
+ * Vista previa de solo lectura de lo que haría `process-public` (spec 93).
+ * `townId` simula la elección del municipio cuando el envío no lo trae.
+ */
+export function getProcessPreview(
+  surveyId: string,
+  options: { townId?: string } = {},
+): Promise<ProcessPreview> {
+  const qs = options.townId
+    ? `?townId=${encodeURIComponent(options.townId)}`
+    : "";
+  return apiClient.get<ProcessPreview>(
+    `/api/surveys/${surveyId}/process-preview${qs}`,
+  );
+}
+
+/**
+ * Procesa un envío público (incluida la detección de colisiones del spec 68):
+ * un 409 con { documentId, submittedName, existingFarmer } significa que hace
+ * falta declarar `resolution` para continuar. `existed` indica si el
+ * productor ya existía (misma persona).
+ */
+export function processPublicSubmission(
+  surveyId: string,
+  body: ProcessBody,
+): Promise<ProcessPublicResult> {
+  return apiClient.post<ProcessPublicResult>(
+    `/api/surveys/${surveyId}/process-public`,
+    body,
+  );
+}
+
+export function discardPublicSubmission(
+  surveyId: string,
+): Promise<{ surveyId: string; reviewStatus: string }> {
+  return apiClient.post<{ surveyId: string; reviewStatus: string }>(
+    `/api/surveys/${surveyId}/discard-public`,
+    {},
   );
 }

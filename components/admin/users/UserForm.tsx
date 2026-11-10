@@ -90,7 +90,7 @@ export default function UserForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
@@ -102,7 +102,7 @@ export default function UserForm({
             maxLength={50}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
         <div>
@@ -115,7 +115,7 @@ export default function UserForm({
             maxLength={50}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
           />
         </div>
       </div>
@@ -130,7 +130,7 @@ export default function UserForm({
           maxLength={100}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
         {emailError && (
           <p className="mt-1 text-xs text-[var(--danger-fg)]">{emailError}</p>
@@ -154,7 +154,7 @@ export default function UserForm({
           placeholder={
             mode === "edit" ? "Dejar vacío para no cambiar" : "Mínimo 8 caracteres"
           }
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
         {mode === "edit" && (
           <p className="mt-1 text-xs text-[var(--text-muted)]">
@@ -171,7 +171,7 @@ export default function UserForm({
       </div>
 
       {error && (
-        <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
+        <p className="text-sm text-[var(--danger-fg)] rounded-md bg-[var(--danger-bg)] px-3 py-2">
           {error}
         </p>
       )}
@@ -179,7 +179,7 @@ export default function UserForm({
       <button
         type="submit"
         disabled={saving}
-        className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
+        className="rounded-md bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors disabled:opacity-50"
       >
         {saving ? "Guardando…" : submitLabel ?? "Guardar"}
       </button>

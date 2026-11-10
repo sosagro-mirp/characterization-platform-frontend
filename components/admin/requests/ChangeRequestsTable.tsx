@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Eye } from "lucide-react";
 import { ChangeRequestListItem } from "@/app/(admin)/types";
+import Tooltip from "@/components/common/Tooltip";
 import RequestDetailModal from "./RequestDetailModal";
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -26,59 +28,61 @@ export default function ChangeRequestsTable({ requests, onResolve }: Props) {
 
   if (requests.length === 0) {
     return (
-      <p className="text-sm text-[var(--text-muted)] py-12 text-center">
-        No hay solicitudes.
-      </p>
+      <div className="flex flex-col items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          No hay solicitudes
+        </p>
+      </div>
     );
   }
 
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
-              <th className="px-4 py-3 font-medium">Fuente</th>
-              <th className="px-4 py-3 font-medium">Categoría</th>
-              <th className="px-4 py-3 font-medium">Descripción</th>
-              <th className="px-4 py-3 font-medium">Creado por</th>
-              <th className="px-4 py-3 font-medium">Fecha</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium text-right">Acciones</th>
+      <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <table className="w-full text-xs">
+          <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-[10.5px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            <tr>
+              <th className="px-3 py-2.5 text-left">Origen</th>
+              <th className="px-3 py-2.5 text-left">Categoría</th>
+              <th className="px-3 py-2.5 text-left">Descripción</th>
+              <th className="px-3 py-2.5 text-left">Creado por</th>
+              <th className="px-3 py-2.5 text-left">Fecha</th>
+              <th className="px-3 py-2.5 text-left">Estado</th>
+              <th className="px-3 py-2.5 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[var(--border)]">
             {requests.map((r) => (
               <tr
                 key={r.changeRequestId}
-                className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--surface-muted)]/40 transition-colors"
+                className="hover:bg-[var(--surface-muted)] transition-colors"
               >
-                <td className="px-4 py-3">
+                <td className="px-3 py-2.5">
                   <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                    className={`inline-flex rounded px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap ${
                       r.source === "mobile"
                         ? "bg-[var(--info-bg)] text-[var(--info-fg)]"
-                        : "bg-[var(--warning-bg)] text-[var(--warning-fg)]"
+                        : "bg-[var(--surface-muted)] text-[var(--text-muted)]"
                     }`}
                   >
                     {SOURCE_LABELS[r.source] ?? r.source}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[var(--text-muted)]">
+                <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap">
                   {r.category ? (CATEGORY_LABELS[r.category] ?? r.category) : "—"}
                 </td>
-                <td className="px-4 py-3 text-[var(--text-primary)] max-w-xs">
-                  <span className="line-clamp-2">{r.description}</span>
+                <td className="max-w-xs truncate px-3 py-2.5 text-[var(--text-primary)]">
+                  {r.description}
                 </td>
-                <td className="px-4 py-3 text-[var(--text-muted)]">
+                <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap">
                   {r.createdBy.name} {r.createdBy.lastName}
                 </td>
-                <td className="px-4 py-3 text-[var(--text-muted)] whitespace-nowrap">
+                <td className="whitespace-nowrap px-3 py-2.5 text-[var(--text-muted)]">
                   {new Date(r.createdAt).toLocaleDateString("es-CO")}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-2.5">
                   <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                    className={`inline-flex rounded-full px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap ${
                       r.status === "resolved"
                         ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
                         : "bg-[var(--warning-bg)] text-[var(--warning-fg)]"
@@ -87,27 +91,29 @@ export default function ChangeRequestsTable({ requests, onResolve }: Props) {
                     {r.status === "resolved" ? "Resuelta" : "Abierta"}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDetail(r)}
-                      className="rounded-lg border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--surface-muted)] transition-colors"
-                    >
-                      Ver
-                    </button>
-                    {r.status === "open" ? (
+                <td className="px-3 py-2.5 text-right">
+                  <div className="inline-flex items-center gap-1.5">
+                    <Tooltip label="Ver detalle de la solicitud">
                       <button
                         type="button"
-                        onClick={() => onResolve(r)}
-                        className="rounded-lg border border-[var(--brand)]/40 px-3 py-1 text-xs font-medium text-[var(--brand)] hover:bg-[var(--success-bg)] transition-colors"
+                        onClick={() => setDetail(r)}
+                        className="rounded-md p-1.5 text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors"
+                        aria-label="Ver detalle de la solicitud"
                       >
-                        Resolver
+                        <Eye className="size-3.5" aria-hidden="true" />
                       </button>
-                    ) : (
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {r.resolvedAt ? new Date(r.resolvedAt).toLocaleDateString("es-CO") : "—"}
-                      </span>
+                    </Tooltip>
+                    {r.status === "open" && (
+                      <Tooltip label="Resolver solicitud">
+                        <button
+                          type="button"
+                          onClick={() => onResolve(r)}
+                          className="rounded-md p-1.5 text-[var(--brand)] border border-[var(--brand)]/40 hover:bg-[var(--success-bg)] transition-colors"
+                          aria-label="Resolver solicitud"
+                        >
+                          <Check className="size-3.5" aria-hidden="true" />
+                        </button>
+                      </Tooltip>
                     )}
                   </div>
                 </td>
@@ -118,7 +124,14 @@ export default function ChangeRequestsTable({ requests, onResolve }: Props) {
       </div>
 
       {detail && (
-        <RequestDetailModal item={detail} onClose={() => setDetail(null)} />
+        <RequestDetailModal
+          item={detail}
+          onClose={() => setDetail(null)}
+          onResolve={(item) => {
+            setDetail(null);
+            onResolve(item);
+          }}
+        />
       )}
     </>
   );

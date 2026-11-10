@@ -8,6 +8,7 @@ import {
   LikertChart,
   MultipleChoiceChart,
   NumericChart,
+  NumericWithUnitChart,
   SingleChoiceChart,
   UnsupportedQuestionType,
   YesNoChart,
@@ -66,11 +67,11 @@ export default function QuestionChartFactory({ question }: QuestionChartFactoryP
     case "harvest-calendar":
       return <HarvestCalendarChart question={question} />;
     case "histogram":
-    case "histogram-by-unit":
-      // DEBT: `histogram-by-unit` (numeric_with_unit) todavía no tiene
-      // agregación en el backend (ver spec/backlog.md) — NumericChart no
-      // renderiza nada hasta que exista `aggregation.type === "numeric"`.
       return <NumericChart question={question} />;
+    case "histogram-by-unit":
+      // numeric_with_unit: agregación agrupada por unidad (bug
+      // `numeric_with_unit`, 2026-11-10), sin convertir entre unidades.
+      return <NumericWithUnitChart question={question} />;
     default:
       return <UnsupportedQuestionType />;
   }

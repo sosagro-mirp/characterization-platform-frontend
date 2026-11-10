@@ -49,6 +49,14 @@ function summarizeAggregation(question: DashboardQuestion): string {
         : "Sin media calculable";
     case "numeric":
       return `Media: ${aggregation.average?.toFixed(2) ?? "—"}, Mediana: ${aggregation.median?.toFixed(2) ?? "—"}, n=${aggregation.count}`;
+    case "numeric_with_unit":
+      return aggregation.units
+        .map((group) =>
+          group.suppressed
+            ? `${group.unit} (oculto por privacidad)`
+            : `${group.unit}: media ${group.average?.toFixed(2) ?? "—"}, n=${group.count}`,
+        )
+        .join("; ");
     default:
       return "";
   }

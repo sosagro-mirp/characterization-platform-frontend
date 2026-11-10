@@ -15,11 +15,9 @@ export interface DashboardFilters {
   ageRange?: string;
   educationLevel?: string;
   connectivity?: string;
-  populationGroup?: string;
   profile?: string;
   tenure?: string;
   chainStage?: string;
-  campaignId?: string;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -110,11 +108,39 @@ export interface AggregationNumeric {
   distribution?: number[];
 }
 
+/** Un grupo por unidad; estadísticas en `null` si el grupo no alcanza el umbral. */
+export interface AggregationUnitGroup {
+  optionId: string;
+  unit: string;
+  /** null si suppressed=true (spec 66, D2): el grupo tiene menos de MIN_CELL_SIZE respuestas. */
+  count: number | null;
+  /** null si suppressed=true, mismo criterio que count. */
+  percentage: number | null;
+  /** true si el grupo no alcanza MIN_CELL_SIZE: conteo, porcentaje y estadísticas en null. */
+  suppressed: boolean;
+  average: number | null;
+  median: number | null;
+  q1: number | null;
+  q3: number | null;
+  min: number | null;
+  max: number | null;
+  stdDev: number | null;
+  distribution?: number[];
+}
+
+/** `numeric_with_unit`: agrupado por unidad, sin convertir entre unidades. */
+export interface AggregationNumericWithUnit {
+  type: "numeric_with_unit";
+  count: number;
+  units: AggregationUnitGroup[];
+}
+
 export type DashboardAggregation =
   | AggregationYesNo
   | AggregationChoices
   | AggregationLikert
-  | AggregationNumeric;
+  | AggregationNumeric
+  | AggregationNumericWithUnit;
 
 export interface DashboardQuestion {
   questionId: string;

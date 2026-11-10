@@ -2,14 +2,42 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Check } from "lucide-react";
 import { FarmerDetail, UpdateFarmerRequest, UpdateFarmRequest } from "@/app/(admin)/types";
-import { getFarmer, updateFarmer } from "@/services/farmers.service";
-import { updateFarm } from "@/services/farms.service";
+import {
+  deleteFarmerCascade,
+  getFarmer,
+  updateFarmer,
+} from "@/services/farmers.service";
+import { getFarm, updateFarm } from "@/services/farms.service";
+import { getFarmerConsentStatus } from "@/services/consents.service";
+import type { ConsentStatus } from "@/lib/consents/resolveConsentRequirement";
 import { listCrops } from "@/services/types-of-crops.service";
 import { CropSummary } from "@/app/(instrument)/types";
+import {
+  presentFarmerFarms,
+  primaryFarm,
+  sharedFarmCropsWarning,
+} from "@/lib/farmers/farmerFarms";
 import { SurveysTab } from "./SurveysTab";
+import { CoverageTab } from "./CoverageTab";
+import { DiscrepanciesPanel } from "./DiscrepanciesPanel";
+import DeleteFarmerDialog from "./DeleteFarmerDialog";
+import AdminOnly from "@/components/admin/AdminOnly";
 
-type Tab = "datos" | "encuestas";
+type Tab = "datos" | "encuestas" | "cobertura";
+
+const TAB_LABELS: Record<Tab, string> = {
+  datos: "Datos",
+  cobertura: "Cobertura",
+  encuestas: "Encuestas",
+};
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "—";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
 
 export default function EditFarmerPage() {
   const router = useRouter();
@@ -17,11 +45,19 @@ export default function EditFarmerPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>("datos");
   const [farmer, setFarmer] = useState<FarmerDetail | null>(null);
+  // Spec 78, Fase 13 — estado exacto de consentimiento (GET /api/farmers/:id
+  // no lo trae; solo el listado GET /api/farmers agrega hasPendingConsent).
+  const [consentStatus, setConsentStatus] = useState<ConsentStatus | null>(null);
+  // Spec 101 — encuesta a abrir al llegar desde la pestaña «Cobertura».
+  const [focusSurveyId, setFocusSurveyId] = useState<string | null>(null);
   const [crops, setCrops] = useState<CropSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Farmer fields
   const [name, setName] = useState("");
@@ -34,25 +70,58 @@ export default function EditFarmerPage() {
   const [vereda, setVereda] = useState("");
   const [altitude, setAltitude] = useState("");
   const [selectedCropIds, setSelectedCropIds] = useState<string[]>([]);
+  // Spec 94 — aviso si la finca principal la comparten otros productores.
+  const [sharedWarning, setSharedWarning] = useState<string | null>(null);
+
+  // Fuente única de la finca principal (spec 94): `farms` con respaldo al alias `farm`.
+  function principalFarmId(f: FarmerDetail): string | undefined {
+    return primaryFarm(f.farms ?? [])?.farmId ?? f.farm?.farmId;
+  }
+
+  // Carga el aviso de finca compartida sin retrasar la ficha.
+  function refreshSharedWarning(f: FarmerDetail, isCancelled: () => boolean) {
+    const principalId = principalFarmId(f);
+    if (!principalId) {
+      setSharedWarning(null);
+      return;
+    }
+    getFarm(principalId)
+      .then((detail) => {
+        if (!isCancelled()) setSharedWarning(sharedFarmCropsWarning(detail, f.id));
+      })
+      .catch(() => {
+        // Sin el detalle no se puede avisar; la edición sigue disponible.
+      });
+  }
+
+  function applyFarmer(f: FarmerDetail) {
+    setFarmer(f);
+    setName(f.name ?? "");
+    setDocumentId(f.documentId ?? "");
+    setPhone(f.phone ?? "");
+    setEmail(f.email ?? "");
+    if (f.farm) {
+      setFarmName(f.farm.name ?? "");
+      setVereda(f.farm.vereda ?? "");
+      setAltitude(f.farm.altitude != null ? String(f.farm.altitude) : "");
+      setSelectedCropIds((f.farm.crops ?? []).map((c) => c.cropId));
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const [f, c] = await Promise.all([getFarmer(id), listCrops()]);
+        const [f, c, consent] = await Promise.all([
+          getFarmer(id),
+          listCrops(),
+          getFarmerConsentStatus(id),
+        ]);
         if (cancelled) return;
-        setFarmer(f);
         setCrops(c);
-        setName(f.name ?? "");
-        setDocumentId(f.documentId ?? "");
-        setPhone(f.phone ?? "");
-        setEmail(f.email ?? "");
-        if (f.farm) {
-          setFarmName(f.farm.name ?? "");
-          setVereda(f.farm.vereda ?? "");
-          setAltitude(f.farm.altitude != null ? String(f.farm.altitude) : "");
-          setSelectedCropIds((f.farm.crops ?? []).map((c) => c.cropId));
-        }
+        setConsentStatus(consent);
+        applyFarmer(f);
+        refreshSharedWarning(f, () => cancelled);
       } catch (err) {
         if (!cancelled)
           setError(err instanceof Error ? err.message : "Error al cargar agricultor.");
@@ -62,6 +131,7 @@ export default function EditFarmerPage() {
     }
     load();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   function toggleCrop(cropId: string) {
@@ -84,21 +154,48 @@ export default function EditFarmerPage() {
       };
       await updateFarmer(id, farmerPayload);
 
-      if (farmer.farm) {
+      const principalId = principalFarmId(farmer);
+      if (principalId) {
         const farmPayload: UpdateFarmRequest = {
           name: farmName.trim() || undefined,
           vereda: vereda.trim() || undefined,
           altitude: altitude !== "" ? Number(altitude) : undefined,
           cropIds: selectedCropIds,
         };
-        await updateFarm(farmer.farm.farmId, farmPayload);
+        await updateFarm(principalId, farmPayload);
       }
+
+      // Recarga el productor para que «Fincas del agricultor» refleje lo guardado.
+      const fresh = await getFarmer(id);
+      applyFarmer(fresh);
+      refreshSharedWarning(fresh, () => false);
 
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  // Spec 101 — tras aplicar una diferencia, recarga productor y finca.
+  async function reloadFarmer() {
+    const fresh = await getFarmer(id);
+    applyFarmer(fresh);
+    refreshSharedWarning(fresh, () => false);
+  }
+
+  async function handleDeleteCascade() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteFarmerCascade(id);
+      router.push("/admin/farmers");
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Error al eliminar el agricultor.",
+      );
+      setDeleting(false);
     }
   }
 
@@ -112,168 +209,310 @@ export default function EditFarmerPage() {
     );
   }
 
+  const presentedFarms = presentFarmerFarms(farmer.farms ?? []);
+
+  // Spec 101 — «Datos» con cambios sin guardar (bloquea resolver diferencias).
+  const isDirty =
+    name !== (farmer.name ?? "") ||
+    documentId !== (farmer.documentId ?? "") ||
+    phone !== (farmer.phone ?? "") ||
+    email !== (farmer.email ?? "") ||
+    (farmer.farm
+      ? farmName !== (farmer.farm.name ?? "") ||
+        vereda !== (farmer.farm.vereda ?? "") ||
+        altitude !== (farmer.farm.altitude != null ? String(farmer.farm.altitude) : "") ||
+        [...selectedCropIds].sort().join() !==
+          (farmer.farm.crops ?? []).map((c) => c.cropId).sort().join()
+      : false);
+
+  const locationParts = [
+    farmer.documentId ? `CC ${farmer.documentId}` : null,
+    farmer.farm?.name ?? null,
+  ].filter(Boolean);
+
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
+      <button
+        onClick={() => router.push("/admin/farmers")}
+        className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+      >
+        <ArrowLeft className="size-3.5" aria-hidden="true" />
+        Volver al listado
+      </button>
+
       {/* Header */}
-      <div>
-        <button
-          onClick={() => router.push("/admin/farmers")}
-          className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4 flex items-center gap-1"
-        >
-          ← Volver al listado
-        </button>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          {farmer.name}
-        </h1>
-        {farmer.documentId && (
-          <p className="text-sm text-[var(--text-muted)]">CC {farmer.documentId}</p>
-        )}
+      <div className="flex items-center gap-3.5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[var(--brand-subtle-bg)] text-sm font-bold text-[var(--brand-subtle-fg)]">
+          {initials(farmer.name)}
+        </span>
+        <div>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+            {farmer.name}
+          </h1>
+          {locationParts.length > 0 && (
+            <p className="text-xs text-[var(--text-muted)]">{locationParts.join(" · ")}</p>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--border)]">
-        {(["datos", "encuestas"] as Tab[]).map((tab) => (
+        {(["datos", "cobertura", "encuestas"] as Tab[]).map((tab) => (
           <button
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+            onClick={() => {
+              // Solo se abre una encuesta concreta al llegar desde «Cobertura».
+              setFocusSurveyId(null);
+              setActiveTab(tab);
+            }}
+            className={`px-4 py-2.5 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
               activeTab === tab
                 ? "border-[var(--brand)] text-[var(--brand)]"
                 : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             }`}
           >
-            {tab === "datos" ? "Datos" : "Encuestas"}
+            {TAB_LABELS[tab]}
           </button>
         ))}
       </div>
 
       {/* Tab: Datos */}
       {activeTab === "datos" && (
-        <div className="space-y-8">
+        <div className="space-y-5">
           {error && (
-            <p className="text-sm text-[var(--danger-fg)] rounded-lg bg-[var(--danger-bg)] px-3 py-2">
+            <p className="text-sm text-[var(--danger-fg)] rounded-md bg-[var(--danger-bg)] px-3 py-2">
               {error}
             </p>
           )}
 
           {success && (
-            <p className="text-sm text-[var(--success-fg)] rounded-lg bg-[var(--success-bg)] px-3 py-2">
-              Cambios guardados correctamente.
-            </p>
+            <div className="flex items-center gap-2 rounded-md border border-[var(--success-fg)]/30 bg-[var(--success-bg)] px-3.5 py-2.5 text-sm text-[var(--success-fg)]">
+              <Check className="size-4 shrink-0" aria-hidden="true" />
+              Los datos del agricultor se actualizaron correctamente.
+            </div>
           )}
 
-          {/* Datos del agricultor */}
-          <section className="space-y-4">
-            <h2 className="text-base font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
-              Datos del agricultor
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Nombre completo *">
-                <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-              </Field>
-              <Field label="Número de documento">
-                <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} className={inputClass} />
-              </Field>
-              <Field label="Teléfono">
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
-              </Field>
-              <Field label="Correo electrónico" className="sm:col-span-2">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
-              </Field>
+          {/* Spec 78, Fase 13 — estado exacto de consentimiento informado. */}
+          {consentStatus && (
+            <div
+              className={`flex items-center gap-2.5 rounded-md border px-3.5 py-2.5 text-xs ${
+                consentStatus.status === "valid"
+                  ? "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)]"
+                  : "border-[var(--warning-fg)]/30 bg-[var(--warning-bg)] text-[var(--warning-fg)]"
+              }`}
+            >
+              <span className="font-semibold">Consentimiento informado:</span>
+              <span>
+                {consentStatus.status === "valid" && `vigente (v${consentStatus.acceptedVersion})`}
+                {consentStatus.status === "outdated_version" &&
+                  `pendiente — versión aceptada (v${consentStatus.acceptedVersion}) quedó desactualizada`}
+                {consentStatus.status === "revoked" && "pendiente — revocado"}
+                {consentStatus.status === "none" && "pendiente — nunca se registró"}
+              </span>
             </div>
-          </section>
+          )}
 
-          {/* Datos de la finca */}
-          {farmer.farm && (
-            <section className="space-y-4">
-              <h2 className="text-base font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
-                Datos de la finca
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Nombre de la finca" className="sm:col-span-2">
-                  <input value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputClass} />
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {/* Datos del agricultor */}
+            <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+              <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2.5">
+                <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                  Datos del agricultor
+                </h2>
+              </div>
+              <div className="flex flex-col gap-4 p-4">
+                <Field label="Nombre completo" required>
+                  <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
                 </Field>
-                <Field label="Vereda / Sector">
-                  <input value={vereda} onChange={(e) => setVereda(e.target.value)} className={inputClass} />
+                <Field label="Número de documento">
+                  <input value={documentId} onChange={(e) => setDocumentId(e.target.value)} className={inputClass} />
                 </Field>
-                <Field label="Altitud (m.s.n.m.)">
-                  <input
-                    type="number"
-                    min={0}
-                    value={altitude}
-                    onChange={(e) => setAltitude(e.target.value)}
-                    className={inputClass}
-                  />
+                <Field label="Teléfono">
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label="Correo electrónico">
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
                 </Field>
               </div>
+            </section>
 
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)] mb-2">Cultivos</p>
-                <div className="flex flex-wrap gap-2">
-                  {crops.map((crop) => {
-                    const selected = selectedCropIds.includes(crop.cropId);
-                    return (
-                      <button
-                        key={crop.cropId}
-                        type="button"
-                        onClick={() => toggleCrop(crop.cropId)}
-                        className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-                          selected
-                            ? "bg-[var(--brand)] text-[var(--brand-foreground)] border-[var(--brand)]"
-                            : "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--brand)]"
-                        }`}
-                      >
-                        {crop.name}
-                      </button>
-                    );
-                  })}
+            {/* Datos de la finca */}
+            {farmer.farm && (
+              <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+                <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2.5">
+                  <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                    Datos de la finca
+                  </h2>
                 </div>
+                <div className="flex flex-col gap-4 p-4">
+                  <Field label="Nombre de la finca">
+                    <input value={farmName} onChange={(e) => setFarmName(e.target.value)} className={inputClass} />
+                  </Field>
+                  <Field label="Vereda / Sector">
+                    <input value={vereda} onChange={(e) => setVereda(e.target.value)} className={inputClass} />
+                  </Field>
+                  <Field label="Altitud (m.s.n.m.)">
+                    <input
+                      type="number"
+                      min={0}
+                      value={altitude}
+                      onChange={(e) => setAltitude(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+
+                  <div>
+                    <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">Cultivos</p>
+                    {sharedWarning && (
+                      <p className="mb-2 rounded-md border border-[var(--warning-fg)]/30 bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--warning-fg)]">
+                        {sharedWarning}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {crops.map((crop) => {
+                        const selected = selectedCropIds.includes(crop.cropId);
+                        return (
+                          <button
+                            key={crop.cropId}
+                            type="button"
+                            onClick={() => toggleCrop(crop.cropId)}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                              selected
+                                ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]"
+                                : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--brand)]"
+                            }`}
+                          >
+                            {crop.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Spec 94 — todas las fincas del productor (solo lectura) */}
+          {presentedFarms.length > 0 && (
+            <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+              <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2.5">
+                <h2 className="text-xs font-semibold text-[var(--text-primary)]">
+                  Fincas del agricultor
+                </h2>
               </div>
+              <ul className="divide-y divide-[var(--border)]">
+                {presentedFarms.map((f) => (
+                  <li key={f.farmId} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                        {f.name}
+                      </p>
+                      <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
+                        {[f.vereda, f.townName].filter(Boolean).join(" · ") || "Sin ubicación"}
+                        {" · "}
+                        {f.cropNames.length > 0 ? f.cropNames.join(", ") : "Sin cultivos"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-primary)]">
+                      {f.roleLabel}
+                    </span>
+                    {f.isPrimary && (
+                      <span className="shrink-0 rounded-full bg-[var(--brand-subtle-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-subtle-fg)]">
+                        Principal
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
+          {/* Spec 95/101 — diferencias por revisar */}
+          <DiscrepanciesPanel
+            farmerId={id}
+            blocked={isDirty}
+            onApplied={reloadFarmer}
+          />
+
           {/* Acciones */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2">
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
+              className="rounded-md bg-[var(--brand)] px-5 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
             >
-              {saving ? "Guardando…" : "Guardar"}
+              {saving ? "Guardando…" : "Guardar cambios"}
             </button>
             <button
               onClick={() => router.push("/admin/farmers")}
-              className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+              className="rounded-md border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
             >
               Cancelar
             </button>
+            <AdminOnly>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="ml-auto rounded-xl border border-[var(--danger-fg)]/40 px-4 py-2 text-sm font-medium text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
+              >
+                Eliminar agricultor
+              </button>
+            </AdminOnly>
           </div>
         </div>
       )}
 
       {/* Tab: Encuestas */}
-      {activeTab === "encuestas" && <SurveysTab farmerId={id} />}
+      {activeTab === "cobertura" && (
+        <CoverageTab
+          farmerId={id}
+          onOpenSurvey={(surveyId) => {
+            setFocusSurveyId(surveyId);
+            setActiveTab("encuestas");
+          }}
+        />
+      )}
+
+      {activeTab === "encuestas" && (
+        <SurveysTab farmerId={id} initialSurveyId={focusSurveyId} />
+      )}
+
+      {confirmDelete && (
+        <DeleteFarmerDialog
+          farmerId={id}
+          deleting={deleting}
+          error={deleteError}
+          onConfirm={handleDeleteCascade}
+          onCancel={() => {
+            setConfirmDelete(false);
+            setDeleteError(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 const inputClass =
-  "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]";
+  "w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]";
 
 function Field({
   label,
   children,
   className,
+  required,
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
+  required?: boolean;
 }) {
   return (
     <div className={className}>
-      <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">
-        {label}
+      <label className="mb-1.5 block text-xs text-[var(--text-muted)]">
+        {label} {required && <span className="text-[var(--danger-fg)]">*</span>}
       </label>
       {children}
     </div>

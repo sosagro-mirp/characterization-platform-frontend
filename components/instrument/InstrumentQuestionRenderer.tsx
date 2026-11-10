@@ -300,7 +300,7 @@ export default function InstrumentQuestionRenderer({
             <MediaAttachmentViewer
                 label={question.text}
                 isRequired={question.isRequired}
-                publicUrl={answer?.publicUrl}
+                attachmentId={answer?.attachmentId}
                 mimeType={answer?.mimeType}
                 originalFilename={answer?.originalFilename}
             />

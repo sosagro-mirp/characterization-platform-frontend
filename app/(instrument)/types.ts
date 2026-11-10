@@ -13,15 +13,6 @@ export type QuestionTypeName =
   | "video"
   | (string & {});
 
-export interface MediaAttachment {
-  attachmentId: string;
-  publicUrl: string;
-  originalFilename: string;
-  mimeType: string;
-  fileSizeBytes: number;
-  status: "pending" | "uploaded" | "failed";
-}
-
 export interface InstrumentType {
   typeId: string;
   name: QuestionTypeName;
@@ -58,8 +49,9 @@ export interface InstrumentDraftAnswer {
   numericValue?: number;
   booleanValue?: boolean;
   otherText?: string;
-  // Multimedia — solo lectura en web; capturado en mobile y subido a R2
-  publicUrl?: string;
+  // Multimedia — solo lectura en web; capturado en mobile y subido a R2.
+  // La evidencia se resuelve por URL firmada a partir de `attachmentId` (spec 85).
+  attachmentId?: string;
   mimeType?: string;
   originalFilename?: string;
 }
@@ -116,62 +108,6 @@ export interface InstrumentSummary {
   actorTypes: ActorTypeSummary[];
 }
 
-// ── Campaign session (encuestador) ───────────────────────────────────────────
-
-export interface CampaignActiveSummary {
-  campaignId: string;
-  name: string;
-  description: string | null;
-  isActive: boolean;
-}
-
-export interface StepConditionRender {
-  conditionId: string;
-  order: number;
-  logicalOperator: 'AND' | 'OR' | null;
-  conditionType: 'question' | 'crop';
-  conditionCrop: { cropId: string; name: string } | null;
-  conditionQuestion: { questionId: string; text: string } | null;
-  conditionValue: string | null;
-}
-
-export interface CampaignStepRender {
-  stepId: string;
-  order: number;
-  instrument: { instrumentId: string; name: string; isActive: boolean };
-  conditions: StepConditionRender[];
-}
-
-export interface CampaignRender extends CampaignActiveSummary {
-  steps: CampaignStepRender[];
-}
-
-export interface CampaignSessionResponse {
-  sessionId: string;
-  campaign: { campaignId: string; name: string };
-}
-
-export interface NextStepResponse {
-  stepId?: string;
-  order?: number;
-  instrument?: { instrumentId: string; name: string; isActive: boolean };
-  totalSteps?: number;
-  completedCount?: number;
-  nextStep?: null;
-}
-
-export interface CreateCampaignSessionPayload {
-  campaignId: string;
-  farmerId?: string;
-  userId?: string;
-  actorTypeId?: string;
-  departmentId?: string;
-  townId?: string;
-  vereda?: string;
-  cropId?: string;
-  cropIds?: string[];
-}
-
 // ── Pre-survey form S1/S2 ────────────────────────────────────────────────────
 
 export interface CropSummary {
@@ -196,16 +132,6 @@ export interface ExtractFarmerResult {
   existed: boolean;
 }
 
-export interface ExtractCropsResult {
-  crops: CropSummary[];
-}
-
-export type LastFarmerResult = {
-  farmerId: string;
-  name: string;
-  farm?: { name: string };
-} | null;
-
 export interface CreateFarmerPayload {
   name: string;
   documentId: string;
@@ -223,27 +149,4 @@ export interface CreateFarmerPayload {
   latitude?: number;
   longitude?: number;
   altitude?: number;
-}
-
-export interface DuplicateCheckResult {
-  hasDuplicate: boolean;
-  surveyId?: string;
-}
-
-export interface PreSurveyFormData {
-  mode: 'search' | 'create';
-  searchQuery: string;
-  name: string;
-  documentId: string;
-  phone: string;
-  email: string;
-  farmName: string;
-  departmentId: string;
-  townId: string;
-  vereda: string;
-  latitude: string;
-  longitude: string;
-  altitude: string;
-  cropIds: string[];
-  selectedFarmerId: string | null;
 }

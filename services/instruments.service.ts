@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import {
   CreateInstrumentRequest,
+  DuplicateInstrumentRequest,
   InstrumentDetail,
   InstrumentListItem,
   UpdateInstrumentRequest,
@@ -47,6 +48,16 @@ export function deleteInstrument(id: string): Promise<void> {
   return apiClient.delete<void>(`/api/instruments/${id}`);
 }
 
+export function duplicateInstrument(
+  id: string,
+  data: DuplicateInstrumentRequest,
+): Promise<InstrumentListItem> {
+  return apiClient.post<InstrumentListItem>(
+    `/api/instruments/${id}/duplicate`,
+    data,
+  );
+}
+
 interface RenderedSection {
   sectionId: string;
   name: string;
@@ -60,13 +71,23 @@ export async function getInstrumentForEditor(id: string): Promise<{
   version: number;
   publishDate: string;
   isActive: boolean;
+  isPublic: boolean;
+  scopeLevel?: import("@/app/(admin)/types").InstrumentListItem["scopeLevel"];
+  cropIds?: string[];
+  coverageGroup?: string | null;
   actorTypes: import("@/app/(admin)/types").ActorTypeSummary[];
+  createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
+  updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   sections: import("@/app/(admin)/types").SectionDetail[];
 }> {
+  // Spec 84 — `/editor-structure` (a diferencia de `/render`, público y que
+  // oculta lo archivado) muestra TODO, con `archivedAt`/`responseCount` por
+  // pregunta y opción: es lo que decide si algo se puede borrar o hay que
+  // archivarlo.
   const [meta, render] = await Promise.all([
     getInstrumentById(id),
     apiClient.get<{ sections?: RenderedSection[] }>(
-      `/api/instruments/${id}/render`,
+      `/api/instruments/${id}/editor-structure`,
       { cache: "no-store" },
     ),
   ]);
@@ -77,7 +98,13 @@ export async function getInstrumentForEditor(id: string): Promise<{
     version: meta.version,
     publishDate: meta.publishDate,
     isActive: meta.isActive,
+    isPublic: meta.isPublic,
+    scopeLevel: meta.scopeLevel ?? null,
+    cropIds: meta.cropIds ?? [],
+    coverageGroup: meta.coverageGroup ?? null,
     actorTypes: meta.actorTypes ?? [],
+    createdBy: meta.createdBy,
+    updatedBy: meta.updatedBy,
     sections: (render.sections ?? []).map((sec) => ({
       sectionId: sec.sectionId,
       name: sec.name,

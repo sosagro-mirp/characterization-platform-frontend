@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { UserListItem } from "@/app/(admin)/types";
 import { deleteUser, listUsers } from "@/services/users.service";
 import UsersTable from "@/components/admin/users/UsersTable";
@@ -54,13 +55,16 @@ export default function UsersListPage() {
             Usuarios
           </h1>
           <p className="text-sm text-[var(--text-muted)]">
-            Gestiona usuarios y sus roles.
+            {loading
+              ? "Gestiona usuarios y sus roles."
+              : `${users.length} usuario${users.length === 1 ? "" : "s"} con acceso al panel`}
           </p>
         </div>
         <Link
           href="/admin/users/new"
-          className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors"
+          className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold bg-brand text-brand-foreground hover:bg-brand-hover transition-colors"
         >
+          <Plus className="size-5 shrink-0" />
           Nuevo usuario
         </Link>
       </div>

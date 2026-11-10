@@ -26,21 +26,33 @@ export default function NewInstrumentPage() {
   }, []);
 
   return (
-    <div className="max-w-xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Nuevo instrumento</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Completa los datos básicos. Luego podrás agregar secciones y preguntas.
-        </p>
-      </div>
-      {error ? (
+    <div className="max-w-xl space-y-6">
+      <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Nuevo instrumento</h1>
+
+      {error && (
         <p className="rounded-md border border-[var(--danger-fg)]/40 bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-fg)]">
           {error}
         </p>
-      ) : actorTypes === null ? (
+      )}
+
+      {!error && actorTypes === null && (
         <p className="text-sm text-[var(--text-muted)]">Cargando…</p>
-      ) : (
-        <NewInstrumentClient actorTypes={actorTypes} />
+      )}
+
+      {!error && actorTypes !== null && (
+        <section className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]">
+          <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-6 py-3">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+              Datos básicos
+            </h2>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              Luego podrás agregar secciones y preguntas.
+            </p>
+          </div>
+          <div className="p-6">
+            <NewInstrumentClient actorTypes={actorTypes} />
+          </div>
+        </section>
       )}
     </div>
   );

@@ -14,78 +14,97 @@ const CATEGORY_LABELS: Record<string, string> = {
 interface Props {
   item: ChangeRequestListItem;
   onClose: () => void;
+  onResolve?: (item: ChangeRequestListItem) => void;
 }
 
-export default function RequestDetailModal({ item, onClose }: Props) {
+export default function RequestDetailModal({ item, onClose, onResolve }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-lg rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 shadow-xl mx-4 flex flex-col gap-4">
-
-        <div className="flex items-start justify-between gap-4">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-xl">
+        <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface-muted)] px-5 py-3.5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">
             Detalle de la solicitud
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-[var(--text-muted)] hover:bg-[var(--surface-muted)] transition-colors"
+            className="rounded-md p-1 text-[var(--text-muted)] hover:bg-[var(--surface)] transition-colors"
+            aria-label="Cerrar"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-xs">
-          <span
-            className={`inline-flex rounded-full px-2 py-0.5 font-medium ${
-              item.source === "mobile"
-                ? "bg-[var(--info-bg)] text-[var(--info-fg)]"
-                : "bg-[var(--warning-bg)] text-[var(--warning-fg)]"
-            }`}
-          >
-            {SOURCE_LABELS[item.source] ?? item.source}
-          </span>
-          {item.category && (
-            <span className="inline-flex rounded-full px-2 py-0.5 font-medium bg-[var(--surface-muted)] text-[var(--text-muted)]">
-              {CATEGORY_LABELS[item.category] ?? item.category}
-            </span>
-          )}
-          <span
-            className={`inline-flex rounded-full px-2 py-0.5 font-medium ${
-              item.status === "resolved"
-                ? "bg-[var(--success-bg)] text-[var(--success-fg)]"
-                : "bg-[var(--warning-bg)] text-[var(--warning-fg)]"
-            }`}
-          >
-            {item.status === "resolved" ? "Resuelta" : "Abierta"}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
-            Descripción
-          </p>
-          <p className="text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap">
-            {item.description}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-3">
-          <div>
-            <p className="font-medium uppercase tracking-wide mb-0.5">Creado por</p>
-            <p>{item.createdBy.name} {item.createdBy.lastName}</p>
-          </div>
-          <div>
-            <p className="font-medium uppercase tracking-wide mb-0.5">Fecha</p>
-            <p>{new Date(item.createdAt).toLocaleDateString("es-CO")}</p>
-          </div>
-          {item.resolvedAt && (
-            <div>
-              <p className="font-medium uppercase tracking-wide mb-0.5">Resuelta el</p>
-              <p>{new Date(item.resolvedAt).toLocaleDateString("es-CO")}</p>
+        <div className="flex flex-col gap-4 p-5">
+          <div className="grid grid-cols-3 gap-px overflow-hidden rounded-md border border-[var(--border)] bg-[var(--border)]">
+            <div className="bg-[var(--surface-muted)] px-3.5 py-2.5">
+              <p className="mb-1 text-[9.5px] uppercase tracking-wide text-[var(--text-muted)]">Origen</p>
+              <p className="text-xs font-medium text-[var(--text-primary)]">
+                {SOURCE_LABELS[item.source] ?? item.source}
+              </p>
             </div>
-          )}
-        </div>
+            <div className="bg-[var(--surface-muted)] px-3.5 py-2.5">
+              <p className="mb-1 text-[9.5px] uppercase tracking-wide text-[var(--text-muted)]">Categoría</p>
+              <p className="text-xs font-medium text-[var(--text-primary)]">
+                {item.category ? (CATEGORY_LABELS[item.category] ?? item.category) : "—"}
+              </p>
+            </div>
+            <div className="bg-[var(--surface-muted)] px-3.5 py-2.5">
+              <p className="mb-1 text-[9.5px] uppercase tracking-wide text-[var(--text-muted)]">Estado</p>
+              <p className="text-xs font-medium text-[var(--text-primary)]">
+                {item.status === "resolved" ? "Resuelta" : "Abierta"}
+              </p>
+            </div>
+            <div className="bg-[var(--surface-muted)] px-3.5 py-2.5">
+              <p className="mb-1 text-[9.5px] uppercase tracking-wide text-[var(--text-muted)]">Creado por</p>
+              <p className="text-xs font-medium text-[var(--text-primary)]">
+                {item.createdBy.name} {item.createdBy.lastName}
+              </p>
+            </div>
+            <div className="bg-[var(--surface-muted)] px-3.5 py-2.5">
+              <p className="mb-1 text-[9.5px] uppercase tracking-wide text-[var(--text-muted)]">Fecha</p>
+              <p className="text-xs font-medium text-[var(--text-primary)]">
+                {new Date(item.createdAt).toLocaleDateString("es-CO")}
+              </p>
+            </div>
+            {item.resolvedAt && (
+              <div className="bg-[var(--surface-muted)] px-3.5 py-2.5">
+                <p className="mb-1 text-[9.5px] uppercase tracking-wide text-[var(--text-muted)]">Resuelta el</p>
+                <p className="text-xs font-medium text-[var(--text-primary)]">
+                  {new Date(item.resolvedAt).toLocaleDateString("es-CO")}
+                </p>
+              </div>
+            )}
+          </div>
 
+          <div>
+            <p className="mb-2 text-[10.5px] uppercase tracking-wide text-[var(--text-muted)]">
+              Descripción
+            </p>
+            <p className="border-l-2 border-[var(--brand)] pl-3.5 text-sm leading-relaxed text-[var(--text-primary)] whitespace-pre-wrap">
+              {item.description}
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-muted)] transition-colors"
+            >
+              Cerrar
+            </button>
+            {item.status === "open" && onResolve && (
+              <button
+                type="button"
+                onClick={() => onResolve(item)}
+                className="rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-[var(--brand-foreground)] hover:bg-[var(--brand-hover)] transition-colors"
+              >
+                Marcar como resuelta
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ActorTypeSummary,
+  InstrumentListItem,
   SectionDetail,
   TypeOfQuestionSummary,
 } from "@/app/(admin)/types";
@@ -22,7 +23,13 @@ interface EditorData {
   version: number;
   publishDate: string;
   isActive: boolean;
+  isPublic: boolean;
+  scopeLevel?: InstrumentListItem["scopeLevel"];
+  cropIds?: string[];
+  coverageGroup?: string | null;
   actorTypes: ActorTypeSummary[];
+  createdBy?: import("@/app/(admin)/types").UserAuditSummary | null;
+  updatedBy?: import("@/app/(admin)/types").UserAuditSummary | null;
   sections: SectionDetail[];
 }
 
@@ -118,14 +125,20 @@ export default function InstrumentEditorPage({ params }: PageProps) {
         <span className="text-[var(--text-primary)] font-medium">{editor.name}</span>
       </div>
 
-      <div className="flex-1 rounded-2xl border border-[var(--border)] overflow-hidden">
+      <div className="flex-1 rounded-md border border-[var(--border)] overflow-hidden">
         <InstrumentEditorLayout
           instrumentId={editor.instrumentId}
           name={editor.name}
           version={editor.version}
           publishDate={editor.publishDate}
           isActive={editor.isActive}
+          isPublic={editor.isPublic}
+          scopeLevel={editor.scopeLevel}
+          cropIds={editor.cropIds}
+          coverageGroup={editor.coverageGroup}
           actorTypes={editor.actorTypes}
+          createdBy={editor.createdBy}
+          updatedBy={editor.updatedBy}
           sections={editor.sections}
           allActorTypes={allActorTypes}
           questionTypes={questionTypes}

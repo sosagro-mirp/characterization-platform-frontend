@@ -14,7 +14,7 @@ const sectionLinks = [
 ] as const;
 
 const platformLinks = [
-  { href: "/campaign", label: "Responder encuesta" },
+  { href: "/productores", label: "Responder encuesta" },
   { href: "/login", label: "Ingresar como investigador" },
 ] as const;
 
@@ -129,8 +129,10 @@ const Footer = () => {
             {project.sigpCode}
           </p>
           <div className="flex gap-6">
-            {/* TODO: enlazar páginas de privacidad y términos cuando existan */}
-            <span>Política de privacidad</span>
+            <Link href="/privacidad" className="hover:text-white transition-colors">
+              Política de privacidad
+            </Link>
+            {/* TODO: enlazar términos y condiciones cuando exista esa página */}
             <span>Términos y condiciones</span>
           </div>
         </div>

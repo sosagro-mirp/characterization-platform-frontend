@@ -27,11 +27,9 @@ const FILTER_KEYS: (keyof DashboardFilters)[] = [
   "ageRange",
   "educationLevel",
   "connectivity",
-  "populationGroup",
   "profile",
   "tenure",
   "chainStage",
-  "campaignId",
   "dateFrom",
   "dateTo",
 ];

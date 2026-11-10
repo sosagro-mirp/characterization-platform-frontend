@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import InstrumentQuestionRenderer from "@/components/instrument/InstrumentQuestionRenderer";
 import SurveyCompletedCard from "@/components/instrument/SurveyCompletedCard";
 import type {
@@ -12,6 +13,15 @@ import type {
 } from "@/app/(instrument)/types";
 import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
+import { isAnswerComplete } from "@/lib/instrument/isAnswerComplete";
+import type { ApplyContext } from "@/lib/pollster/surveyAnchor";
+import {
+    afterRegistroPath,
+    clearPendingConsent,
+    loadPendingConsent,
+} from "@/lib/pollster/registrationFlow";
+import { submitConsent } from "@/services/consents.service";
+import type { PublicSurveyConsentInput } from "@/lib/public-surveys/publicSurveyPayload";
 
 interface InstrumentQuestionFlowProps {
     localId: string;
@@ -19,11 +29,27 @@ interface InstrumentQuestionFlowProps {
     instrumentName: string;
     sections: InstrumentSection[];
     apiBaseUrl: string;
-    campaignSessionId?: string;
-    stepOrder?: number;
     previewMode?: boolean;
     existingSurveyId?: string;
+    /** Spec 102 — contexto de productor (flujo por productor, sin campaña). */
+    producerContext?: ApplyContext;
+    /** Spec 102 — destino al salir; por defecto /productores. */
+    exitPath?: string;
+    /** Spec 102 — S_REG de `/productores/nuevo`: registra el consentimiento y vuelve a esa página. */
+    registroMode?: boolean;
     onPreviewComplete?: () => void;
+    /**
+     * Spec 79 — canal público sin encuestador: envía por
+     * submitPublicResponses en vez de submitResponses (una sola llamada
+     * atómica, sin crear el survey por adelantado), oculta "salir de la
+     * encuesta" (no hay a dónde volver dentro del sistema) y nunca consulta
+     * ni muestra el aviso de consentimiento pendiente del flujo de
+     * encuestador — el consentimiento del canal público ya se capturó antes,
+     * en el paso previo, y viaja en publicConsent.
+     */
+    publicMode?: boolean;
+    /** Requerido cuando publicMode es true — el consentimiento ya aceptado en el paso previo. */
+    publicConsent?: PublicSurveyConsentInput;
 }
 
 export default function InstrumentQuestionFlow({
@@ -32,17 +58,25 @@ export default function InstrumentQuestionFlow({
     instrumentName,
     sections,
     apiBaseUrl,
-    campaignSessionId,
-    stepOrder,
     previewMode = false,
     existingSurveyId,
+    producerContext,
+    exitPath = "/productores",
+    registroMode = false,
     onPreviewComplete,
+    publicMode = false,
+    publicConsent,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
+    const registroSurveyRef = useRef<string | null>(null);
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [sessionExpired, setSessionExpired] = useState(false);
+    // Spec 79, criterio 9 — el enlace se cerró entre la carga del formulario
+    // y el envío. Solo aplica en publicMode; el flujo de encuestador no
+    // tiene este estado (submitResponses nunca devuelve "closed").
+    const [linkClosed, setLinkClosed] = useState(false);
     const {
         initializeSurvey,
         flattenedQuestions,
@@ -52,6 +86,7 @@ export default function InstrumentQuestionFlow({
         goNext,
         goPrevious,
         submitResponses,
+        submitPublicResponses,
         submitting,
         error,
         clearError,
@@ -126,46 +161,6 @@ export default function InstrumentQuestionFlow({
     );
     const currentSectionName = currentItem?.sectionName ?? sortedSections[0]?.name ?? "";
 
-    const isAnswerComplete = (question: InstrumentQuestion, answer?: InstrumentDraftAnswer) => {
-        if (!question.isRequired) {
-            return true;
-        }
-
-        if (!answer) {
-            return false;
-        }
-
-        switch (question.type.name) {
-            case "open_text":
-                return Boolean(answer.textValue?.trim());
-            case "numeric":
-                return answer.numericValue !== undefined;
-            case "numeric_with_unit":
-                return answer.numericValue !== undefined && Boolean(answer.optionId);
-            case "yes_no":
-                return answer.booleanValue !== undefined;
-            case "multiple_choice": {
-                const selectedIds = answer.optionIds ?? [];
-                if (selectedIds.length === 0) return false;
-                const otherOption = question.options.find((o) => o.isOther);
-                if (otherOption && selectedIds.includes(otherOption.optionId)) {
-                    return Boolean(answer.otherText?.trim());
-                }
-                return true;
-            }
-            case "single_choice":
-            case "likert":
-                return Boolean(answer.optionId);
-            default:
-                return Boolean(
-                    answer.optionId ||
-                    answer.textValue ||
-                    answer.numericValue !== undefined ||
-                    answer.booleanValue !== undefined,
-                );
-        }
-    };
-
     const handleAnswerChange = (answer: InstrumentDraftAnswer) => {
         setValidationError(undefined);
         clearError();
@@ -193,13 +188,52 @@ export default function InstrumentQuestionFlow({
                 return;
             }
 
+            if (publicMode) {
+                if (!publicConsent) return;
+                const publicResult = await submitPublicResponses(publicConsent);
+                if (publicResult.outcome === "submitted") {
+                    setCompleted(true);
+                } else if (publicResult.outcome === "closed") {
+                    setLinkClosed(true);
+                }
+                return;
+            }
+
+            // Spec 102 — sin consentimiento pendiente no se crea la encuesta S_REG.
+            if (registroMode && !loadPendingConsent()) {
+                setValidationError(
+                    "Falta el consentimiento del productor. Vuelve a Productores → Nuevo productor.",
+                );
+                return;
+            }
+
             const result = await submitResponses({
-                campaignSessionId,
-                stepOrder,
-                existingSurveyId,
+                // En reintentos del registro se reutiliza la encuesta ya creada.
+                existingSurveyId: existingSurveyId ?? registroSurveyRef.current ?? undefined,
+                producerContext,
+                ...(registroMode && {
+                    onSurveyCreated: async (createdSurveyId: string) => {
+                        registroSurveyRef.current = createdSurveyId;
+                        const pending = loadPendingConsent();
+                        if (!pending) {
+                            throw new Error(
+                                "Falta el consentimiento del productor. Vuelve a Productores → Nuevo productor.",
+                            );
+                        }
+                        await submitConsent({ ...pending, surveyId: createdSurveyId });
+                    },
+                }),
             });
 
             if (result.outcome === "submitted") {
+                if (registroMode) {
+                    const createdId = useInstrumentSurveyStore.getState().surveyId;
+                    clearPendingConsent();
+                    if (createdId) {
+                        router.replace(afterRegistroPath(createdId));
+                        return;
+                    }
+                }
                 setCompleted(true);
             } else if (result.outcome === "session_expired") {
                 setSessionExpired(true);
@@ -217,7 +251,8 @@ export default function InstrumentQuestionFlow({
 
     const handleConfirmExit = () => {
         setShowExitConfirm(false);
-        router.push("/campaign");
+        if (registroMode) clearPendingConsent();
+        router.push(exitPath);
     };
 
     if (completed) {
@@ -231,10 +266,89 @@ export default function InstrumentQuestionFlow({
                 />
             );
         }
+        if (publicMode) {
+            // No reutiliza SurveyCompletedCard: ese componente es del flujo
+            // interno y ofrece enlaces al sistema (autenticado) que no tienen
+            // sentido para un visitante anónimo. Pantalla final propia, sin
+            // enlaces al sistema interno (criterio de "Puntos delicados", punto 5).
+            return (
+                <section className="w-full max-w-xl mx-auto mt-19 min-h-[calc(100vh-76px)] bg-surface flex flex-col justify-center items-center px-4">
+                    <div className="bg-brand max-w-max p-6 rounded-full text-brand-foreground">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-8"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m4.5 12.75 6 6 9-13.5"
+                            />
+                        </svg>
+                    </div>
+                    <h2 className="font-bold text-3xl mt-6 text-text-primary text-center">
+                        ¡Gracias por responder!
+                    </h2>
+                    <p className="text-text-muted mt-2 px-4 text-center">
+                        Tus respuestas quedaron registradas. El equipo del proyecto
+                        SosAgro 4.C las revisará próximamente.
+                    </p>
+                    <Link
+                        href="/privacidad"
+                        className="text-sm text-brand hover:underline mt-8"
+                    >
+                        Ver política de privacidad
+                    </Link>
+                </section>
+            );
+        }
         return (
             <SurveyCompletedCard
-                campaignSessionId={campaignSessionId}
+                {...(producerContext
+                    ? {
+                          ctaText: "Volver al productor",
+                          ctaHref: exitPath,
+                      }
+                    : {})}
             />
+        );
+    }
+
+    // Spec 79, criterio 9 — el enlace se cerró mientras se respondía. No
+    // tiene sentido seguir mostrando el formulario: el envío ya no puede
+    // completarse. Reemplaza toda la pantalla, igual que el estado
+    // "completed" de arriba.
+    if (publicMode && linkClosed) {
+        return (
+            <section className="w-full max-w-xl mx-auto mt-19 min-h-[calc(100vh-76px)] bg-surface flex flex-col justify-center items-center px-4 text-center">
+                <div className="bg-[var(--warning-bg)] max-w-max p-6 rounded-full text-[var(--warning-fg)]">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="size-8"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                    </svg>
+                </div>
+                <h2 className="font-bold text-2xl mt-6 text-text-primary">
+                    Esta encuesta ya no está recibiendo respuestas
+                </h2>
+                <p className="text-text-muted mt-2 px-4">
+                    El enlace se cerró mientras respondías. Tus respuestas no se
+                    enviaron. Si crees que esto es un error, contacta a quien te
+                    compartió el enlace.
+                </p>
+            </section>
         );
     }
 
@@ -265,7 +379,6 @@ export default function InstrumentQuestionFlow({
                     Modo vista previa — sin datos enviados
                 </div>
             )}
-
             {/* Contenido scrollable */}
             <div className="flex-1">
                 <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
@@ -290,23 +403,28 @@ export default function InstrumentQuestionFlow({
                                     </p>
                                 )}
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => previewMode ? router.push("/admin/instruments") : setShowExitConfirm(true)}
-                                aria-label={previewMode ? "Salir de la vista previa" : "Salir de la encuesta"}
-                                className="shrink-0 p-1.5 rounded-lg text-text-muted hover:text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="size-5"
+                            {/* Spec 79 — sin botón de salida en publicMode: no hay
+                                ninguna ruta del sistema a la que un visitante
+                                anónimo deba (o pueda) volver. */}
+                            {!publicMode && (
+                                <button
+                                    type="button"
+                                    onClick={() => previewMode ? router.push("/admin/instruments") : setShowExitConfirm(true)}
+                                    aria-label={previewMode ? "Salir de la vista previa" : "Salir de la encuesta"}
+                                    className="shrink-0 p-1.5 rounded-lg text-text-muted hover:text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] transition-colors"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        className="size-5"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
                     </div>
 

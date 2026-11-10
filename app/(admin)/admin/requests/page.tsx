@@ -54,47 +54,62 @@ export default function RequestsPage() {
   }
 
   return (
-    <div className="max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
           Solicitudes de cambio
         </h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          {loading
+            ? "Cargando solicitudes…"
+            : `${requests.length} solicitud${requests.length === 1 ? "" : "es"} reportada${requests.length === 1 ? "" : "s"} desde web y mobile`}
+        </p>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-5 flex-wrap">
-        <div className="flex gap-1 rounded-lg border border-[var(--border)] p-1 bg-[var(--surface)]">
-          {(["open", "all", "resolved"] as StatusFilter[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                statusFilter === s
-                  ? "bg-[var(--brand)] text-[var(--brand-foreground)]"
-                  : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              {s === "open" ? "Abiertas" : s === "resolved" ? "Resueltas" : "Todas"}
-            </button>
-          ))}
+      <div className="flex flex-wrap items-end gap-6">
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Estado
+          </p>
+          <div className="flex overflow-hidden rounded-md border border-[var(--border)]">
+            {(["open", "all", "resolved"] as StatusFilter[]).map((s, i) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`px-3.5 py-2 text-xs font-medium transition-colors ${i > 0 ? "border-l border-[var(--border)]" : ""} ${
+                  statusFilter === s
+                    ? "bg-[var(--brand)] text-[var(--brand-foreground)] font-semibold"
+                    : "bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                }`}
+              >
+                {s === "open" ? "Abiertas" : s === "resolved" ? "Resueltas" : "Todas"}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex gap-1 rounded-lg border border-[var(--border)] p-1 bg-[var(--surface)]">
-          {(["all", "mobile", "web"] as SourceFilter[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setSourceFilter(s)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                sourceFilter === s
-                  ? "bg-[var(--brand)] text-[var(--brand-foreground)]"
-                  : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              {s === "all" ? "Todas las fuentes" : s === "mobile" ? "Mobile" : "Web"}
-            </button>
-          ))}
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Origen
+          </p>
+          <div className="flex overflow-hidden rounded-md border border-[var(--border)]">
+            {(["all", "mobile", "web"] as SourceFilter[]).map((s, i) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSourceFilter(s)}
+                className={`px-3.5 py-2 text-xs font-medium transition-colors ${i > 0 ? "border-l border-[var(--border)]" : ""} ${
+                  sourceFilter === s
+                    ? "bg-[var(--brand)] text-[var(--brand-foreground)] font-semibold"
+                    : "bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
+                }`}
+              >
+                {s === "all" ? "Todas" : s === "mobile" ? "Mobile" : "Web"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
