@@ -34,13 +34,15 @@ const STAT_ITEMS: { key: "average" | "median" | "min" | "max" | "stdDev"; label:
 export default function NumericWithUnitChart({ question }: NumericWithUnitChartProps) {
   const aggregation =
     question.aggregation?.type === "numeric_with_unit" ? question.aggregation : null;
-  const [selected, setSelected] = useState(() =>
-    aggregation ? defaultUnitIndex(aggregation.units) : 0,
-  );
+  // Se guarda la unidad por `optionId`, no por posición: al cambiar los
+  // filtros el orden de los grupos puede cambiar sin que la tarjeta se monte de nuevo.
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
 
   if (!aggregation || aggregation.units.length === 0) return null;
 
-  const group = aggregation.units[Math.min(selected, aggregation.units.length - 1)];
+  const group =
+    aggregation.units.find((unitGroup) => unitGroup.optionId === selectedOptionId) ??
+    aggregation.units[defaultUnitIndex(aggregation.units)];
   const showStats = hasUnitStats(group);
   const bins =
     showStats && group.distribution && group.distribution.length > 0
@@ -51,7 +53,7 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
     <div className="space-y-4">
       {aggregation.units.length > 1 && (
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Unidad">
-          {aggregation.units.map((unitGroup, index) => {
+          {aggregation.units.map((unitGroup) => {
             const isActive = unitGroup.optionId === group.optionId;
             return (
               <button
@@ -59,7 +61,7 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                onClick={() => setSelected(index)}
+                onClick={() => setSelectedOptionId(unitGroup.optionId)}
                 className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   isActive
                     ? "border-[#15803d] bg-[#15803d] text-white"
