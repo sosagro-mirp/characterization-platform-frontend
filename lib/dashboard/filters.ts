@@ -39,10 +39,8 @@ type RawParams = Record<string, string | undefined>;
  * D6 (spec 43): resuelve el estado de la página (vista + categoría + filtros)
  * desde `searchParams`. `view` es puramente derivado de `categoryId` — un
  * `categoryId` válido implica `view=category`; su ausencia o un valor fuera
- * de C1..C14 implica `view=overview`. D2: `instrumentId` y `categoryId` son
- * mutuamente excluyentes — un `categoryId` válido descarta `instrumentId`
- * (la navegación por categoría es la vía principal; el filtro por
- * instrumento queda disponible solo cuando no hay categoría activa).
+ * de C1..C14 implica `view=overview`. Spec 107: `instrumentId` se ignora (la
+ * consulta por instrumento ya no es pública).
  */
 export function parseDashboardParams(raw: RawParams): DashboardPageState {
   const categoryId =

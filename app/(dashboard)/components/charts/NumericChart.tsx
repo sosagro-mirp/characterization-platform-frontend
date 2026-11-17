@@ -144,6 +144,7 @@ export default function NumericChart({ question }: NumericChartProps) {
         <div className="w-full">
           <ResponsiveContainer width="100%" height={36}>
             <ComposedChart
+              accessibilityLayer={false}
               data={boxData}
               layout="vertical"
               margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
@@ -151,8 +152,8 @@ export default function NumericChart({ question }: NumericChartProps) {
               <XAxis
                 type="number"
                 domain={[
-                  aggregation.q1! - (aggregation.q3! - aggregation.q1!) * 0.5,
-                  aggregation.q3! + (aggregation.q3! - aggregation.q1!) * 0.5,
+                  aggregation.q1! - Math.max((aggregation.q3! - aggregation.q1!) * 0.5, 1),
+                  aggregation.q3! + Math.max((aggregation.q3! - aggregation.q1!) * 0.5, 1),
                 ]}
                 hide
               />

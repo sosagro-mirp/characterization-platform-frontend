@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   Bar,
+  Cell,
   BarChart,
   CartesianGrid,
   ResponsiveContainer,
@@ -120,7 +121,7 @@ export default function NumericWithUnitChart({
           aria-label={`Histograma en ${group.unit}: ${describeHistogram(bins)}`}
         >
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={bins} margin={{ left: 0, right: 8, bottom: 24 }}>
+            <BarChart accessibilityLayer={false} data={bins} margin={{ left: 0, right: 8, bottom: 24 }}>
               <CartesianGrid vertical={false} stroke="var(--border)" />
               <XAxis
                 dataKey="label"
@@ -130,7 +131,7 @@ export default function NumericWithUnitChart({
                 textAnchor="end"
                 height={40}
               />
-              <YAxis tick={{ fontSize: 11 }} unit="%" />
+              <YAxis hide />
               <Tooltip
                 formatter={(_value, _name, item) => {
                   const bar = item.payload as {
@@ -142,7 +143,15 @@ export default function NumericWithUnitChart({
                     : [`${bar.count} encuestas`, "Frecuencia"];
                 }}
               />
-              <Bar dataKey="percentage" fill="#15803d" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="percentage" fill="#15803d" radius={[4, 4, 0, 0]}>
+                {bins.map((entry) => (
+                  <Cell
+                    key={entry.label}
+                    fill={entry.suppressed ? "var(--text-muted)" : "#15803d"}
+                    fillOpacity={entry.suppressed ? 0.35 : 1}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
