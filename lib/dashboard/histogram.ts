@@ -1,31 +1,55 @@
-export interface HistogramBin {
+import type { AggregationBin } from "@/app/(dashboard)/types";
+import { SUPPRESSED_BAR_PLACEHOLDER } from "./suppressedOption";
+
+export interface HistogramBar {
   label: string;
-  count: number;
-  /** Porcentaje del bin sobre el total de valores (0–100). */
+  /** `null` si el intervalo está suprimido por privacidad. */
+  count: number | null;
+  /** Porcentaje del intervalo (0–100); el placeholder si está suprimido. */
   percentage: number;
+  suppressed: boolean;
 }
 
-/** Algoritmo de Sturges: k = ceil(log2(n) + 1) bins entre min y max. */
-export function buildHistogramBins(
-  values: number[],
-  min: number,
-  max: number,
-): HistogramBin[] {
-  const n = values.length;
-  if (n === 0 || max === min) return [];
+function formatEdge(value: number): string {
+  return Number.isInteger(value)
+    ? String(value)
+    : String(Number(value.toFixed(4)));
+}
 
-  const k = Math.max(1, Math.ceil(Math.log2(n) + 1));
-  const binWidth = (max - min) / k;
-  const counts = Array.from({ length: k }, () => 0);
+function binLabel(bin: AggregationBin): string {
+  if (bin.from === null && bin.to !== null)
+    return `Menos de ${formatEdge(bin.to)}`;
+  if (bin.to === null && bin.from !== null)
+    return `${formatEdge(bin.from)} o más`;
+  if (bin.from !== null && bin.to !== null) {
+    return `${formatEdge(bin.from)}–${formatEdge(bin.to)}`;
+  }
+  return "Todos los valores";
+}
 
-  values.forEach((v) => {
-    const idx = Math.min(k - 1, Math.floor((v - min) / binWidth));
-    counts[idx] += 1;
-  });
-
-  return counts.map((count, i) => ({
-    label: `${(min + i * binWidth).toFixed(1)}–${(min + (i + 1) * binWidth).toFixed(1)}`,
-    count,
-    percentage: (count / n) * 100,
+/** Adapta los intervalos del backend (spec 107): el cliente ya no calcula
+ * intervalos ni recibe valores crudos. Un intervalo suprimido usa el mismo
+ * placeholder que `toBarDatum` — nunca 0, nunca omitido. */
+export function binsToHistogram(bins: AggregationBin[]): HistogramBar[] {
+  return bins.map((bin) => ({
+    label: binLabel(bin),
+    count: bin.suppressed ? null : bin.count,
+    percentage: bin.suppressed
+      ? SUPPRESSED_BAR_PLACEHOLDER
+      : (bin.percentage ?? 0),
+    suppressed: bin.suppressed,
   }));
+}
+
+/** Alternativa textual del histograma para lectores de pantalla (guía
+ * `accessibility`: «Provide semantic data tables as accessible alternatives
+ * for charts»): un intervalo por frase, con su conteo o «oculto». */
+export function describeHistogram(bars: HistogramBar[]): string {
+  return bars
+    .map((bar) =>
+      bar.suppressed
+        ? `${bar.label}: oculto por privacidad`
+        : `${bar.label}: ${bar.count} encuestas (${bar.percentage.toFixed(0)}%)`,
+    )
+    .join("; ");
 }

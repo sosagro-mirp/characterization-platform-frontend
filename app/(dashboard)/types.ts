@@ -5,6 +5,8 @@
  * página vive por separado en `DashboardPageState.categoryId`
  * (`lib/dashboard/filters.ts`, D6) — no lo agregues a `FILTER_KEYS` ahí. */
 export interface DashboardFilters {
+  /** @deprecated Spec 107: la consulta por instrumento ya no es pública; el
+   * dashboard ignora este filtro. */
   instrumentId?: string;
   categoryId?: string;
   departmentId?: string;
@@ -77,10 +79,24 @@ export interface AggregationOption {
 
 export interface AggregationYesNo {
   type: "yes_no";
-  yesCount: number;
-  noCount: number;
-  yesPercentage: number;
-  noPercentage: number;
+  /** `null` si la celda está suprimida (spec 107, P18-b/d). */
+  yesCount: number | null;
+  noCount: number | null;
+  yesPercentage: number | null;
+  noPercentage: number | null;
+  /** Supresión complementaria: llegan las dos suprimidas o ninguna. */
+  yesSuppressed: boolean;
+  noSuppressed: boolean;
+}
+
+/** Intervalo del histograma calculado en el backend (spec 107, P24).
+ * `from: null` = «menos de `to`»; `to: null` = «`from` o más». */
+export interface AggregationBin {
+  from: number | null;
+  to: number | null;
+  count: number | null;
+  percentage: number | null;
+  suppressed: boolean;
 }
 
 export interface AggregationChoices {
@@ -100,12 +116,10 @@ export interface AggregationNumeric {
   count: number;
   average: number | null;
   median: number | null;
-  min: number | null;
-  max: number | null;
   stdDev: number | null;
   q1: number | null;
   q3: number | null;
-  distribution?: number[];
+  bins: AggregationBin[];
 }
 
 /** Un grupo por unidad; estadísticas en `null` si el grupo no alcanza el umbral. */
@@ -122,10 +136,8 @@ export interface AggregationUnitGroup {
   median: number | null;
   q1: number | null;
   q3: number | null;
-  min: number | null;
-  max: number | null;
   stdDev: number | null;
-  distribution?: number[];
+  bins: AggregationBin[];
 }
 
 /** `numeric_with_unit`: agrupado por unidad, sin convertir entre unidades. */

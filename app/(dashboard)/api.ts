@@ -25,7 +25,6 @@ const CATEGORIES_REVALIDATE_SECONDS = 3600;
 /** Mismas claves que `DashboardFilters` — mantener sincronizado con
  * `lib/dashboard/filters.ts` (FILTER_KEYS) al agregar un filtro nuevo. */
 const FILTER_QUERY_KEYS: (keyof DashboardFilters)[] = [
-  "instrumentId",
   "categoryId",
   "departmentId",
   "townId",
