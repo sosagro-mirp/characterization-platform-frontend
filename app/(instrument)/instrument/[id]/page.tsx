@@ -1,12 +1,16 @@
 import InstrumentLoader from '../InstrumentLoader';
+import { hasApplyContextParams, parseApplyContext } from '@/lib/pollster/surveyAnchor';
 
 interface InstrumentPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{
-    campaignSessionId?: string;
-    stepOrder?: string;
     preview?: string;
     existingSurveyId?: string;
+    farmerId?: string;
+    farmId?: string;
+    farmCropId?: string;
+    scopeLevel?: string;
+    registro?: string;
   }>;
 }
 
@@ -18,7 +22,14 @@ export default async function InstrumentPage({
   searchParams,
 }: InstrumentPageProps) {
   const { id } = await params;
-  const { campaignSessionId, stepOrder, preview, existingSurveyId } = await searchParams;
+  const sp = await searchParams;
+  const { preview, existingSurveyId } = sp;
+  // Spec 102 — contexto de productor; inválido o incompleto se ignora.
+  const query = new URLSearchParams();
+  for (const k of ['farmerId', 'farmId', 'farmCropId', 'scopeLevel'] as const) {
+    if (sp[k]) query.set(k, sp[k]!);
+  }
+  const producerContext = parseApplyContext(query);
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
   const isPreview = preview === 'true';
 
@@ -30,15 +41,22 @@ export default async function InstrumentPage({
     );
   }
 
-  const parsedStepOrder = stepOrder ? Number(stepOrder) : undefined;
+  if (hasApplyContextParams(query) && !producerContext) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-8 text-center text-sm text-red-600">
+        El contexto del productor en el enlace no es válido. Vuelve a la ficha e inténtalo de nuevo.
+      </div>
+    );
+  }
+
   return (
     <InstrumentLoader
       instrumentId={id}
       apiBaseUrl={apiBaseUrl}
-      campaignSessionId={campaignSessionId}
-      stepOrder={Number.isFinite(parsedStepOrder) ? parsedStepOrder : undefined}
       previewMode={isPreview}
       existingSurveyId={existingSurveyId}
+      producerContext={producerContext ?? undefined}
+      registroMode={sp.registro === '1'}
     />
   );
 }

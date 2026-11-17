@@ -4,4 +4,5 @@ export { default as LikertChart } from "./LikertChart";
 export { default as ComplianceChart } from "./ComplianceChart";
 export { default as MultipleChoiceChart } from "./MultipleChoiceChart";
 export { default as NumericChart } from "./NumericChart";
+export { default as NumericWithUnitChart } from "./NumericWithUnitChart";
 export { default as UnsupportedQuestionType } from "./UnsupportedQuestionType";

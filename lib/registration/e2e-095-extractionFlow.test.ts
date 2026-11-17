@@ -30,7 +30,7 @@
  *
  * ── Contrato que el spec 95 debe exponer (nombres propuestos) ──────────────
  *
- * 1. `lib/campaign-session/preSurveyFlow.ts` (amplía el del spec 84)
+ * 1. `lib/registration/preSurveyFlow.ts` (amplía el del spec 84)
  *    - `completeAfterBatch(surveyId, phase, deps)`: tras el batch consulta
  *      `deps.getExtraction(surveyId)` (`GET /surveys/:id/extraction`, que trae
  *      `farmerName`) y decide según `status`:

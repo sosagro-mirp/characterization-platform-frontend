@@ -121,6 +121,11 @@ export function SurveysTab({
                 <p className="mt-0.5 text-[10.5px] text-[var(--text-muted)]">
                   Aplicada el {formatDate(survey.createdAt)}
                 </p>
+                {survey.campaignName && (
+                  <p className="mt-0.5 truncate text-[10.5px] text-[var(--text-muted)]">
+                    Campaña: {survey.campaignName}
+                  </p>
+                )}
                 {(survey.farm || survey.crop) && (
                   <p className="mt-0.5 truncate text-[10.5px] text-[var(--text-muted)]">
                     {[survey.farm?.name, survey.crop?.name].filter(Boolean).join(" · ")}

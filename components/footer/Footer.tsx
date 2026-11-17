@@ -14,7 +14,7 @@ const sectionLinks = [
 ] as const;
 
 const platformLinks = [
-  { href: "/campaign", label: "Responder encuesta" },
+  { href: "/productores", label: "Responder encuesta" },
   { href: "/login", label: "Ingresar como investigador" },
 ] as const;
 

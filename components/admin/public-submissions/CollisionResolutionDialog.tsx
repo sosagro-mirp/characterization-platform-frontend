@@ -13,7 +13,7 @@ interface CollisionResolutionDialogProps {
  * Spec 79 — declaración de resolución cuando `process-public` responde 409
  * (colisión de documentId, spec 68). No existía un diálogo equivalente en
  * `frontend/`: la resolución de colisiones solo estaba resuelta en mobile.
- * Estilo visual tomado de components/campaign/DuplicateDialog.tsx (mismo
+ * Estilo visual tomado de components/farmers/DuplicateDialog.tsx (mismo
  * patrón de diálogo de decisión con advertencia).
  */
 export default function CollisionResolutionDialog({

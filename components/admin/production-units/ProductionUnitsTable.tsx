@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { CoverageColumn, UnitRow } from "@/lib/production-units/types";
 import { SELECTION_LABELS } from "@/lib/production-units/selection";
-import { StatusChip } from "./StatusChip";
+import { StatusChip } from "@/components/common/StatusChip";
 
 interface ProductionUnitsTableProps {
   rows: UnitRow[];

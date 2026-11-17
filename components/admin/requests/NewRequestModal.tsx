@@ -108,7 +108,7 @@ export default function NewRequestModal({ onClose, onCreated }: Props) {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={5}
                   maxLength={2000}
-                  placeholder="Contanos qué ocurrió, en qué pantalla y con qué instrumento o campaña."
+                  placeholder="Contanos qué ocurrió, en qué pantalla y con qué instrumento o productor."
                   className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm text-[var(--text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
                 />
               </div>

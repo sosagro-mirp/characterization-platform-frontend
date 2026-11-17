@@ -31,7 +31,7 @@ export default function LoginPage() {
                             Plataforma de datos del proyecto
                         </h1>
                         <p className="text-sm leading-relaxed text-brand-light/90 dark:text-yellow-50/80">
-                            Gestioná instrumentos, campañas y respuestas de caracterización
+                            Gestioná instrumentos, productores y respuestas de caracterización
                             agrícola en las cuatro cadenas productivas de los seis
                             departamentos priorizados.
                         </p>

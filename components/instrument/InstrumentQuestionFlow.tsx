@@ -12,10 +12,15 @@ import type {
     InstrumentSection,
 } from "@/app/(instrument)/types";
 import { useInstrumentSurveyStore } from "@/store/useInstrumentSurveyStore";
-import { useCampaignSessionStore } from "@/store/useCampaignSessionStore";
 import { isQuestionVisible } from "@/lib/isQuestionVisible";
 import { isAnswerComplete } from "@/lib/instrument/isAnswerComplete";
-import ConsentModal from "@/components/campaign/ConsentModal";
+import type { ApplyContext } from "@/lib/pollster/surveyAnchor";
+import {
+    afterRegistroPath,
+    clearPendingConsent,
+    loadPendingConsent,
+} from "@/lib/pollster/registrationFlow";
+import { submitConsent } from "@/services/consents.service";
 import type { PublicSurveyConsentInput } from "@/lib/public-surveys/publicSurveyPayload";
 
 interface InstrumentQuestionFlowProps {
@@ -24,10 +29,14 @@ interface InstrumentQuestionFlowProps {
     instrumentName: string;
     sections: InstrumentSection[];
     apiBaseUrl: string;
-    campaignSessionId?: string;
-    stepOrder?: number;
     previewMode?: boolean;
     existingSurveyId?: string;
+    /** Spec 102 — contexto de productor (flujo por productor, sin campaña). */
+    producerContext?: ApplyContext;
+    /** Spec 102 — destino al salir; por defecto /productores. */
+    exitPath?: string;
+    /** Spec 102 — S_REG de `/productores/nuevo`: registra el consentimiento y vuelve a esa página. */
+    registroMode?: boolean;
     onPreviewComplete?: () => void;
     /**
      * Spec 79 — canal público sin encuestador: envía por
@@ -49,15 +58,17 @@ export default function InstrumentQuestionFlow({
     instrumentName,
     sections,
     apiBaseUrl,
-    campaignSessionId,
-    stepOrder,
     previewMode = false,
     existingSurveyId,
+    producerContext,
+    exitPath = "/productores",
+    registroMode = false,
     onPreviewComplete,
     publicMode = false,
     publicConsent,
 }: InstrumentQuestionFlowProps) {
     const router = useRouter();
+    const registroSurveyRef = useRef<string | null>(null);
     const [validationError, setValidationError] = useState<string>();
     const [completed, setCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -66,16 +77,6 @@ export default function InstrumentQuestionFlow({
     // y el envío. Solo aplica en publicMode; el flujo de encuestador no
     // tiene este estado (submitResponses nunca devuelve "closed").
     const [linkClosed, setLinkClosed] = useState(false);
-    // Cambio de alcance (2026-08-28, Fase 12) — aviso persistente de
-    // consentimiento pendiente, visible mientras se aplican las preguntas
-    // (no solo antes de S1). `consentPending`/`farmerName` vienen del mismo
-    // store que ya alimenta el resto de la sesión de campaña; en modo vista
-    // previa y en publicMode no hay sesión real, así que el banner nunca se
-    // muestra ahí (ambos dejan campaignSessionId sin definir).
-    const consentPending = useCampaignSessionStore((s) => s.consentPending);
-    const farmerName = useCampaignSessionStore((s) => s.farmerName);
-    const setConsent = useCampaignSessionStore((s) => s.setConsent);
-    const [consentModalOpen, setConsentModalOpen] = useState(false);
     const {
         initializeSurvey,
         flattenedQuestions,
@@ -198,13 +199,41 @@ export default function InstrumentQuestionFlow({
                 return;
             }
 
+            // Spec 102 — sin consentimiento pendiente no se crea la encuesta S_REG.
+            if (registroMode && !loadPendingConsent()) {
+                setValidationError(
+                    "Falta el consentimiento del productor. Vuelve a Productores → Nuevo productor.",
+                );
+                return;
+            }
+
             const result = await submitResponses({
-                campaignSessionId,
-                stepOrder,
-                existingSurveyId,
+                // En reintentos del registro se reutiliza la encuesta ya creada.
+                existingSurveyId: existingSurveyId ?? registroSurveyRef.current ?? undefined,
+                producerContext,
+                ...(registroMode && {
+                    onSurveyCreated: async (createdSurveyId: string) => {
+                        registroSurveyRef.current = createdSurveyId;
+                        const pending = loadPendingConsent();
+                        if (!pending) {
+                            throw new Error(
+                                "Falta el consentimiento del productor. Vuelve a Productores → Nuevo productor.",
+                            );
+                        }
+                        await submitConsent({ ...pending, surveyId: createdSurveyId });
+                    },
+                }),
             });
 
             if (result.outcome === "submitted") {
+                if (registroMode) {
+                    const createdId = useInstrumentSurveyStore.getState().surveyId;
+                    clearPendingConsent();
+                    if (createdId) {
+                        router.replace(afterRegistroPath(createdId));
+                        return;
+                    }
+                }
                 setCompleted(true);
             } else if (result.outcome === "session_expired") {
                 setSessionExpired(true);
@@ -222,7 +251,8 @@ export default function InstrumentQuestionFlow({
 
     const handleConfirmExit = () => {
         setShowExitConfirm(false);
-        router.push("/campaign");
+        if (registroMode) clearPendingConsent();
+        router.push(exitPath);
     };
 
     if (completed) {
@@ -237,13 +267,10 @@ export default function InstrumentQuestionFlow({
             );
         }
         if (publicMode) {
-            // No reutiliza SurveyCompletedCard: ese componente consulta
-            // useCampaignSessionStore para ofrecer "Continuar con la
-            // siguiente encuesta" — un enlace a /campaign (autenticado) que
-            // no tiene sentido para un visitante anónimo, y que podría
-            // aparecer por error si el mismo navegador tuvo antes una sesión
-            // de encuestador activa. Pantalla final propia, sin enlaces al
-            // sistema interno (criterio de "Puntos delicados", punto 5).
+            // No reutiliza SurveyCompletedCard: ese componente es del flujo
+            // interno y ofrece enlaces al sistema (autenticado) que no tienen
+            // sentido para un visitante anónimo. Pantalla final propia, sin
+            // enlaces al sistema interno (criterio de "Puntos delicados", punto 5).
             return (
                 <section className="w-full max-w-xl mx-auto mt-19 min-h-[calc(100vh-76px)] bg-surface flex flex-col justify-center items-center px-4">
                     <div className="bg-brand max-w-max p-6 rounded-full text-brand-foreground">
@@ -280,7 +307,12 @@ export default function InstrumentQuestionFlow({
         }
         return (
             <SurveyCompletedCard
-                campaignSessionId={campaignSessionId}
+                {...(producerContext
+                    ? {
+                          ctaText: "Volver al productor",
+                          ctaHref: exitPath,
+                      }
+                    : {})}
             />
         );
     }
@@ -347,22 +379,6 @@ export default function InstrumentQuestionFlow({
                     Modo vista previa — sin datos enviados
                 </div>
             )}
-            {/* Spec 78, cambio de alcance (2026-08-28) — criterio 1-cuarter:
-                aviso persistente mientras el encuestado no tenga
-                consentimiento vigente, con acceso directo al formulario. */}
-            {!previewMode && campaignSessionId && consentPending && (
-                <div className="bg-[var(--warning-bg)] border-b border-[var(--warning-fg)]/30 px-4 py-2 text-sm text-[var(--warning-fg)] text-center flex items-center justify-center gap-3">
-                    <span>Este encuestado todavía no dio su consentimiento informado.</span>
-                    <button
-                        type="button"
-                        onClick={() => setConsentModalOpen(true)}
-                        className="rounded-md bg-[var(--warning-fg)] px-3 py-1 text-xs font-medium text-white hover:opacity-90 transition-colors"
-                    >
-                        Registrar consentimiento
-                    </button>
-                </div>
-            )}
-
             {/* Contenido scrollable */}
             <div className="flex-1">
                 <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
@@ -518,19 +534,6 @@ export default function InstrumentQuestionFlow({
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Consentimiento pendiente — Fase 12, se abre in place, sin navegar. */}
-            {consentModalOpen && campaignSessionId && (
-                <ConsentModal
-                    sessionId={campaignSessionId}
-                    defaultRespondentName={farmerName ?? undefined}
-                    onAccepted={(record) => {
-                        setConsent(record.consentRecordId, record.consentDocument.version);
-                        setConsentModalOpen(false);
-                    }}
-                    onClose={() => setConsentModalOpen(false)}
-                />
             )}
         </div>
     );

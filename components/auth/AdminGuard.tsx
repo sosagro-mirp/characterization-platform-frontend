@@ -9,6 +9,7 @@ import {
   clearRoleCookie,
   clearSessionCookie,
 } from "@/lib/sessionCookie";
+import { defaultRouteForRole } from "@/lib/roleRouting";
 
 const PANEL_ROLES = ["admin", "researcher"];
 
@@ -39,7 +40,7 @@ export default function AdminGuard({
       return;
     }
     if (!user.role || !PANEL_ROLES.includes(user.role)) {
-      router.replace("/campaign");
+      router.replace(defaultRouteForRole(user.role));
     }
   }, [hydrated, isAuthenticated, user, router, pathname]);
 

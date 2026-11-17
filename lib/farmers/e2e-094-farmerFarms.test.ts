@@ -10,7 +10,7 @@
  *
  * Lo que depende de la extracción unificada (orquestador web sin `extract-*`,
  * discrepancias abiertas, bandeja pública con rol) quedó en el spec 95:
- * `lib/campaign-session/e2e-095-extractionFlow.test.ts`.
+ * `lib/registration/e2e-095-extractionFlow.test.ts`.
  *
  * El entorno de Vitest de este repositorio es `node` (sin Testing Library), así
  * que aquí solo se prueba lógica pura. Lo visual vive en el `test-094` manual.

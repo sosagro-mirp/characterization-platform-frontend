@@ -32,7 +32,7 @@ export default function RegisterPage() {
                         </h1>
                         <p className="text-sm leading-relaxed text-brand-light/90 dark:text-yellow-50/80">
                             Creá tu cuenta con el código de validación compartido por el
-                            equipo de coordinación para gestionar instrumentos y campañas de
+                            equipo de coordinación para gestionar instrumentos y productores de
                             caracterización agrícola.
                         </p>
                     </div>

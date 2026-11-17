@@ -170,12 +170,12 @@ export const Navbar = () => {
                     className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 dark:border-[#334155] bg-white dark:bg-[#0f172a] py-1.5 shadow-lg"
                   >
                     <Link
-                      href="/campaign"
+                      href="/productores"
                       role="menuitem"
                       onClick={closeSessionMenu}
                       className="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#f1f5f9] hover:bg-gray-50 dark:hover:bg-white/5 hover:text-brand-dark dark:hover:text-white"
                     >
-                      Campañas
+                      Productores
                     </Link>
                     {isAdmin && (
                       <Link
@@ -274,11 +274,11 @@ export const Navbar = () => {
                   {user.name} {user.lastName}
                 </span>
                 <Link
-                  href="/campaign"
+                  href="/productores"
                   onClick={closeMenu}
                   className="block w-full rounded-lg bg-brand py-3 text-center text-sm font-bold text-brand-foreground"
                 >
-                  Campañas
+                  Productores
                 </Link>
                 {isAdmin && (
                   <Link

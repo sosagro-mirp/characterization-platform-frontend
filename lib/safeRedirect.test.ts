@@ -3,7 +3,7 @@ import { isSafeRedirectPath } from "./safeRedirect";
 
 describe("isSafeRedirectPath", () => {
   it("accepts a plain internal path", () => {
-    expect(isSafeRedirectPath("/campaign")).toBe(true);
+    expect(isSafeRedirectPath("/productores")).toBe(true);
   });
 
   it("rejects null/undefined/empty", () => {
@@ -22,12 +22,12 @@ describe("isSafeRedirectPath", () => {
 
   it("rejects redirects back into /login", () => {
     expect(isSafeRedirectPath("/login")).toBe(false);
-    expect(isSafeRedirectPath("/login?from=/campaign")).toBe(false);
+    expect(isSafeRedirectPath("/login?from=/productores")).toBe(false);
   });
 
   it("rejects paths carrying a query string or nested from= (loop growth)", () => {
-    expect(isSafeRedirectPath("/campaign?foo=bar")).toBe(false);
-    expect(isSafeRedirectPath("/campaign?from=/admin")).toBe(false);
+    expect(isSafeRedirectPath("/productores?foo=bar")).toBe(false);
+    expect(isSafeRedirectPath("/productores?from=/admin")).toBe(false);
   });
 
   it("rejects paths longer than 512 characters", () => {

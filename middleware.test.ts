@@ -40,14 +40,14 @@ describe("middleware", () => {
 
   it("lets an authenticated request through to a protected non-admin route", () => {
     const res = middleware(
-      makeRequest("/campaign", { "sosagro.session": "1" }),
+      makeRequest("/productores", { "sosagro.session": "1" }),
     );
     expect(res.status).toBe(200);
   });
 
   it("forces /change-password when must_change cookie is set", () => {
     const res = middleware(
-      makeRequest("/campaign", {
+      makeRequest("/productores", {
         "sosagro.session": "1",
         "sosagro.must_change": "1",
       }),
@@ -66,7 +66,7 @@ describe("middleware", () => {
       }),
     );
     expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location")!).pathname).toBe("/campaign");
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/productores");
   });
 
   it("redirects a researcher away from /admin/users to /admin/instruments", () => {
@@ -94,10 +94,10 @@ describe("middleware", () => {
 
   it("redirects an authenticated /login visit to a safe `from` target", () => {
     const res = middleware(
-      makeRequest("/login?from=%2Fcampaign", { "sosagro.session": "1" }),
+      makeRequest("/login?from=%2Fproductores", { "sosagro.session": "1" }),
     );
     expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location")!).pathname).toBe("/campaign");
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/productores");
   });
 
   it("falls back to the role default route when `from` is unsafe", () => {
@@ -115,7 +115,7 @@ describe("middleware", () => {
 
   it("redirects everything to /maintenance when maintenance mode is on", () => {
     process.env.NEXT_PUBLIC_MAINTENANCE_MODE = "true";
-    const res = middleware(makeRequest("/campaign"));
+    const res = middleware(makeRequest("/productores"));
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get("location")!).pathname).toBe(
       "/maintenance",

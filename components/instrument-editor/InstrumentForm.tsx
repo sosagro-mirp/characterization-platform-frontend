@@ -285,7 +285,7 @@ export default function InstrumentForm({
             <span>
               Instrumento activo
               <span className="mt-0.5 block text-[10.5px] text-[var(--text-muted)]">
-                Visible para encuestadores en campaña.
+                Visible para encuestadores.
               </span>
             </span>
           </label>
