@@ -10,16 +10,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { binsToHistogram } from "@/lib/dashboard/histogram";
+import { binsToHistogram, describeHistogram } from "@/lib/dashboard/histogram";
 import { SUPPRESSED_TOOLTIP_LABEL } from "@/lib/dashboard/suppressedOption";
-import { defaultUnitIndex, hasUnitStats } from "@/lib/dashboard/numericWithUnit";
+import {
+  defaultUnitIndex,
+  hasUnitStats,
+} from "@/lib/dashboard/numericWithUnit";
 import { DashboardQuestion } from "../../types";
 
 interface NumericWithUnitChartProps {
   question: DashboardQuestion;
 }
 
-const STAT_ITEMS: { key: "average" | "median" | "q1" | "q3" | "stdDev"; label: string }[] = [
+const STAT_ITEMS: {
+  key: "average" | "median" | "q1" | "q3" | "stdDev";
+  label: string;
+}[] = [
   { key: "average", label: "Media" },
   { key: "median", label: "Mediana" },
   { key: "q1", label: "Q1" },
@@ -32,9 +38,13 @@ const STAT_ITEMS: { key: "average" | "median" | "q1" | "q3" | "stdDev"; label: s
  * entre unidades. La normalización por factor se decide pregunta a pregunta
  * en la curaduría del dashboard (spec 66).
  */
-export default function NumericWithUnitChart({ question }: NumericWithUnitChartProps) {
+export default function NumericWithUnitChart({
+  question,
+}: NumericWithUnitChartProps) {
   const aggregation =
-    question.aggregation?.type === "numeric_with_unit" ? question.aggregation : null;
+    question.aggregation?.type === "numeric_with_unit"
+      ? question.aggregation
+      : null;
   // Se guarda la unidad por `optionId`, no por posición: al cambiar los
   // filtros el orden de los grupos puede cambiar sin que la tarjeta se monte de nuevo.
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -42,15 +52,20 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
   if (!aggregation || aggregation.units.length === 0) return null;
 
   const group =
-    aggregation.units.find((unitGroup) => unitGroup.optionId === selectedOptionId) ??
-    aggregation.units[defaultUnitIndex(aggregation.units)];
+    aggregation.units.find(
+      (unitGroup) => unitGroup.optionId === selectedOptionId,
+    ) ?? aggregation.units[defaultUnitIndex(aggregation.units)];
   const showStats = hasUnitStats(group);
   const bins = showStats ? binsToHistogram(group.bins ?? []) : [];
 
   return (
     <div className="space-y-4">
       {aggregation.units.length > 1 && (
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Unidad">
+        <div
+          className="flex flex-wrap gap-2"
+          role="tablist"
+          aria-label="Unidad"
+        >
           {aggregation.units.map((unitGroup) => {
             const isActive = unitGroup.optionId === group.optionId;
             return (
@@ -67,7 +82,9 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
                 }`}
               >
                 {unitGroup.unit}
-                {unitGroup.percentage !== null ? ` · ${unitGroup.percentage.toFixed(0)}%` : ""}
+                {unitGroup.percentage !== null
+                  ? ` · ${unitGroup.percentage.toFixed(0)}%`
+                  : ""}
               </button>
             );
           })}
@@ -80,7 +97,9 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
             <div key={key}>
               <dt className="text-xs text-text-muted">{label}</dt>
               <dd className="font-medium text-text-primary">
-                {group[key] !== null ? `${group[key]!.toFixed(2)} ${group.unit}` : "—"}
+                {group[key] !== null
+                  ? `${group[key]!.toFixed(2)} ${group.unit}`
+                  : "—"}
               </dd>
             </div>
           ))}
@@ -96,34 +115,43 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
       )}
 
       {bins.length > 0 && (
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={bins} margin={{ left: 0, right: 8, bottom: 24 }}>
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis
-              dataKey="label"
-              tick={{ fontSize: 9 }}
-              interval={0}
-              angle={-30}
-              textAnchor="end"
-              height={40}
-            />
-            <YAxis tick={{ fontSize: 11 }} unit="%" />
-            <Tooltip
-              formatter={(_value, _name, item) => {
-                const bar = item.payload as { suppressed?: boolean; count: number | null };
-                return bar.suppressed
-                  ? [SUPPRESSED_TOOLTIP_LABEL, "Frecuencia"]
-                  : [`${bar.count} encuestas`, "Frecuencia"];
-              }}
-            />
-            <Bar dataKey="percentage" fill="#15803d" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div
+          role="img"
+          aria-label={`Histograma en ${group.unit}: ${describeHistogram(bins)}`}
+        >
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={bins} margin={{ left: 0, right: 8, bottom: 24 }}>
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 9 }}
+                interval={0}
+                angle={-30}
+                textAnchor="end"
+                height={40}
+              />
+              <YAxis tick={{ fontSize: 11 }} unit="%" />
+              <Tooltip
+                formatter={(_value, _name, item) => {
+                  const bar = item.payload as {
+                    suppressed?: boolean;
+                    count: number | null;
+                  };
+                  return bar.suppressed
+                    ? [SUPPRESSED_TOOLTIP_LABEL, "Frecuencia"]
+                    : [`${bar.count} encuestas`, "Frecuencia"];
+                }}
+              />
+              <Bar dataKey="percentage" fill="#15803d" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       )}
 
       {aggregation.units.length > 1 && (
         <p className="text-xs text-text-muted">
-          Cada unidad se muestra por separado; los valores no se convierten entre unidades.
+          Cada unidad se muestra por separado; los valores no se convierten
+          entre unidades.
         </p>
       )}
     </div>

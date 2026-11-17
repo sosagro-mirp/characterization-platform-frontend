@@ -11,12 +11,16 @@ export interface HistogramBar {
 }
 
 function formatEdge(value: number): string {
-  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(4)));
+  return Number.isInteger(value)
+    ? String(value)
+    : String(Number(value.toFixed(4)));
 }
 
 function binLabel(bin: AggregationBin): string {
-  if (bin.from === null && bin.to !== null) return `Menos de ${formatEdge(bin.to)}`;
-  if (bin.to === null && bin.from !== null) return `${formatEdge(bin.from)} o más`;
+  if (bin.from === null && bin.to !== null)
+    return `Menos de ${formatEdge(bin.to)}`;
+  if (bin.to === null && bin.from !== null)
+    return `${formatEdge(bin.from)} o más`;
   if (bin.from !== null && bin.to !== null) {
     return `${formatEdge(bin.from)}–${formatEdge(bin.to)}`;
   }
@@ -30,7 +34,22 @@ export function binsToHistogram(bins: AggregationBin[]): HistogramBar[] {
   return bins.map((bin) => ({
     label: binLabel(bin),
     count: bin.suppressed ? null : bin.count,
-    percentage: bin.suppressed ? SUPPRESSED_BAR_PLACEHOLDER : (bin.percentage ?? 0),
+    percentage: bin.suppressed
+      ? SUPPRESSED_BAR_PLACEHOLDER
+      : (bin.percentage ?? 0),
     suppressed: bin.suppressed,
   }));
+}
+
+/** Alternativa textual del histograma para lectores de pantalla (guía
+ * `accessibility`: «Provide semantic data tables as accessible alternatives
+ * for charts»): un intervalo por frase, con su conteo o «oculto». */
+export function describeHistogram(bars: HistogramBar[]): string {
+  return bars
+    .map((bar) =>
+      bar.suppressed
+        ? `${bar.label}: oculto por privacidad`
+        : `${bar.label}: ${bar.count} encuestas (${bar.percentage.toFixed(0)}%)`,
+    )
+    .join("; ");
 }
