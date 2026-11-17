@@ -140,7 +140,11 @@ describe("Spec 107 — criterio 10: histogramas desde los intervalos del backend
       expect({ file, min: /Mín\b/.test(text) }).toEqual({ file, min: false });
       expect({ file, max: /Máx\b/.test(text) }).toEqual({ file, max: false });
       expect({ file, whisker: /whisker/i.test(text) }).toEqual({ file, whisker: false });
-      expect({ file, raw: /\bdistribution\b/.test(text) }).toEqual({ file, raw: false });
+      // `distribution` en OverviewView son los conteos por banda de la batería
+      // Likert (no valores numéricos sin agrupar): solo se vigila en las gráficas.
+      if (!file.endsWith("OverviewView.tsx")) {
+        expect({ file, raw: /\bdistribution\b/.test(text) }).toEqual({ file, raw: false });
+      }
     }
   });
 });
