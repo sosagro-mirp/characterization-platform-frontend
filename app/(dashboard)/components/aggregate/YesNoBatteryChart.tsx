@@ -24,7 +24,9 @@ export default function YesNoBatteryChart({ questions }: YesNoBatteryChartProps)
   const items = questions
     .filter(
       (q): q is DashboardQuestion & { aggregation: { type: "yes_no"; yesPercentage: number } } =>
-        !q.suppressed && q.aggregation?.type === "yes_no",
+        !q.suppressed &&
+        q.aggregation?.type === "yes_no" &&
+        q.aggregation.yesPercentage !== null,
     )
     .map((q) => ({
       name: q.questionText,

@@ -29,6 +29,9 @@ function summarizeAggregation(question: DashboardQuestion): string {
   const aggregation = question.aggregation;
   switch (aggregation.type) {
     case "yes_no":
+      if (aggregation.yesPercentage === null || aggregation.noPercentage === null) {
+        return "Oculto por privacidad";
+      }
       return `Sí: ${aggregation.yesPercentage.toFixed(0)}%, No: ${aggregation.noPercentage.toFixed(0)}%`;
     case "single_choice":
     case "multiple_choice":

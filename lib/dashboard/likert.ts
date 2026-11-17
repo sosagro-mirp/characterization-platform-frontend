@@ -62,3 +62,16 @@ export function buildDivergingRows(
     })
     .sort((a, b) => b.meanScore - a.meanScore);
 }
+
+/** Mapea el ranking Likert de la demanda digital a los ítems de la batería
+ * (conteos por banda en el orden de la escala). */
+export function toLikertBatteryItems(
+  ranking: { questionId: string; questionText: string; bands: { count: number | null }[]; meanScore: number | null }[],
+): LikertBatteryItem[] {
+  return ranking.map((item) => ({
+    questionId: item.questionId,
+    label: item.questionText,
+    distribution: item.bands.map((band) => band.count),
+    meanScore: item.meanScore,
+  }));
+}

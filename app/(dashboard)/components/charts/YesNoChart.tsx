@@ -28,22 +28,34 @@ export default function YesNoChart({ question }: YesNoChartProps) {
   if (question.aggregation?.type !== "yes_no") return null;
   const aggregation = question.aggregation;
 
+  // Spec 107 (P18-b/d): con una celda suprimida llegan las dos (supresión
+  // complementaria): no se dibuja la dona, solo un aviso de privacidad.
+  if (aggregation.yesSuppressed || aggregation.noSuppressed) {
+    return (
+      <p className="text-sm text-text-muted">
+        Oculto por privacidad: alguna de las respuestas tiene menos de 5 casos.
+      </p>
+    );
+  }
+
+  const yesCount = aggregation.yesCount ?? 0;
+  const noCount = aggregation.noCount ?? 0;
   const data = [
     {
       name: "Sí",
-      value: aggregation.yesCount,
-      percentage: aggregation.yesPercentage,
+      value: yesCount,
+      percentage: aggregation.yesPercentage ?? 0,
       color: COLORS.yes,
     },
     {
       name: "No",
-      value: aggregation.noCount,
-      percentage: aggregation.noPercentage,
+      value: noCount,
+      percentage: aggregation.noPercentage ?? 0,
       color: COLORS.no,
     },
   ];
 
-  const total = aggregation.yesCount + aggregation.noCount;
+  const total = yesCount + noCount;
 
   return (
     <div className="flex w-full items-center gap-6">

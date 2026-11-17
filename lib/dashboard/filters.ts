@@ -18,7 +18,6 @@ const CATEGORY_ID_PATTERN = /^C([1-9]|1[0-4])$/;
 
 /** Mismas claves que `DashboardFilters` — mantener sincronizado al agregar un filtro nuevo. */
 const FILTER_KEYS: (keyof DashboardFilters)[] = [
-  "instrumentId",
   "departmentId",
   "townId",
   "cropId",
@@ -56,7 +55,6 @@ export function parseDashboardParams(raw: RawParams): DashboardPageState {
     const value = raw[key];
     if (value) filters[key] = value;
   }
-  if (categoryId) delete filters.instrumentId;
 
   return {
     view: categoryId ? "category" : "overview",

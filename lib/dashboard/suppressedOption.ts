@@ -54,7 +54,12 @@ export function formatBarTooltip(datum: BarDatum): string {
  * actualmente X?" × 4 cultivos → una barra por cultivo). La supresión es a
  * nivel de pregunta completa (`question.suppressed`), no de opción. */
 export function yesNoToBarDatum(question: DashboardQuestion, label: string): BarDatum {
-  if (question.suppressed || question.aggregation?.type !== "yes_no") {
+  if (
+    question.suppressed ||
+    question.aggregation?.type !== "yes_no" ||
+    question.aggregation.yesSuppressed ||
+    question.aggregation.yesPercentage === null
+  ) {
     return { name: label, percentage: SUPPRESSED_BAR_PLACEHOLDER, count: null, suppressed: true };
   }
   return {

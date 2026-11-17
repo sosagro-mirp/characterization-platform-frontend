@@ -4,6 +4,7 @@ import {
   fetchDigitalDemand,
 } from "../api";
 import { AGE_RANGE_BUCKETS } from "@/lib/dashboard/filters";
+import { toLikertBatteryItems } from "@/lib/dashboard/likert";
 import { DashboardFilters, DashboardQuestion } from "../types";
 import KpiStrip from "./KpiStrip";
 import CropDonut from "./CropDonut";
@@ -112,12 +113,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
 
   // `LikertRankingItem` (metadata rica: sectionName, answeredCount) → forma
   // mínima que espera `LikertDivergingMatrix`/`buildDivergingRows`.
-  const likertBatteryItems = digitalDemand.likertRanking.map((item) => ({
-    questionId: item.questionId,
-    label: item.questionText,
-    distribution: item.bands.map((band) => band.count),
-    meanScore: item.meanScore,
-  }));
+  const likertBatteryItems = toLikertBatteryItems(digitalDemand.likertRanking);
 
   // Fase 8: si la muestra global (sin restringir a categoría) está por
   // debajo del umbral, ninguna fila curada tendría datos reales que mostrar

@@ -10,7 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { buildHistogramBins } from "@/lib/dashboard/histogram";
+import { binsToHistogram } from "@/lib/dashboard/histogram";
+import { SUPPRESSED_TOOLTIP_LABEL } from "@/lib/dashboard/suppressedOption";
 import { defaultUnitIndex, hasUnitStats } from "@/lib/dashboard/numericWithUnit";
 import { DashboardQuestion } from "../../types";
 
@@ -18,11 +19,11 @@ interface NumericWithUnitChartProps {
   question: DashboardQuestion;
 }
 
-const STAT_ITEMS: { key: "average" | "median" | "min" | "max" | "stdDev"; label: string }[] = [
+const STAT_ITEMS: { key: "average" | "median" | "q1" | "q3" | "stdDev"; label: string }[] = [
   { key: "average", label: "Media" },
   { key: "median", label: "Mediana" },
-  { key: "min", label: "Mínimo" },
-  { key: "max", label: "Máximo" },
+  { key: "q1", label: "Q1" },
+  { key: "q3", label: "Q3" },
   { key: "stdDev", label: "Desv. estándar" },
 ];
 
@@ -44,10 +45,7 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
     aggregation.units.find((unitGroup) => unitGroup.optionId === selectedOptionId) ??
     aggregation.units[defaultUnitIndex(aggregation.units)];
   const showStats = hasUnitStats(group);
-  const bins =
-    showStats && group.distribution && group.distribution.length > 0
-      ? buildHistogramBins(group.distribution, group.min!, group.max!)
-      : [];
+  const bins = showStats ? binsToHistogram(group.bins ?? []) : [];
 
   return (
     <div className="space-y-4">
@@ -109,9 +107,16 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
               textAnchor="end"
               height={40}
             />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-            <Tooltip formatter={(value) => [`${value} encuestas`, "Frecuencia"]} />
-            <Bar dataKey="count" fill="#15803d" radius={[4, 4, 0, 0]} />
+            <YAxis tick={{ fontSize: 11 }} unit="%" />
+            <Tooltip
+              formatter={(_value, _name, item) => {
+                const bar = item.payload as { suppressed?: boolean; count: number | null };
+                return bar.suppressed
+                  ? [SUPPRESSED_TOOLTIP_LABEL, "Frecuencia"]
+                  : [`${bar.count} encuestas`, "Frecuencia"];
+              }}
+            />
+            <Bar dataKey="percentage" fill="#15803d" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
