@@ -87,6 +87,7 @@ export default function NumericChart({ question }: NumericChartProps) {
       <div role="img" aria-label={`Histograma: ${describeHistogram(bins)}`}>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart
+            accessibilityLayer={false}
             data={bins}
             margin={{ left: 0, right: 8, top: 16, bottom: 24 }}
           >
