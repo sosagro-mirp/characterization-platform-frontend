@@ -14,8 +14,11 @@
  */
 import { AggregationOption, DashboardQuestion } from "@/app/(dashboard)/types";
 
-export const SUPPRESSED_TOOLTIP_LABEL =
-  "Oculto por privacidad (menos de 5 respuestas)";
+/** Mínimo de respuestas por celda: espejo de `MIN_CELL_SIZE` del backend
+ * (`dashboard-privacy.config.ts`). Un solo lugar para los textos de privacidad. */
+export const MIN_CELL_SIZE = 5;
+
+export const SUPPRESSED_TOOLTIP_LABEL = `Oculto por privacidad (menos de ${MIN_CELL_SIZE} respuestas)`;
 
 /** Altura mínima de barra para que la celda suprimida sea visible en el
  * listado sin insinuar un valor real — nunca 0, nunca ausente. */
@@ -53,14 +56,22 @@ export function formatBarTooltip(datum: BarDatum): string {
  * relacionadas en una sola `HorizontalBarChart` (ej. "¿Cultiva
  * actualmente X?" × 4 cultivos → una barra por cultivo). La supresión es a
  * nivel de pregunta completa (`question.suppressed`), no de opción. */
-export function yesNoToBarDatum(question: DashboardQuestion, label: string): BarDatum {
+export function yesNoToBarDatum(
+  question: DashboardQuestion,
+  label: string,
+): BarDatum {
   if (
     question.suppressed ||
     question.aggregation?.type !== "yes_no" ||
     question.aggregation.yesSuppressed ||
     question.aggregation.yesPercentage === null
   ) {
-    return { name: label, percentage: SUPPRESSED_BAR_PLACEHOLDER, count: null, suppressed: true };
+    return {
+      name: label,
+      percentage: SUPPRESSED_BAR_PLACEHOLDER,
+      count: null,
+      suppressed: true,
+    };
   }
   return {
     name: label,

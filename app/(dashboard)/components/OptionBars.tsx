@@ -1,4 +1,5 @@
 import { AggregationOption } from "../types";
+import { SUPPRESSED_TOOLTIP_LABEL } from "@/lib/dashboard/suppressedOption";
 
 interface OptionBarsProps {
   options: AggregationOption[];
@@ -42,11 +43,7 @@ export default function OptionBars({ options }: OptionBarsProps) {
                     : "var(--color-brand)",
                   opacity: option.suppressed ? 0.5 : 1,
                 }}
-                title={
-                  option.suppressed
-                    ? "Oculto por privacidad (menos de 5 respuestas)"
-                    : undefined
-                }
+                title={option.suppressed ? SUPPRESSED_TOOLTIP_LABEL : undefined}
               />
             </div>
             <span className="w-10 shrink-0 text-xs font-semibold text-text-muted">
