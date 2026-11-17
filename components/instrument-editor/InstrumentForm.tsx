@@ -13,6 +13,7 @@ import { listCrops } from "@/services/types-of-crops.service";
 import type { CropSummary } from "@/app/(instrument)/types";
 import { buildPublicSurveyUrl } from "@/lib/public-surveys/publicSurveyUrl";
 import SaveStatusIndicator, { SaveStatus } from "./SaveStatusIndicator";
+import { todayDateOnly } from "@/lib/dateOnly";
 
 interface InstrumentFormProps {
   actorTypes: ActorTypeSummary[];
@@ -56,7 +57,7 @@ export default function InstrumentForm({
   const [name, setName] = useState(initialValues?.name ?? "");
   const [version, setVersion] = useState(initialValues?.version ?? 1);
   const [publishDate, setPublishDate] = useState(
-    initialValues?.publishDate ?? new Date().toISOString().slice(0, 10),
+    initialValues?.publishDate ?? todayDateOnly(),
   );
   const [isActive, setIsActive] = useState(initialValues?.isActive ?? true);
   const [isPublic, setIsPublic] = useState(initialValues?.isPublic ?? false);
@@ -96,7 +97,7 @@ export default function InstrumentForm({
     name: initialValues?.name ?? "",
     version: initialValues?.version ?? 1,
     publishDate:
-      initialValues?.publishDate ?? new Date().toISOString().slice(0, 10),
+      initialValues?.publishDate ?? todayDateOnly(),
   });
 
   const persist = async (patch: UpdateInstrumentRequest) => {
