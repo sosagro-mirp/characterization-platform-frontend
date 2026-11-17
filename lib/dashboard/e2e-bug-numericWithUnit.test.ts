@@ -26,8 +26,9 @@ describe("buildHistogramBins", () => {
 const group = (unit: string, count: number, withStats: boolean) => ({
   optionId: unit,
   unit,
-  count,
-  percentage: 0,
+  count: withStats ? count : null,
+  percentage: withStats ? 0 : null,
+  suppressed: !withStats,
   average: withStats ? 1 : null,
   median: withStats ? 1 : null,
   q1: withStats ? 1 : null,

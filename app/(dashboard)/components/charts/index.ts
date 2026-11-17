@@ -1,8 +1,12 @@
 export { default as YesNoChart } from "./YesNoChart";
+export { default as DonutChart } from "./DonutChart";
 export { default as SingleChoiceChart } from "./SingleChoiceChart";
 export { default as LikertChart } from "./LikertChart";
 export { default as ComplianceChart } from "./ComplianceChart";
 export { default as MultipleChoiceChart } from "./MultipleChoiceChart";
 export { default as NumericChart } from "./NumericChart";
 export { default as NumericWithUnitChart } from "./NumericWithUnitChart";
+export { default as DepartmentMap } from "./DepartmentMap";
+export { default as CropCultivationChart } from "./CropCultivationChart";
+export { default as HarvestCalendarChart } from "./HarvestCalendarChart";
 export { default as UnsupportedQuestionType } from "./UnsupportedQuestionType";

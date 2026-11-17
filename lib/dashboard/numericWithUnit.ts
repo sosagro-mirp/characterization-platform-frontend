@@ -5,7 +5,9 @@ import type { AggregationUnitGroup } from "@/app/(dashboard)/types";
  * alcanza el umbral de privacidad: entonces solo se muestra su conteo.
  */
 export function hasUnitStats(group: AggregationUnitGroup): boolean {
-  return group.average !== null && group.min !== null && group.max !== null;
+  return (
+    !group.suppressed && group.average !== null && group.min !== null && group.max !== null
+  );
 }
 
 /** La unidad que se muestra primero: la primera (más respondida) con estadísticas. */

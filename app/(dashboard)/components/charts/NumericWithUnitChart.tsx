@@ -68,7 +68,8 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
                     : "border-border text-text-muted hover:text-text-primary"
                 }`}
               >
-                {unitGroup.unit} · {unitGroup.percentage.toFixed(0)}%
+                {unitGroup.unit}
+                {unitGroup.percentage !== null ? ` · ${unitGroup.percentage.toFixed(0)}%` : ""}
               </button>
             );
           })}
@@ -92,8 +93,7 @@ export default function NumericWithUnitChart({ question }: NumericWithUnitChartP
         </dl>
       ) : (
         <p className="text-sm text-text-muted">
-          {group.count} {group.count === 1 ? "respuesta" : "respuestas"} en {group.unit}: muestra
-          insuficiente para mostrar valores.
+          {group.unit}: oculto por privacidad (menos de 5 respuestas).
         </p>
       )}
 

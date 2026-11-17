@@ -62,9 +62,17 @@ export interface DashboardKpi {
 export interface AggregationOption {
   optionId: string;
   text: string;
-  count: number;
-  percentage: number;
+  /** null si suppressed=true (spec 66, D2): la celda tiene menos de
+   * MIN_CELL_SIZE respondientes y no se expone, aunque la muestra total
+   * supere el umbral global de privacidad. */
+  count: number | null;
+  /** null si suppressed=true, mismo criterio que count. */
+  percentage: number | null;
   value: number | null;
+  /** true si esta opción tiene menos de MIN_CELL_SIZE respondientes. Nunca
+   * se representa como 0 ni se omite del listado en silencio — los
+   * componentes de gráfica deben mostrarla como oculta por privacidad. */
+  suppressed: boolean;
 }
 
 export interface AggregationYesNo {
@@ -104,8 +112,12 @@ export interface AggregationNumeric {
 export interface AggregationUnitGroup {
   optionId: string;
   unit: string;
-  count: number;
-  percentage: number;
+  /** null si suppressed=true (spec 66, D2): el grupo tiene menos de MIN_CELL_SIZE respuestas. */
+  count: number | null;
+  /** null si suppressed=true, mismo criterio que count. */
+  percentage: number | null;
+  /** true si el grupo no alcanza MIN_CELL_SIZE: conteo, porcentaje y estadísticas en null. */
+  suppressed: boolean;
   average: number | null;
   median: number | null;
   q1: number | null;
@@ -140,6 +152,9 @@ export interface DashboardQuestion {
   instrumentId?: string;
   instrumentName?: string;
   systemField: string | null;
+  /** Gráfica curada explícitamente (spec 66, D3), o null si no se curó
+   * ninguna — ver `lib/dashboard/chartHint.ts`. */
+  chartHint: string | null;
   isInverted: boolean;
   answeredCount: number;
   suppressed: boolean;
