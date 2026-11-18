@@ -1,4 +1,10 @@
-import { DashboardKpi, DashboardQuestion } from "@/app/(dashboard)/types";
+import {
+  DashboardAggregation,
+  DashboardKpi,
+  DashboardQuestion,
+  ServedChart,
+  ServedMetricBucket,
+} from "@/app/(dashboard)/types";
 
 function escapeCsvField(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
@@ -91,4 +97,53 @@ export function kpisToCsv(kpis: DashboardKpi[]): string {
       kpi.suppressed ? "Sí" : "No",
     ]),
   );
+}
+
+/**
+ * Spec 109 — CSV de los gráficos servidos de la vista: una fila por serie,
+ * con lo mismo que muestra la pantalla (incluida la supresión).
+ */
+export function chartsToCsv(charts: ServedChart[]): string {
+  const rows: string[][] = [];
+  for (const chart of charts) {
+    for (const series of chart.series) {
+      const raw = series.aggregation as
+        | DashboardAggregation
+        | { buckets: ServedMetricBucket[] }
+        | null;
+      const aggregation: DashboardAggregation | null =
+        raw && "buckets" in raw
+          ? {
+              type: "single_choice",
+              options: raw.buckets.map((b) => ({
+                optionId: b.id,
+                text: b.name,
+                count: b.count,
+                percentage: b.percentage,
+                value: null,
+                suppressed: b.suppressed ?? false,
+              })),
+            }
+          : raw;
+      const question = {
+        questionId: chart.chartId,
+        questionText: chart.title,
+        questionType: aggregation?.type ?? chart.questionType ?? "",
+        sectionName: "",
+        systemField: null,
+        isInverted: false,
+        answeredCount: series.answeredCount,
+        suppressed: series.suppressed,
+        aggregation,
+      } as DashboardQuestion;
+      rows.push([
+        chart.title,
+        chart.series.length > 1 ? series.label : "",
+        chart.instrumentNames.join(" · "),
+        String(series.answeredCount),
+        summarizeAggregation(question),
+      ]);
+    }
+  }
+  return toCsv(["Gráfico", "Serie", "Fuente", "n", "Resumen"], rows);
 }

@@ -147,6 +147,7 @@ export default function PrivateDashboardPage() {
               <GlobalFilterBar
                 state={state}
                 categoryTitle={activeName}
+                audience="private"
                 departments={catalogs.departments}
                 crops={catalogs.crops}
                 actorTypes={catalogs.actorTypes}
