@@ -1,7 +1,6 @@
 import { fetchServedChartsOrNull } from "../api";
 import { DashboardFilters } from "../types";
 import ViewHeader from "./ViewHeader";
-import KpiStrip from "./KpiStrip";
 import ChartsGrid from "./ChartsGrid";
 import SuppressedDataCard from "./SuppressedDataCard";
 
@@ -39,8 +38,6 @@ export default async function CategoryView({ categoryCode, filters }: CategoryVi
             : undefined
         }
       />
-
-      <KpiStrip />
 
       {data.suppressed && (
         <SuppressedDataCard reason="La muestra con estos filtros es insuficiente: los gráficos de preguntas se muestran suprimidos." />

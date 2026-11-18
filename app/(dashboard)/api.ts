@@ -25,9 +25,10 @@ const CATALOG_REVALIDATE_SECONDS = 3600;
 const CATEGORIES_REVALIDATE_SECONDS = 3600;
 
 /** Mismas claves que `DashboardFilters` — mantener sincronizado con
- * `lib/dashboard/filters.ts` (FILTER_KEYS) al agregar un filtro nuevo. */
+ * `lib/dashboard/filters.ts` (FILTER_KEYS) al agregar un filtro nuevo.
+ * Spec 109 (Fase 6): sin `categoryId` — las rutas de agregación responden 410
+ * con él; los gráficos de una categoría lo añaden aparte. */
 const FILTER_QUERY_KEYS: (keyof DashboardFilters)[] = [
-  "categoryId",
   "departmentId",
   "townId",
   "cropId",
