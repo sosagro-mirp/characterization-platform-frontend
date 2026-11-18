@@ -69,7 +69,11 @@ export function updateBuilderChart(
   id: string,
   body: Partial<BuilderChartPayload>,
 ): Promise<BuilderChart> {
-  return apiClient.patch(`${BASE}/charts/${id}`, body);
+  // El origen del gráfico (preguntas o métrica) no se cambia al editar: el
+  // backend rechaza `sourceKind` en el PATCH.
+  const patch = { ...body };
+  delete patch.sourceKind;
+  return apiClient.patch(`${BASE}/charts/${id}`, patch);
 }
 
 export function reorderBuilderCharts(
