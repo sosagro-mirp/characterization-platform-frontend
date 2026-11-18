@@ -1,5 +1,8 @@
 import { DashboardKpi } from "../types";
 
+// DEBT: sin uso desde el spec 109 (Fase 6), que retiró la tira de KPIs de
+// juguete; se conserva para reconectar los KPIs reales en el spec 65.
+
 interface KpiCardProps {
   kpi: DashboardKpi;
   /** El diseño destaca el primer KPI de cada tira con verde institucional

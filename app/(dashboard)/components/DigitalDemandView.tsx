@@ -1,7 +1,6 @@
 import { fetchDigitalDemand, fetchServedChartsOrNull } from "../api";
 import { DashboardFilters, IndexByCutBucket } from "../types";
 import ViewHeader from "./ViewHeader";
-import KpiStrip from "./KpiStrip";
 import LikertDivergingMatrix from "./LikertDivergingMatrix";
 import IndexBars from "./IndexBars";
 import RadarBarriers from "./RadarBarriers";
@@ -81,8 +80,6 @@ export default async function DigitalDemandView({
             : undefined
         }
       />
-
-      <KpiStrip />
 
       {digitalDemand.suppressed ? (
         <div className="rounded-lg border border-[var(--border)] bg-surface-muted px-4 py-6 text-center text-text-muted">
