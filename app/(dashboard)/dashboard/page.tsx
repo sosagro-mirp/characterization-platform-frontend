@@ -1,20 +1,19 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import {
-  fetchCategories,
+  fetchServedCategories,
   fetchPublicActorTypes,
   fetchPublicCrops,
   fetchPublicDepartments,
 } from "../api";
 import { parseDashboardParams } from "@/lib/dashboard/filters";
-import { DashboardCategory, DashboardFilters } from "../types";
+import { DashboardFilters, ServedCategory } from "../types";
 import DashboardSidebar from "../components/DashboardSidebar";
 import GlobalFilterBar from "../components/GlobalFilterBar";
 import DashboardSkeleton from "../components/DashboardSkeleton";
 import OverviewView from "../components/OverviewView";
 import CategoryView from "../components/CategoryView";
 import DigitalDemandView from "../components/DigitalDemandView";
-import CategoryInactiveCard from "../components/CategoryInactiveCard";
 import DashboardUnavailableNotice from "../components/DashboardUnavailableNotice";
 import DashboardUnderConstruction from "../components/DashboardUnderConstruction";
 
@@ -48,8 +47,14 @@ export default async function DashboardPage({
     return <DashboardUnderConstruction />;
   }
 
-  const state = parseDashboardParams(await searchParams);
-  const categories = await fetchCategories();
+  // Spec 109 (P2, P20): la navegación sale de la API — solo categorías
+  // activas con gráficos públicos publicados; un código no declarado vuelve
+  // al resumen general.
+  const categories = await fetchServedCategories();
+  const state = parseDashboardParams(
+    await searchParams,
+    categories.map((c) => c.code),
+  );
 
   return (
     <div className="flex flex-col lg:flex-row min-h-full">
@@ -79,7 +84,7 @@ async function GlobalFilterBarData({
   categories,
 }: {
   state: ReturnType<typeof parseDashboardParams>;
-  categories: DashboardCategory[];
+  categories: ServedCategory[];
 }) {
   const [departments, crops, actorTypes] = await Promise.all([
     fetchPublicDepartments(),
@@ -103,25 +108,16 @@ async function GlobalFilterBarData({
 }
 
 /**
- * Fase 7 (spec 43): enruta a la vista curada correspondiente. Sin
- * `categoryId` → `OverviewView` (layout `1a`). Con
- * `categoryId=C14` → `DigitalDemandView` (D4, caso especial — era C15 antes
- * de la fusión C1+C3 y renumeración en cascada, spec 66 Fase 3 D7). Cualquier
- * otra categoría (spec 107: el drill-down por instrumento salió de la
- * interfaz pública) →
- * `CategoryView` genérica.
- *
- * Fase 8: una categoría sin instrumentos activos (`instrumentCount === 0`
- * en el catálogo) se resuelve **antes** de pedir `/analytics`/`/kpis` — no
- * hay nada que agregar, así que ni siquiera vale la pena la llamada, y el
- * mensaje es distinto de "muestra insuficiente" (`CategoryInactiveCard`).
+ * Spec 109: sin categoría → `OverviewView` (bloques fijos + gráficos de
+ * `OVERVIEW`); `C14` → `DigitalDemandView` (bloque consolidado fijo + sus
+ * gráficos configurados); cualquier otra → `CategoryView` con los gráficos
+ * publicados de la categoría. La categoría ya viene validada contra la API.
  */
 async function DashboardViewContent({
   state,
-  categories,
 }: {
   state: ReturnType<typeof parseDashboardParams>;
-  categories: DashboardCategory[];
+  categories: ServedCategory[];
 }) {
   const { filters, categoryId } = state;
 
@@ -129,20 +125,9 @@ async function DashboardViewContent({
     return <OverviewView filters={filters} />;
   }
 
-  if (categoryId) {
-    const category = categories.find((c) => c.code === categoryId);
-    if (category && category.instrumentCount === 0) {
-      return <CategoryInactiveCard />;
-    }
-  }
-
   if (categoryId === "C14") {
     return <DigitalDemandView filters={filters} />;
   }
 
-  const analyticsFilters: DashboardFilters = categoryId
-    ? { ...filters, categoryId }
-    : filters;
-
-  return <CategoryView filters={analyticsFilters} />;
+  return <CategoryView categoryCode={categoryId} filters={filters} />;
 }

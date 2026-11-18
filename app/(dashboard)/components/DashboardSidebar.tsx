@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { buildDashboardQuery, DashboardPageState } from "@/lib/dashboard/filters";
-import { DashboardCategory } from "../types";
+import {
+  buildDashboardQuery,
+  DashboardPageState,
+  visibleCategories,
+} from "@/lib/dashboard/filters";
+import { ServedCategory } from "../types";
 
 interface DashboardSidebarProps {
-  categories: DashboardCategory[];
+  /** Spec 109: categorías que declara la API (ya sin vacías ni inactivas). */
+  categories: ServedCategory[];
   state: DashboardPageState;
+  /** Ruta base de los enlaces (`/dashboard` público o `/admin/dashboard` privado). */
+  basePath?: string;
 }
 
 /**
@@ -37,8 +44,9 @@ interface DashboardSidebarProps {
 export default function DashboardSidebar({
   categories,
   state,
+  basePath = "/dashboard",
 }: DashboardSidebarProps) {
-  const overviewHref = `/dashboard?${buildDashboardQuery({ view: "overview", filters: state.filters })}`;
+  const overviewHref = `${basePath}?${buildDashboardQuery({ view: "overview", filters: state.filters })}`;
   const isOverviewActive = state.view === "overview";
 
   return (
@@ -59,8 +67,8 @@ export default function DashboardSidebar({
           Categorías
         </p>
 
-        {categories.map((category) => {
-          const href = `/dashboard?${buildDashboardQuery({
+        {visibleCategories(categories).map((category) => {
+          const href = `${basePath}?${buildDashboardQuery({
             view: "category",
             categoryId: category.code,
             filters: state.filters,
@@ -69,7 +77,7 @@ export default function DashboardSidebar({
           const isDigitalDemand = category.code === "C14";
 
           return (
-            <SidebarLink key={category.id} href={href} active={active}>
+            <SidebarLink key={category.code} href={href} active={active}>
               <span className="w-7 shrink-0 text-xs lg:text-[10px] 2xl:text-sm font-bold text-brand-light/60 dark:text-text-muted">
                 {category.code}
               </span>

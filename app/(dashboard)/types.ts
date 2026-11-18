@@ -255,3 +255,69 @@ export interface DashboardDigitalDemand {
   platforms: AggregationOption[];
   preferredChannel: AggregationOption[];
 }
+
+// ─── Spec 109 — dashboards sobre gráficos del constructor ───────────────────
+
+/** Categoría servida por `GET /api/dashboard/categories` (o `/private/categories`). */
+export interface ServedCategory {
+  code: string;
+  name: string;
+  description?: string | null;
+}
+
+/** Celda de una agregación Sí/No servida (spec 109: `cells` junto a los campos del 107). */
+export interface ServedYesNoCell {
+  key: "yes" | "no";
+  label: string;
+  count: number | null;
+  percentage: number | null;
+  suppressed: boolean;
+}
+
+/** Bucket de una métrica de entidad (P13 del 108). */
+export interface ServedMetricBucket {
+  id: string;
+  name: string;
+  count: number | null;
+  percentage: number | null;
+  suppressed?: boolean;
+}
+
+export interface ServedSeries {
+  seriesKey: string;
+  label: string;
+  /** null si la serie está suprimida: un conteo bajo el umbral no se publica. */
+  answeredCount: number | null;
+  suppressed: boolean;
+  /** Agregación del 107/108 según el tipo; `{ buckets }` en métricas de conteo. */
+  aggregation: unknown;
+}
+
+/** Gráfico servido por `GET /api/dashboard/charts` (spec 109). */
+export interface ServedChart {
+  chartId: string;
+  title: string;
+  subtitle: string | null;
+  sourceKind: "questions" | "entity_metric";
+  questionType: string | null;
+  chartKind: string;
+  combineMode: "merge" | "compare";
+  layout: "normal" | "wide";
+  audience: "public" | "private";
+  settings: Record<string, unknown>;
+  suppressed: boolean;
+  /** null si el gráfico está suprimido. */
+  answeredCount: number | null;
+  instrumentNames: string[];
+  metricKey?: string;
+  ignoredFilters?: string[];
+  normalization?: { targetUnit: string; excludedCount: number | null };
+  series: ServedSeries[];
+}
+
+export interface ServedChartsResponse {
+  category: ServedCategory;
+  totalCount: number | null;
+  suppressed: boolean;
+  charts: ServedChart[];
+}

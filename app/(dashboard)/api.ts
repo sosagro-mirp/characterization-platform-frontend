@@ -13,6 +13,8 @@ import {
   DashboardResponse,
   DashboardSummary,
   InstrumentSummary,
+  ServedCategory,
+  ServedChartsResponse,
 } from "./types";
 
 /** D4: caché HTTP corta para datos que cambian con la muestra de encuestas. */
@@ -148,4 +150,62 @@ export function fetchDigitalDemand(
     `/api/dashboard/digital-demand${buildQuery(filters)}`,
     { withAuth: false, next: { revalidate: ANALYTICS_REVALIDATE_SECONDS } },
   );
+}
+
+// ─── Spec 109 — dashboards sobre gráficos del constructor ───────────────────
+
+/** Categorías con gráficos públicos publicados (P20; el backend omite las vacías). */
+export function fetchServedCategories(): Promise<ServedCategory[]> {
+  return apiClient.get<ServedCategory[]>("/api/dashboard/categories", {
+    withAuth: false,
+    next: { revalidate: ANALYTICS_REVALIDATE_SECONDS },
+  });
+}
+
+/** Gráficos públicos publicados de una categoría, con los filtros globales (P22). */
+export function fetchServedCharts(
+  categoryCode: string,
+  filters: DashboardFilters,
+): Promise<ServedChartsResponse> {
+  // `categoryId` va aparte: el código de la categoría, no el filtro del 43.
+  const query = buildQuery({ ...filters, categoryId: undefined });
+  const sep = query ? "&" : "?";
+  return apiClient.get<ServedChartsResponse>(
+    `/api/dashboard/charts${query}${sep}categoryId=${encodeURIComponent(categoryCode)}`,
+    { withAuth: false, next: { revalidate: ANALYTICS_REVALIDATE_SECONDS } },
+  );
+}
+
+/** Dashboard privado (ADMIN/RESEARCHER, `no-store`): categorías con gráficos de ambas audiencias. */
+export function fetchPrivateCategories(): Promise<ServedCategory[]> {
+  return apiClient.get<ServedCategory[]>("/api/dashboard/private/categories", {
+    cache: "no-store",
+  });
+}
+
+/** Dashboard privado: gráficos públicos y privados publicados de una categoría. */
+export function fetchPrivateCharts(
+  categoryCode: string,
+  filters: DashboardFilters,
+): Promise<ServedChartsResponse> {
+  // `categoryId` va aparte: el código de la categoría, no el filtro del 43.
+  const query = buildQuery({ ...filters, categoryId: undefined });
+  const sep = query ? "&" : "?";
+  return apiClient.get<ServedChartsResponse>(
+    `/api/dashboard/private/charts${query}${sep}categoryId=${encodeURIComponent(categoryCode)}`,
+    { cache: "no-store" },
+  );
+}
+
+/** Igual que `fetchServedCharts`, pero un 404 (categoría sin gráficos o inactiva) da `null`. */
+export async function fetchServedChartsOrNull(
+  categoryCode: string,
+  filters: DashboardFilters,
+): Promise<ServedChartsResponse | null> {
+  try {
+    return await fetchServedCharts(categoryCode, filters);
+  } catch (err) {
+    if ((err as { status?: number }).status === 404) return null;
+    throw err;
+  }
 }
