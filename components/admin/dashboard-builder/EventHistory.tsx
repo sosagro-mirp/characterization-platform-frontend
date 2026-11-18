@@ -31,7 +31,7 @@ export default function EventHistory({ events }: { events: BuilderChartEvent[] }
           </time>
           <span className="font-medium">{EVENT_LABELS[event.eventType] ?? event.eventType}</span>
           <span className="text-[var(--text-muted)]">
-            {event.userName ?? (event.userId === null ? "sistema o API" : "usuario desconocido")}
+            por {event.userName ?? (event.userId === null ? "sistema o API" : "usuario desconocido")}
           </span>
         </li>
       ))}

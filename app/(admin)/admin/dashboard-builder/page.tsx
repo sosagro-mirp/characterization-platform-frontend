@@ -237,11 +237,11 @@ export default function DashboardBuilderPage() {
                 <button type="button" className={secondaryButton} onClick={loadCharts}>
                   Reintentar
                 </button>
-              ) : (
-                <p role="status" className="text-sm text-[var(--text-muted)]">
-                  Cargando gráficos…
-                </p>
-              )}
+              ) : null}
+              {/* Región viva siempre presente: solo cambia su texto (se anuncia mejor). */}
+              <p role="status" className="text-sm text-[var(--text-muted)]">
+                {loadedKey !== viewKey && failedKey !== viewKey ? "Cargando gráficos…" : ""}
+              </p>
             </>
           ) : (
             !loading && (
