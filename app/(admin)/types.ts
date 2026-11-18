@@ -658,6 +658,8 @@ export interface BuilderChartEvent {
   chartId: string;
   eventType: BuilderChartEventType;
   userId: string | null;
+  /** Nombre de quien hizo el cambio; null si fue la API o el usuario ya no existe. */
+  userName?: string | null;
   createdAt: string;
   summary: Record<string, unknown>;
 }
