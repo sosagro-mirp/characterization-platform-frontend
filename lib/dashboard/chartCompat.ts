@@ -132,6 +132,9 @@ const DEPARTMENTS = [
   "vichada",
 ];
 
+/** Opciones de escape que no cuentan contra la condición del calendario. */
+const ESCAPE_OPTION = /^(no aplica|no sabe|ns\/nr|otros?)$/i;
+
 const normalize = (text: string): string =>
   text
     .normalize("NFD")
@@ -173,8 +176,10 @@ function optionConditionHolds(
     return named.length > 0 && named.every((t) => known.includes(normalize(t)));
   }
   if (chartKind === "harvest-calendar") {
-    const set = new Set(options.map(normalize));
-    return options.length === 12 && MONTHS.every((m) => set.has(m));
+    // «No aplica» y similares se ignoran, igual que en el backend.
+    const months = options.filter((t) => !ESCAPE_OPTION.test(t.trim()));
+    const set = new Set(months.map(normalize));
+    return months.length === 12 && MONTHS.every((m) => set.has(m));
   }
   return true;
 }
