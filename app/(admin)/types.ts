@@ -553,3 +553,126 @@ export interface FarmerCoverageDetail {
   }[];
   unsyncedWithResponses: number;
 }
+
+// ─── Spec 109 — constructor de dashboard (API del spec 108) ─────────────────
+
+export interface BuilderCategory {
+  categoryId: string;
+  code: string;
+  name: string;
+  description: string | null;
+  position: number;
+  isActive: boolean;
+  isReserved: boolean;
+}
+
+export type BuilderChartStatus = "draft" | "published";
+export type BuilderChartHealth = "ok" | "needs_review";
+
+export interface BuilderChartSource {
+  questionId: string;
+  instrumentCodeSnapshot: string | null;
+  questionTextSnapshot: string;
+}
+
+export interface BuilderChartSeries {
+  seriesKey: string;
+  label: string;
+  sources: BuilderChartSource[];
+}
+
+export interface BuilderChart {
+  chartId: string;
+  categoryId: string;
+  title: string;
+  subtitle: string | null;
+  sourceKind: "questions" | "entity_metric";
+  metricKey: string | null;
+  questionType: string | null;
+  chartKind: string;
+  combineMode: "merge" | "compare";
+  audience: "public" | "private";
+  status: BuilderChartStatus;
+  layout: "normal" | "wide";
+  position: number;
+  settings: Record<string, unknown>;
+  archivedAt: string | null;
+  health: BuilderChartHealth;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  series: BuilderChartSeries[];
+}
+
+/** Pregunta del catálogo del constructor (`GET /dashboard/builder/questions`). */
+export interface BuilderCatalogQuestion {
+  questionId: string;
+  text: string;
+  questionType: string;
+  sectionName: string | null;
+  instrumentId: string | null;
+  instrumentCode: string | null;
+  instrumentName: string | null;
+  archivedAt: string | null;
+  selectable: boolean;
+  blockedReason: string | null;
+  compatibleCharts: string[];
+  options: string[];
+}
+
+export interface BuilderEntityMetric {
+  metricKey: string;
+  label: string;
+  entity: string;
+  charts: string[];
+  filters: string[];
+}
+
+export interface BuilderPreviewSeries {
+  seriesKey: string;
+  label: string;
+  answeredCount: number;
+  suppressed: boolean;
+  aggregation: unknown;
+}
+
+export interface BuilderPreviewResult {
+  health: BuilderChartHealth;
+  metricKey?: string;
+  ignoredFilters?: string[];
+  series: BuilderPreviewSeries[];
+  excludedSources: { questionId: string; reason: string }[];
+  normalization?: { targetUnit: string; excludedCount: number };
+}
+
+export type BuilderChartEventType =
+  | "created"
+  | "updated"
+  | "published"
+  | "unpublished"
+  | "archived"
+  | "restored";
+
+export interface BuilderChartEvent {
+  eventId: string;
+  chartId: string;
+  eventType: BuilderChartEventType;
+  userId: string | null;
+  createdAt: string;
+  summary: Record<string, unknown>;
+}
+
+/** Cuerpo de crear/editar/previsualizar un gráfico. */
+export interface BuilderChartPayload {
+  categoryId: string;
+  title: string;
+  subtitle?: string;
+  sourceKind: "questions" | "entity_metric";
+  metricKey?: string;
+  chartKind: string;
+  combineMode?: "merge" | "compare";
+  audience: "public" | "private";
+  layout?: "normal" | "wide";
+  settings?: Record<string, unknown>;
+  series?: { seriesKey?: string; label: string; questionIds: string[] }[];
+}

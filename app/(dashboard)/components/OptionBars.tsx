@@ -12,7 +12,11 @@ export default function OptionBars({ options }: OptionBarsProps) {
     return <p className="text-sm text-text-muted">Sin datos suficientes.</p>;
   }
 
-  const sorted = [...options].sort((a, b) => b.percentage - a.percentage);
+  // Spec 109: una celda suprimida llega con `percentage: null`; va al final
+  // y se muestra como «—», nunca como cero.
+  const pct = (option: AggregationOption): number | null =>
+    (option.percentage as number | null) ?? null;
+  const sorted = [...options].sort((a, b) => (pct(b) ?? -1) - (pct(a) ?? -1));
 
   return (
     <div className="flex flex-col gap-2">
@@ -24,11 +28,11 @@ export default function OptionBars({ options }: OptionBarsProps) {
           <div className="h-2.5 flex-1 rounded-full bg-surface-muted overflow-hidden">
             <div
               className="h-full rounded-full bg-brand"
-              style={{ width: `${option.percentage}%` }}
+              style={{ width: `${pct(option) ?? 0}%` }}
             />
           </div>
           <span className="w-10 shrink-0 text-xs font-semibold text-text-muted">
-            {option.percentage.toFixed(0)}%
+            {pct(option) === null ? "—" : `${pct(option)!.toFixed(0)}%`}
           </span>
         </div>
       ))}

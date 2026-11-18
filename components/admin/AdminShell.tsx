@@ -80,6 +80,14 @@ export default function AdminShell({ children }: AdminShellProps) {
             Solicitudes
           </Link>
         )}
+        {role === "admin" && (
+          <Link
+            href="/admin/dashboard-builder"
+            className={navLinkClass("/admin/dashboard-builder")}
+          >
+            Constructor de dashboard
+          </Link>
+        )}
         <div className="mt-4 border-t border-[var(--border)] pt-4">
           <Link
             href="/productores"
