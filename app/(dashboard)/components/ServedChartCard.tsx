@@ -40,8 +40,8 @@ export default function ServedChartCard({ chart }: ServedChartCardProps) {
 
       {chart.suppressed && chart.combineMode === "merge" ? (
         <p className="text-sm text-warning-fg bg-warning-bg/40 rounded-md px-3 py-2">
-          Muestra insuficiente para este gráfico (n = {chart.answeredCount}, se
-          requieren al menos 5).
+          Muestra insuficiente para este gráfico (se requieren al menos 5
+          respuestas).
         </p>
       ) : (
         <ServedChartFactory chart={chart} />

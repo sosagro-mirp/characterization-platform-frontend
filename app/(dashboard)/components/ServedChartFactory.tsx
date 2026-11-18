@@ -66,7 +66,7 @@ function asQuestion(chart: ServedChart, series: ServedSeries): DashboardQuestion
     sectionName: "",
     systemField: null,
     isInverted: (aggregation as { isInverted?: boolean } | null)?.isInverted ?? false,
-    answeredCount: series.answeredCount,
+    answeredCount: series.answeredCount ?? 0,
     suppressed: series.suppressed,
     aggregation,
   } as DashboardQuestion;

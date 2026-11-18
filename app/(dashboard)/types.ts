@@ -286,7 +286,8 @@ export interface ServedMetricBucket {
 export interface ServedSeries {
   seriesKey: string;
   label: string;
-  answeredCount: number;
+  /** null si la serie está suprimida: un conteo bajo el umbral no se publica. */
+  answeredCount: number | null;
   suppressed: boolean;
   /** Agregación del 107/108 según el tipo; `{ buckets }` en métricas de conteo. */
   aggregation: unknown;
@@ -305,11 +306,12 @@ export interface ServedChart {
   audience: "public" | "private";
   settings: Record<string, unknown>;
   suppressed: boolean;
-  answeredCount: number;
+  /** null si el gráfico está suprimido. */
+  answeredCount: number | null;
   instrumentNames: string[];
   metricKey?: string;
   ignoredFilters?: string[];
-  normalization?: { targetUnit: string; excludedCount: number };
+  normalization?: { targetUnit: string; excludedCount: number | null };
   series: ServedSeries[];
 }
 

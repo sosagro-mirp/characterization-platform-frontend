@@ -132,7 +132,7 @@ export function chartsToCsv(charts: ServedChart[]): string {
         sectionName: "",
         systemField: null,
         isInverted: false,
-        answeredCount: series.answeredCount,
+        answeredCount: series.answeredCount ?? 0,
         suppressed: series.suppressed,
         aggregation,
       } as DashboardQuestion;
@@ -140,7 +140,7 @@ export function chartsToCsv(charts: ServedChart[]): string {
         chart.title,
         chart.series.length > 1 ? series.label : "",
         chart.instrumentNames.join(" · "),
-        String(series.answeredCount),
+        series.answeredCount === null ? "—" : String(series.answeredCount),
         summarizeAggregation(question),
       ]);
     }
