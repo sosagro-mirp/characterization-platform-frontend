@@ -174,7 +174,6 @@ export default function GlobalFilterBar({
   async function handleExport() {
     setExporting(true);
     try {
-      const exportFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
       const stamp = new Date().toISOString().slice(0, 10);
 
       if (!state.categoryId && audience === "private") {
@@ -182,7 +181,7 @@ export default function GlobalFilterBar({
         const data = await fetchPrivateCharts("OVERVIEW", filters);
         downloadCsv(`sosagro-resumen-general-${stamp}.csv`, chartsToCsv(data.charts));
       } else if (!state.categoryId) {
-        const kpis = await fetchKpis(exportFilters);
+        const kpis = await fetchKpis(filters);
         downloadCsv(`sosagro-resumen-general-${stamp}.csv`, kpisToCsv(kpis));
       } else {
         const fetchCharts = audience === "private" ? fetchPrivateCharts : fetchServedCharts;
