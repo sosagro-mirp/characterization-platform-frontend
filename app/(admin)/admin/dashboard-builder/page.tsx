@@ -28,6 +28,10 @@ export default function DashboardBuilderPage() {
 
   const [categories, setCategories] = useState<BuilderCategory[]>([]);
   const [charts, setCharts] = useState<BuilderChart[]>([]);
+  // Clave (categoría + archivados) de la última lista cargada: mientras no
+  // coincide con la vista pedida se muestra «Cargando…», no «sin gráficos».
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const viewKey = `${selectedId}|${archived}`;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [managing, setManaging] = useState(false);
@@ -64,9 +68,9 @@ export default function DashboardBuilderPage() {
 
   const loadCharts = useCallback(async () => {
     if (!selectedId) return;
-    setCharts([]);
     try {
       setCharts(await listBuilderCharts({ categoryId: selectedId, archived }));
+      setLoadedKey(`${selectedId}|${archived}`);
       setError(null);
     } catch (err) {
       setError(errorMessage(err, "No se pudieron cargar los gráficos."));
@@ -209,13 +213,19 @@ export default function DashboardBuilderPage() {
                   Archivados
                 </button>
               </div>
-              <ChartList
-                key={`${selected.categoryId}-${archived}`}
-                categoryId={selected.categoryId}
-                charts={charts}
-                archived={archived}
-                onChanged={loadCharts}
-              />
+              {loadedKey === viewKey ? (
+                <ChartList
+                  key={`${selected.categoryId}-${archived}`}
+                  categoryId={selected.categoryId}
+                  charts={charts}
+                  archived={archived}
+                  onChanged={loadCharts}
+                />
+              ) : (
+                <p role="status" className="text-sm text-[var(--text-muted)]">
+                  Cargando gráficos…
+                </p>
+              )}
             </>
           ) : (
             !loading && (
