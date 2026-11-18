@@ -110,6 +110,8 @@ interface ChartFormProps {
   submitLabel: string;
   /** Aviso extra sobre el botón de guardar (p. ej. «se publica al guardar»). */
   saveNotice?: React.ReactNode;
+  /** Al editar, el origen (preguntas o métrica) no se cambia: el backend conserva el guardado. */
+  lockSource?: boolean;
   onSubmit: (payload: BuilderChartPayload) => Promise<void>;
 }
 
@@ -203,6 +205,7 @@ export default function ChartForm({
   metrics,
   submitLabel,
   saveNotice,
+  lockSource = false,
   onSubmit,
 }: ChartFormProps) {
   const [form, setForm] = useState<ChartFormState>(initial);
@@ -365,6 +368,11 @@ export default function ChartForm({
         {/* 1. Origen de los datos */}
         <fieldset className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-4">
           <legend className="px-1 text-sm font-semibold">1. Origen de los datos</legend>
+          {lockSource && (
+            <p className="text-xs text-[var(--text-muted)]">
+              El origen no se cambia al editar. Para otro origen, duplica el gráfico o crea uno nuevo.
+            </p>
+          )}
           <div className="flex flex-wrap gap-4 text-sm">
             {(["questions", "entity_metric"] as const).map((kind) => (
               <label key={kind} className="flex items-center gap-2">
@@ -373,6 +381,7 @@ export default function ChartForm({
                   name="sourceKind"
                   className="accent-green-700"
                   checked={form.sourceKind === kind}
+                  disabled={lockSource}
                   onChange={() => set("sourceKind", kind)}
                 />
                 {kind === "questions" ? "Preguntas de los instrumentos" : "Métrica de productores o fincas"}

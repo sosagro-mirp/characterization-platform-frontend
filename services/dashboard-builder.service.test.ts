@@ -18,4 +18,18 @@ describe("updateBuilderChart", () => {
     expect(body).toEqual({ title: "T", audience: "private" });
     expect("sourceKind" in body).toBe(false);
   });
+
+  it("tampoco lo envía en una métrica de entidad y conserva el resto", async () => {
+    await updateBuilderChart("xyz", {
+      title: "M",
+      sourceKind: "entity_metric",
+      metricKey: "farms_by_department",
+      audience: "public",
+    });
+    expect(patch.mock.calls[0][1]).toEqual({
+      title: "M",
+      metricKey: "farms_by_department",
+      audience: "public",
+    });
+  });
 });

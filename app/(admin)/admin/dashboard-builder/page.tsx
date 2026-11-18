@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Eye, Plus } from "lucide-react";
@@ -31,6 +31,7 @@ export default function DashboardBuilderPage() {
   // Clave (categoría + archivados) de la última lista cargada: mientras no
   // coincide con la vista pedida se muestra «Cargando…», no «sin gráficos».
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [failedKey, setFailedKey] = useState<string | null>(null);
   const viewKey = `${selectedId}|${archived}`;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,13 +67,24 @@ export default function DashboardBuilderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Solo cuenta la última petición: una respuesta tardía de otra categoría o
+  // vista no debe pisar la actual (revisión 107, hallazgo 2).
+  const latestRequest = useRef(0);
+
   const loadCharts = useCallback(async () => {
     if (!selectedId) return;
+    const key = `${selectedId}|${archived}`;
+    const request = ++latestRequest.current;
     try {
-      setCharts(await listBuilderCharts({ categoryId: selectedId, archived }));
-      setLoadedKey(`${selectedId}|${archived}`);
+      const list = await listBuilderCharts({ categoryId: selectedId, archived });
+      if (request !== latestRequest.current) return;
+      setCharts(list);
+      setLoadedKey(key);
+      setFailedKey(null);
       setError(null);
     } catch (err) {
+      if (request !== latestRequest.current) return;
+      setFailedKey(key);
       setError(errorMessage(err, "No se pudieron cargar los gráficos."));
     }
   }, [archived, selectedId]);
@@ -221,6 +233,10 @@ export default function DashboardBuilderPage() {
                   archived={archived}
                   onChanged={loadCharts}
                 />
+              ) : failedKey === viewKey ? (
+                <button type="button" className={secondaryButton} onClick={loadCharts}>
+                  Reintentar
+                </button>
               ) : (
                 <p role="status" className="text-sm text-[var(--text-muted)]">
                   Cargando gráficos…

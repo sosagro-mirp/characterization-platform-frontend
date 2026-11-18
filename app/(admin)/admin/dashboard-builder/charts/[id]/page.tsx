@@ -208,6 +208,7 @@ export default function EditChartPage() {
 
       {chart && initial && catalogs ? (
         <ChartForm
+          lockSource
           key={formVersion}
           initial={initial}
           categories={catalogs.categories}
