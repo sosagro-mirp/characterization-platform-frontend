@@ -1,17 +1,17 @@
 import {
-  fetchDashboardAnalytics,
   fetchDashboardOverview,
   fetchDigitalDemand,
+  fetchServedChartsOrNull,
 } from "../api";
-import { AGE_RANGE_BUCKETS } from "@/lib/dashboard/filters";
+import { AGE_RANGE_BUCKETS, OVERVIEW_CATEGORY_CODE } from "@/lib/dashboard/filters";
 import { DashboardFilters, DashboardQuestion } from "../types";
 import KpiStrip from "./KpiStrip";
 import CropDonut from "./CropDonut";
 import ColombiaMap from "./ColombiaMap";
-import { SingleChoiceChart, MultipleChoiceChart, NumericChart } from "./charts";
+import { NumericChart } from "./charts";
 import LikertDivergingMatrix from "./LikertDivergingMatrix";
 import IndexBars from "./IndexBars";
-import HarvestCalendar from "./HarvestCalendar";
+import ChartsGrid from "./ChartsGrid";
 import EmptyStateCard from "./EmptyStateCard";
 import SuppressedDataCard from "./SuppressedDataCard";
 
@@ -30,13 +30,6 @@ function cardHeader(title: string, source: string) {
       <span className="text-[10px] text-[var(--border-strong)]">{source}</span>
     </div>
   );
-}
-
-function findQuestion(
-  questions: DashboardQuestion[],
-  matcher: (q: DashboardQuestion) => boolean,
-): DashboardQuestion | undefined {
-  return questions.find(matcher);
 }
 
 /** Envuelve un agregado numérico suelto (ej. `/overview`.age) en un
@@ -59,46 +52,21 @@ function wrapNumericAggregation(
 }
 
 /**
- * Vista "Resumen general" (spec 43, Fase 6, layout `1a`). Fuentes reales por
- * fila — nunca los números ilustrativos del mockup:
- * - KPI strip → `/kpis` (sin categoryId → tira de resumen general, D5).
- * - Donut de cultivo + mapa → `/overview` (`byCrop`, `byDepartment`).
- * - Género + edad → `/analytics?categoryId=C1` (S1a/S_REG: fuentes de
- *   `farmer.gender`; `/overview` no expone género, a diferencia de edad).
- * - Etapas de la cadena → `/analytics?categoryId=C1` (S1b/S_REG·10 — S1b se
- *   fusionó dentro de C1 junto con "Perfil del productor", spec 66 Fase 3
- *   D7, 2026-08-10; antes vivía en la categoría separada C3).
- * - Batería Likert ★ consolidada + índice por edad → `/digital-demand`
- *   (D4) — **no** `/analytics` sin más: ningún endpoint de Fase 1-2 agrega
- *   los 130 ítems ★ cruzando instrumentos salvo `/digital-demand`; llamarlo
- *   aquí es una extensión deliberada del alcance original de esta fase
- *   (que solo listaba `/overview`, `/kpis` y `/analytics`), documentada en
- *   el spec junto a esta decisión.
- * - Calendario de cosecha → `/analytics?categoryId=C3` (S2.4·23 — era C4
- *   antes de la renumeración en cascada, spec 66 Fase 3 D7).
- *
- * "Internet por departamento" del mockup se omite: no existe ese desglose
- * en ningún endpoint (`/kpis` solo da el % global) y agregarlo requeriría
- * un campo nuevo en el backend, fuera de alcance de una fase de frontend.
+ * Vista "Resumen general" (spec 43, Fase 6, layout `1a`; spec 109, P3).
+ * Bloques fijos en código: tira de KPIs, dona de cultivos y mapa
+ * (`/overview`), rango de edad (`/overview`, decisión del usuario del
+ * 2026-11-18: sin métrica P13) y la matriz de demanda digital
+ * (`/digital-demand`). Todo lo demás —género, etapas de la cadena,
+ * calendario de cosecha…— son los gráficos publicados de la categoría
+ * reservada `OVERVIEW`, armados en el constructor: ya no se buscan
+ * preguntas por texto.
  */
 export default async function OverviewView({ filters }: OverviewViewProps) {
-  const [overview, c1, cropsCategory, digitalDemand] = await Promise.all([
+  const [overview, overviewCharts, digitalDemand] = await Promise.all([
     fetchDashboardOverview(filters),
-    fetchDashboardAnalytics({ ...filters, categoryId: "C1" }),
-    fetchDashboardAnalytics({ ...filters, categoryId: "C3" }),
+    fetchServedChartsOrNull(OVERVIEW_CATEGORY_CODE, filters),
     fetchDigitalDemand(filters),
   ]);
-
-  const genderQuestion = findQuestion(
-    c1.questions,
-    (q) => q.systemField === "farmer.gender",
-  );
-  const chainStageQuestion = findQuestion(c1.questions, (q) =>
-    q.questionText.startsWith("¿En qué etapas de la cadena productiva"),
-  );
-  const harvestQuestion = findQuestion(cropsCategory.questions, (q) =>
-    q.questionText.startsWith("¿En qué meses se presenta la cosecha principal"),
-  );
 
   const departmentCounts = overview.byDepartment.map((bucket) => ({
     departmentId: bucket.id,
@@ -117,6 +85,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
     label: item.questionText,
     distribution: item.bands.map((band) => band.count),
     meanScore: item.meanScore,
+    total: item.answeredCount,
   }));
 
   // Fase 8: si la muestra global (sin restringir a categoría) está por
@@ -159,32 +128,21 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className={CARD_CLASS}>
-          {cardHeader("Género del productor", "S1a/S_REG·15")}
-          {genderQuestion ? (
-            <SingleChoiceChart question={genderQuestion} />
-          ) : (
-            <p className="text-sm text-text-muted">Sin datos</p>
-          )}
-        </div>
-        <div className={CARD_CLASS}>
-          {cardHeader("Rango de edad", "S1a/S_REG·16 · Histograma")}
-          {overview.age ? (
-            <NumericChart question={wrapNumericAggregation(overview.age)} />
-          ) : (
-            <p className="text-sm text-text-muted">Sin datos</p>
-          )}
-        </div>
-        <div className={CARD_CLASS}>
-          {cardHeader("Etapas de la cadena", "S1b/S_REG·10 · BarrasH")}
-          {chainStageQuestion ? (
-            <MultipleChoiceChart question={chainStageQuestion} />
-          ) : (
-            <p className="text-sm text-text-muted">Sin datos</p>
-          )}
-        </div>
-      </div>
+      {/* Spec 109 (P3): edad queda como bloque fijo (sin métrica P13); el
+          resto de la fila son los gráficos publicados de OVERVIEW. */}
+      <ChartsGrid
+        charts={overviewCharts?.charts ?? []}
+        leading={
+          <div className={`${CARD_CLASS} h-full`}>
+            {cardHeader("Rango de edad", "S1a/S_REG·16 · Histograma")}
+            {overview.age ? (
+              <NumericChart question={wrapNumericAggregation(overview.age)} />
+            ) : (
+              <p className="text-sm text-text-muted">Sin datos</p>
+            )}
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
         <div className={CARD_CLASS}>
@@ -206,15 +164,6 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
         </div>
       </div>
 
-      <div className={CARD_CLASS}>
-        {cardHeader("Meses de cosecha principal", "S2.4·23 · Calendario")}
-        {harvestQuestion?.aggregation?.type === "single_choice" ||
-        harvestQuestion?.aggregation?.type === "multiple_choice" ? (
-          <HarvestCalendar options={harvestQuestion.aggregation.options} />
-        ) : (
-          <p className="text-sm text-text-muted">Sin datos</p>
-        )}
-      </div>
     </div>
   );
 }

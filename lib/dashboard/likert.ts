@@ -5,14 +5,21 @@ export interface LikertBatteryItem {
   label: string;
   /** Conteos crudos o porcentajes, en los 5 niveles de la escala, en orden.
    * `null` en una posición (spec 66, D2) es una celda suprimida por privacidad
-   * — se trata como 0 al sumar el total, nunca se inventa un valor. */
+   * — nunca se inventa un valor. */
   distribution: (number | null)[];
   meanScore: number | null;
+  /** Total real del ítem (respuestas, o 100 si `distribution` son porcentajes).
+   * Con celdas suprimidas evita inflar los tramos visibles: cada tramo se mide
+   * contra el total y lo oculto queda como un tramo «suprimido» (spec 109,
+   * heredado de la auditoría 95 del 66). */
+  total?: number;
 }
 
 export interface LikertDivergingSegment {
   percentage: number;
   color: string;
+  /** Tramo de las celdas ocultas por privacidad: se dibuja aparte, sin valor. */
+  suppressed?: boolean;
 }
 
 export interface LikertDivergingRow {
@@ -37,22 +44,33 @@ export function buildDivergingRows(
       item.meanScore !== null,
     )
     .map((item) => {
-      // DEBT (spec 66, D2): una celda `null` (suprimida por privacidad) se
-      // trata como 0 al sumar — evita NaN sin inventar un valor real, pero
-      // el segmento queda visualmente indistinguible de "cero respuestas
-      // reales". El tratamiento visual explícito (igual al de los charts de
-      // `lib/dashboard/suppressedOption.ts`) queda para la fase de spec 66
-      // que cure esta matriz (Overview/C15), no se resuelve acá.
-      const total = item.distribution.reduce<number>(
+      // Spec 109 (auditoría 95 del 66): una celda suprimida ya no se pinta
+      // como 0 ni infla los tramos visibles. Con `total`, cada tramo visible
+      // se mide contra él y la parte oculta se agrupa en un tramo
+      // «suprimido». Sin `total` se normaliza como antes.
+      const hasHidden = item.distribution.some((value) => value === null);
+      const visibleSum = item.distribution.reduce<number>(
         (sum, value) => sum + (value ?? 0),
         0,
       );
+      const denominator = item.total ?? visibleSum;
       const segments: LikertDivergingSegment[] = item.distribution.map(
         (value, index) => ({
-          percentage: total > 0 && value !== null ? (value / total) * 100 : 0,
+          percentage:
+            denominator > 0 && value !== null ? (value / denominator) * 100 : 0,
           color: LIKERT_SCALE_COLORS[index % LIKERT_SCALE_COLORS.length],
         }),
       );
+      if (hasHidden && item.total !== undefined && denominator > 0) {
+        const hiddenPct = Math.max(0, 100 - (visibleSum / denominator) * 100);
+        if (hiddenPct > 0) {
+          segments.push({
+            percentage: hiddenPct,
+            color: "var(--border-strong)",
+            suppressed: true,
+          });
+        }
+      }
       return {
         questionId: item.questionId,
         label: item.label,

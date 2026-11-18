@@ -22,6 +22,10 @@ interface YesNoBatteryChartProps {
 }
 
 /**
+ * DEBT (spec 107): este componente no se importa en ninguna vista (ni en `development`
+ * antes del spec); se conserva con su tratamiento de celdas suprimidas hasta decidir
+ * si se reincorpora a `QuestionsAnalysisSection` o se retira.
+ *
  * Convierte N donuts Sí/No de una misma sección en un único gráfico
  * comparable de "% Sí" — más legible que N gráficos circulares dispersos.
  */

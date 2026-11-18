@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { buildDashboardQuery, clearDashboardFilters, DashboardPageState } from "@/lib/dashboard/filters";
-import { downloadCsv, kpisToCsv, questionsToCsv } from "@/lib/dashboard/csv";
+import { chartsToCsv, downloadCsv, kpisToCsv } from "@/lib/dashboard/csv";
 import {
-  fetchDashboardAnalytics,
   fetchDashboardSummary,
+  fetchPrivateCharts,
+  fetchServedCharts,
   fetchKpis,
   fetchPublicTowns,
 } from "../api";
@@ -22,6 +23,8 @@ interface GlobalFilterBarProps {
   /** Título de la vista activa: nombre de la categoría (catálogo,
    * `state.categoryId`) o "Resumen general" cuando no hay categoría. */
   categoryTitle?: string;
+  /** Spec 109: el CSV sale de los gráficos de esta audiencia (`private` en el panel). */
+  audience?: "public" | "private";
   departments: DepartmentSummary[];
   crops: CropSummary[];
   actorTypes: ActorTypeSummary[];
@@ -62,6 +65,7 @@ const pillSelectClass =
 export default function GlobalFilterBar({
   state,
   categoryTitle,
+  audience = "public",
   departments,
   crops,
   actorTypes,
@@ -109,7 +113,9 @@ export default function GlobalFilterBar({
    * combinación de filtros pertenece la última respuesta cargada, en vez de
    * un booleano `loading` seteado sincrónicamente en el efecto.
    */
-  const summaryFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
+  // Spec 109: la muestra es la de los filtros globales; los gráficos ya no se
+  // acotan a los instrumentos de una categoría.
+  const summaryFilters: DashboardFilters = { ...filters };
   const summaryQuery = buildDashboardQuery({
     view: state.view,
     categoryId: state.categoryId,
@@ -160,8 +166,8 @@ export default function GlobalFilterBar({
   /**
    * Fase 10 (spec 43): CSV client-side de la vista actual, sin endpoint
    * nuevo — re-pide los mismos datos que ya renderiza la vista (`/kpis`
-   * para "Resumen general", que no tiene un `questions[]` propio;
-   * `/analytics` para categoría/instrumento) y los serializa en el navegador.
+   * para "Resumen general"; `/charts` para una categoría, spec 109) y los
+   * serializa en el navegador.
    */
   const [exporting, setExporting] = useState(false);
 
@@ -171,13 +177,17 @@ export default function GlobalFilterBar({
       const exportFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
       const stamp = new Date().toISOString().slice(0, 10);
 
-      if (!state.categoryId) {
+      if (!state.categoryId && audience === "private") {
+        // El resumen del privado son los gráficos de OVERVIEW, no la tira de KPIs.
+        const data = await fetchPrivateCharts("OVERVIEW", filters);
+        downloadCsv(`sosagro-resumen-general-${stamp}.csv`, chartsToCsv(data.charts));
+      } else if (!state.categoryId) {
         const kpis = await fetchKpis(exportFilters);
         downloadCsv(`sosagro-resumen-general-${stamp}.csv`, kpisToCsv(kpis));
       } else {
-        const data = await fetchDashboardAnalytics(exportFilters);
-        const slug = state.categoryId ?? "instrumento";
-        downloadCsv(`sosagro-${slug}-${stamp}.csv`, questionsToCsv(data.questions));
+        const fetchCharts = audience === "private" ? fetchPrivateCharts : fetchServedCharts;
+        const data = await fetchCharts(state.categoryId, filters);
+        downloadCsv(`sosagro-${state.categoryId}-${stamp}.csv`, chartsToCsv(data.charts));
       }
     } finally {
       setExporting(false);

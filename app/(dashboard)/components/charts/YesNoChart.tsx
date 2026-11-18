@@ -2,6 +2,7 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { DashboardQuestion } from "../../types";
+import { MIN_CELL_SIZE } from "@/lib/dashboard/suppressedOption";
 
 /** Semáforo fijo Sí/No — a diferencia de `DonutChart` (colores por texto de
  * opción, genéricos o específicos como Género), acá el color es semántico
@@ -33,7 +34,8 @@ export default function YesNoChart({ question }: YesNoChartProps) {
   if (aggregation.yesSuppressed || aggregation.noSuppressed) {
     return (
       <p className="text-sm text-text-muted">
-        Oculto por privacidad: alguna de las respuestas tiene menos de 5 casos.
+        Oculto por privacidad: alguna de las respuestas tiene menos de{" "}
+        {MIN_CELL_SIZE} casos.
       </p>
     );
   }
@@ -101,7 +103,9 @@ export default function YesNoChart({ question }: YesNoChartProps) {
               <span className="font-bold text-text-primary">
                 {entry.percentage.toFixed(0)}%
               </span>
-              <span className="text-text-muted">({formatSampleSize(entry.value)})</span>
+              <span className="text-text-muted">
+                ({formatSampleSize(entry.value)})
+              </span>
             </span>
           </li>
         ))}

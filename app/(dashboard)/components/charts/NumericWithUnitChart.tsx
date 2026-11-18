@@ -12,7 +12,10 @@ import {
   YAxis,
 } from "recharts";
 import { binsToHistogram, describeHistogram } from "@/lib/dashboard/histogram";
-import { SUPPRESSED_TOOLTIP_LABEL } from "@/lib/dashboard/suppressedOption";
+import {
+  MIN_CELL_SIZE,
+  SUPPRESSED_TOOLTIP_LABEL,
+} from "@/lib/dashboard/suppressedOption";
 import {
   defaultUnitIndex,
   hasUnitStats,
@@ -111,7 +114,8 @@ export default function NumericWithUnitChart({
         </dl>
       ) : (
         <p className="text-sm text-text-muted">
-          {group.unit}: oculto por privacidad (menos de 5 respuestas).
+          {group.unit}: oculto por privacidad (menos de {MIN_CELL_SIZE}{" "}
+          respuestas).
         </p>
       )}
 
@@ -121,7 +125,11 @@ export default function NumericWithUnitChart({
           aria-label={`Histograma en ${group.unit}: ${describeHistogram(bins)}`}
         >
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart accessibilityLayer={false} data={bins} margin={{ left: 0, right: 8, bottom: 24 }}>
+            <BarChart
+              accessibilityLayer={false}
+              data={bins}
+              margin={{ left: 0, right: 8, bottom: 24 }}
+            >
               <CartesianGrid vertical={false} stroke="var(--border)" />
               <XAxis
                 dataKey="label"
