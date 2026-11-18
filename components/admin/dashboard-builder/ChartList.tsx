@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { BuilderChart } from "@/app/(admin)/types";
@@ -59,10 +59,31 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
   const byId = new Map(charts.map((c) => [c.chartId, c]));
   const ordered = order.map((id) => byId.get(id)).filter((c): c is BuilderChart => !!c);
 
+  // Foco tras reordenar: React mueve el <li> en el DOM (y en un borde el botón
+  // queda deshabilitado), así que se devuelve el foco al botón del mismo
+  // gráfico, o al opuesto si el usado quedó deshabilitado.
+  const focusAfterMove = useRef<{ id: string; direction: "up" | "down" } | null>(null);
+  const reordering = useRef(false);
+  useLayoutEffect(() => {
+    const target = focusAfterMove.current;
+    if (!target) return;
+    focusAfterMove.current = null;
+    const opposite = target.direction === "up" ? "down" : "up";
+    const button = document.getElementById(`move-${target.direction}-${target.id}`);
+    const fallback = document.getElementById(`move-${opposite}-${target.id}`);
+    const el = button && !(button as HTMLButtonElement).disabled ? button : fallback;
+    el?.focus();
+  }, [order]);
+
   async function move(chart: BuilderChart, direction: "up" | "down") {
+    // Un clic mientras se guarda el orden anterior se ignora (sin deshabilitar
+    // el botón, que perdería el foco).
+    if (reordering.current) return;
     const next = moveChart(order, chart.chartId, direction);
     if (next.join(",") === order.join(",")) return;
     const previous = order;
+    focusAfterMove.current = { id: chart.chartId, direction };
+    reordering.current = true;
     setOrder(next);
     setError(null);
     try {
@@ -71,8 +92,11 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
         `«${chart.title}» quedó en la posición ${next.indexOf(chart.chartId) + 1} de ${next.length}.`,
       );
     } catch (err) {
+      focusAfterMove.current = { id: chart.chartId, direction };
       setOrder(previous);
       setError(errorMessage(err, "No se pudo reordenar."));
+    } finally {
+      reordering.current = false;
     }
   }
 
@@ -120,6 +144,7 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
               {!archived && (
                 <div className="flex flex-col">
                   <button
+                    id={`move-up-${chart.chartId}`}
                     type="button"
                     className={ghostButton}
                     onClick={() => move(chart, "up")}
@@ -129,6 +154,7 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
                     <ArrowUp size={16} aria-hidden="true" />
                   </button>
                   <button
+                    id={`move-down-${chart.chartId}`}
                     type="button"
                     className={ghostButton}
                     onClick={() => move(chart, "down")}

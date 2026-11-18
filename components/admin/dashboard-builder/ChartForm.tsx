@@ -406,7 +406,9 @@ export default function ChartForm({
             </div>
           ) : (
             <>
-              {combineModes.includes("compare") && (
+              {/* Visible también si quedó en «comparar» con preguntas que ya no lo
+                  admiten, para poder volver a fusionar. */}
+              {(combineModes.includes("compare") || form.combineMode === "compare") && (
                 <div role="radiogroup" aria-label="Cómo combinar las preguntas" className="flex flex-wrap gap-4 text-sm">
                   {(["merge", "compare"] as const).map((mode) => (
                     <label key={mode} className="flex items-center gap-2">

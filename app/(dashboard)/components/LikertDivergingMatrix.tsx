@@ -52,6 +52,15 @@ export default function LikertDivergingMatrix({
             {label}
           </span>
         ))}
+        {visibleRows.some((row) => row.segments.some((s) => s.suppressed)) && (
+          <span className="flex items-center gap-1.5 text-[10px] text-text-muted">
+            <span
+              className="h-2 w-2 rounded-sm shrink-0"
+              style={{ backgroundColor: "var(--border-strong)", opacity: 0.5 }}
+            />
+            Oculto por privacidad (muy pocas respuestas en ese nivel)
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-2.5">

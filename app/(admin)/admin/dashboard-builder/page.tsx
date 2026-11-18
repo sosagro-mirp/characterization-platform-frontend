@@ -67,6 +67,7 @@ export default function DashboardBuilderPage() {
     setCharts([]);
     try {
       setCharts(await listBuilderCharts({ categoryId: selectedId, archived }));
+      setError(null);
     } catch (err) {
       setError(errorMessage(err, "No se pudieron cargar los gráficos."));
     }
@@ -120,7 +121,9 @@ export default function DashboardBuilderPage() {
           <CategoryManager
             categories={categories}
             onChanged={(categoryId) => {
-              loadCategories();
+              loadCategories().catch((err) =>
+                setError(errorMessage(err, "No se pudieron cargar las categorías.")),
+              );
               if (categoryId) setQuery({ categoryId });
             }}
           />

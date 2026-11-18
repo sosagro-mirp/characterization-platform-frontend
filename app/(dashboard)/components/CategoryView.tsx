@@ -1,4 +1,4 @@
-import { fetchServedCharts } from "../api";
+import { fetchServedChartsOrNull } from "../api";
 import { DashboardFilters } from "../types";
 import ViewHeader from "./ViewHeader";
 import KpiStrip from "./KpiStrip";
@@ -17,7 +17,18 @@ interface CategoryViewProps {
  * spec 43/66: ya no hay curaduría en código.
  */
 export default async function CategoryView({ categoryCode, filters }: CategoryViewProps) {
-  const data = await fetchServedCharts(categoryCode, filters);
+  // Una categoría que dejó de tener gráficos públicos (o se desactivó) entre
+  // que se cacheó la barra lateral y esta consulta responde 404: se muestra
+  // un aviso en vez de romper la página.
+  const data = await fetchServedChartsOrNull(categoryCode, filters);
+  if (!data) {
+    return (
+      <ChartsGrid
+        charts={[]}
+        emptyMessage="Esta categoría ya no tiene gráficos publicados. Vuelve al resumen general o elige otra categoría."
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">

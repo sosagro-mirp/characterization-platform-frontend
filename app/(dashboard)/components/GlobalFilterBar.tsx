@@ -177,7 +177,11 @@ export default function GlobalFilterBar({
       const exportFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
       const stamp = new Date().toISOString().slice(0, 10);
 
-      if (!state.categoryId) {
+      if (!state.categoryId && audience === "private") {
+        // El resumen del privado son los gráficos de OVERVIEW, no la tira de KPIs.
+        const data = await fetchPrivateCharts("OVERVIEW", filters);
+        downloadCsv(`sosagro-resumen-general-${stamp}.csv`, chartsToCsv(data.charts));
+      } else if (!state.categoryId) {
         const kpis = await fetchKpis(exportFilters);
         downloadCsv(`sosagro-resumen-general-${stamp}.csv`, kpisToCsv(kpis));
       } else {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { BuilderCategory } from "@/app/(admin)/types";
 import { moveChart } from "@/lib/dashboard/chartCompat";
@@ -70,10 +70,27 @@ export default function CategoryManager({ categories, onChanged }: CategoryManag
     }, "No se pudo cambiar el estado.");
   }
 
+  // Mismo criterio que ChartList: el foco vuelve al botón usado tras recargar
+  // la lista (o al opuesto si quedó deshabilitado en un borde).
+  const focusAfterMove = useRef<{ id: string; direction: "up" | "down" } | null>(null);
+  const order = categories.map((c) => c.categoryId).join(",");
+  useLayoutEffect(() => {
+    const target = focusAfterMove.current;
+    if (!target) return;
+    focusAfterMove.current = null;
+    const opposite = target.direction === "up" ? "down" : "up";
+    const button = document.getElementById(`cat-${target.direction}-${target.id}`);
+    const fallback = document.getElementById(`cat-${opposite}-${target.id}`);
+    const el = button && !(button as HTMLButtonElement).disabled ? button : fallback;
+    el?.focus();
+  }, [order]);
+
   function move(category: BuilderCategory, direction: "up" | "down") {
+    if (busy) return; // sin deshabilitar las flechas, que perderían el foco
     const ids = categories.map((c) => c.categoryId);
     const next = moveChart(ids, category.categoryId, direction);
     if (next.join() === ids.join()) return;
+    focusAfterMove.current = { id: category.categoryId, direction };
     run(async () => {
       await reorderBuilderCategories(next);
       setStatus(
@@ -100,18 +117,20 @@ export default function CategoryManager({ categories, onChanged }: CategoryManag
             className="flex flex-wrap items-center gap-2 rounded-md border border-[var(--border)] px-2 py-1.5"
           >
             <button
+              id={`cat-up-${category.categoryId}`}
               type="button"
               className={ghostButton}
-              disabled={busy || index === 0}
+              disabled={index === 0}
               onClick={() => move(category, "up")}
               aria-label={`Subir «${category.name}»`}
             >
               <ArrowUp size={16} aria-hidden="true" />
             </button>
             <button
+              id={`cat-down-${category.categoryId}`}
               type="button"
               className={ghostButton}
-              disabled={busy || index === categories.length - 1}
+              disabled={index === categories.length - 1}
               onClick={() => move(category, "down")}
               aria-label={`Bajar «${category.name}»`}
             >
