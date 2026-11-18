@@ -1,4 +1,4 @@
-import { fetchDashboardAnalytics, fetchDigitalDemand } from "../api";
+import { fetchDigitalDemand, fetchServedChartsOrNull } from "../api";
 import { DashboardFilters, IndexByCutBucket } from "../types";
 import ViewHeader from "./ViewHeader";
 import KpiStrip from "./KpiStrip";
@@ -6,7 +6,7 @@ import LikertDivergingMatrix from "./LikertDivergingMatrix";
 import IndexBars from "./IndexBars";
 import RadarBarriers from "./RadarBarriers";
 import OptionBars from "./OptionBars";
-import QuestionsAnalysisSection from "./QuestionsAnalysisSection";
+import ChartsGrid from "./ChartsGrid";
 
 interface DigitalDemandViewProps {
   filters: DashboardFilters;
@@ -40,9 +40,8 @@ function cardHeader(title: string, source: string) {
 /**
  * Vista consolidada "Demanda digital" — caso especial de C14 (spec 43, D4,
  * Fase 7; era C15 antes de la fusión C1+C3 y renumeración en cascada, spec
- * 66 Fase 3 D7). Fila curada (`/digital-demand`, Fase 4) + el mismo grid de
- * preguntas genérico que `CategoryView` (`/analytics?categoryId=C14`) al
- * final: "modo de interacción preferido" y "disposición a pagar" del
+ * 66 Fase 3 D7). Fila curada (`/digital-demand`, Fase 4) + los gráficos
+ * configurados para C14 en el constructor (spec 109) al final: "modo de interacción preferido" y "disposición a pagar" del
  * mockup no tienen campo propio en el DTO de `/digital-demand` (decisión
  * documentada en la Fase 4 — el primero no estaba en el contrato original
  * de 9 campos, el segundo ya vive como KPI) y aparecen ahí como tarjetas
@@ -51,11 +50,11 @@ function cardHeader(title: string, source: string) {
 export default async function DigitalDemandView({
   filters,
 }: DigitalDemandViewProps) {
-  const analyticsFilters: DashboardFilters = { ...filters, categoryId: "C14" };
-
+  // Spec 109: el bloque consolidado sigue fijo en código; debajo van los
+  // gráficos que se configuren para C14 en el constructor.
   const [digitalDemand, data] = await Promise.all([
     fetchDigitalDemand(filters),
-    fetchDashboardAnalytics(analyticsFilters),
+    fetchServedChartsOrNull("C14", filters),
   ]);
 
   const likertBatteryItems = digitalDemand.likertRanking.map((item) => ({
@@ -63,6 +62,7 @@ export default async function DigitalDemandView({
     label: item.questionText,
     distribution: item.bands.map((band) => band.count),
     meanScore: item.meanScore,
+    total: item.answeredCount,
   }));
 
   const institutionTrustItems = digitalDemand.institutionTrust.map((item) => ({
@@ -74,7 +74,13 @@ export default async function DigitalDemandView({
 
   return (
     <div className="space-y-4">
-      <ViewHeader metadata={data.metadata} />
+      <ViewHeader
+        metadata={
+          data?.totalCount != null
+            ? { totalCount: data.totalCount, filters, dateRange: null }
+            : undefined
+        }
+      />
 
       <KpiStrip />
 
@@ -151,7 +157,7 @@ export default async function DigitalDemandView({
         </>
       )}
 
-      <QuestionsAnalysisSection data={data} />
+      {data && data.charts.length > 0 && <ChartsGrid charts={data.charts} />}
     </div>
   );
 }

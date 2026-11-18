@@ -80,6 +80,14 @@ export default function AdminShell({ children }: AdminShellProps) {
             Solicitudes
           </Link>
         )}
+        {(role === "admin" || role === "researcher") && (
+          <Link
+            href="/admin/dashboard"
+            className={navLinkClass("/admin/dashboard")}
+          >
+            Dashboard
+          </Link>
+        )}
         {role === "admin" && (
           <Link
             href="/admin/dashboard-builder"

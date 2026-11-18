@@ -85,8 +85,11 @@ function likertItem(series: ServedSeries): LikertBatteryItem {
   return {
     questionId: series.seriesKey,
     label: series.label,
-    distribution: (agg?.options ?? []).map((o) => o.percentage ?? 0),
+    // Porcentajes sobre el total; una celda suprimida llega en `null` y queda
+    // como tramo «suprimido», no como cero (likert.ts, spec 109).
+    distribution: (agg?.options ?? []).map((o) => o.percentage),
     meanScore: series.suppressed ? null : (agg?.meanScore ?? null),
+    total: 100,
   };
 }
 

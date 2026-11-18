@@ -67,7 +67,13 @@ export default function LikertDivergingMatrix({
                   style={{
                     width: `${segment.percentage}%`,
                     backgroundColor: segment.color,
+                    opacity: segment.suppressed ? 0.5 : 1,
                   }}
+                  title={
+                    segment.suppressed
+                      ? "Respuestas ocultas por privacidad (muy pocas en ese nivel)"
+                      : undefined
+                  }
                 />
               ))}
             </div>

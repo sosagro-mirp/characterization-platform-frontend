@@ -1,36 +1,41 @@
-import { fetchDashboardAnalytics } from "../api";
+import { fetchServedCharts } from "../api";
 import { DashboardFilters } from "../types";
 import ViewHeader from "./ViewHeader";
 import KpiStrip from "./KpiStrip";
-import QuestionsAnalysisSection from "./QuestionsAnalysisSection";
+import ChartsGrid from "./ChartsGrid";
+import SuppressedDataCard from "./SuppressedDataCard";
 
 interface CategoryViewProps {
-  /** Ya debe incluir `categoryId` — el llamador decide la fusión, no este
-   * componente. */
+  categoryCode: string;
   filters: DashboardFilters;
 }
 
 /**
- * Vista de categoría genérica (spec 43, Fase 7): encabezado + KPI strip +
- * grid de preguntas. Usada para cualquier categoría **excepto C15**, que
- * tiene su propia vista consolidada (`DigitalDemandView`, D4) (spec 107: el
- * drill-down por `instrumentId` salió de la interfaz pública). A
- * diferencia de la Fase 6, no muestra el mapa — ni el checklist de esta
- * fase ni el diseño lo incluyen para vistas de categoría (solo para
- * "Resumen general").
+ * Vista de categoría (spec 109): encabezado + KPI strip + los gráficos
+ * publicados de la categoría, en el orden y con el ancho configurados en el
+ * constructor. Reemplaza la grilla «una tarjeta por pregunta elegible» del
+ * spec 43/66: ya no hay curaduría en código.
  */
-export default async function CategoryView({
-  filters,
-}: CategoryViewProps) {
-  const data = await fetchDashboardAnalytics(filters);
+export default async function CategoryView({ categoryCode, filters }: CategoryViewProps) {
+  const data = await fetchServedCharts(categoryCode, filters);
 
   return (
     <div className="space-y-4">
-      <ViewHeader metadata={data.metadata} />
+      <ViewHeader
+        metadata={
+          data.totalCount !== null
+            ? { totalCount: data.totalCount, filters, dateRange: null }
+            : undefined
+        }
+      />
 
       <KpiStrip />
 
-      <QuestionsAnalysisSection data={data} />
+      {data.suppressed && (
+        <SuppressedDataCard reason="La muestra con estos filtros es insuficiente: los gráficos de preguntas se muestran suprimidos." />
+      )}
+
+      <ChartsGrid charts={data.charts} />
     </div>
   );
 }
