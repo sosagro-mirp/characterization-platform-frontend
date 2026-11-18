@@ -5,7 +5,6 @@ import {
 } from "../api";
 import { AGE_RANGE_BUCKETS, OVERVIEW_CATEGORY_CODE } from "@/lib/dashboard/filters";
 import { DashboardFilters, DashboardQuestion } from "../types";
-import KpiStrip from "./KpiStrip";
 import CropDonut from "./CropDonut";
 import ColombiaMap from "./ColombiaMap";
 import { NumericChart } from "./charts";
@@ -91,10 +90,7 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
   // Fase 8: si la muestra global (sin restringir a categoría) está por
   // debajo del umbral, ninguna fila curada tendría datos reales que mostrar
   // — un solo mensaje es más claro que 7 tarjetas diciendo "Sin datos" cada
-  // una por separado. Sin `<KpiStrip />` aquí (corregido 2026-08-05, hallazgo
-  // de `@reviewer`): mientras dure la excepción de D5, mostraría 4 cifras
-  // concretas de juguete justo al lado del aviso de "muestra insuficiente" —
-  // peor que el caso que D5 buscaba evitar.
+  // una por separado.
   if (overview.suppressed) {
     return (
       <div className="space-y-4">
@@ -109,8 +105,6 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
 
   return (
     <div className="space-y-4">
-      <KpiStrip />
-
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
         <div className={CARD_CLASS}>
           {cardHeader("Distribución por cultivo", "S1b/S_REG·4-7 · Dona")}
