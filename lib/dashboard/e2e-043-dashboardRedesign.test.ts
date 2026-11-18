@@ -35,15 +35,17 @@ describe("parseDashboardParams — vista y navegación (criterios 1 y 2)", () =>
     expect(state.categoryId).toBe("C1");
   });
 
-  it("ignora un categoryId fuera del rango C1..C15 y vuelve a overview", () => {
-    const state = parseDashboardParams({ view: "category", categoryId: "C16" });
+  // Spec 66 (Fase 3, D7, 2026-08-10): rango C1..C14, no C1..C15 — fusión de
+  // C1+C3 y renumeración en cascada. C15 pasó a ser el primer valor inválido.
+  it("ignora un categoryId fuera del rango C1..C14 y vuelve a overview", () => {
+    const state = parseDashboardParams({ view: "category", categoryId: "C15" });
     expect(state.view).toBe("overview");
     expect(state.categoryId).toBeUndefined();
   });
 
   it("no acepta categoryId e instrumentId a la vez (D2: mutuamente excluyentes)", () => {
     const state = parseDashboardParams({
-      categoryId: "C15",
+      categoryId: "C14",
       instrumentId: "3f1a5c9e-0000-4000-8000-000000000000",
     });
     expect(
@@ -94,24 +96,24 @@ describe("clearDashboardFilters — «Limpiar» conserva la vista (criterio 4)",
   it("elimina todos los filtros pero mantiene view y categoryId", () => {
     const state = parseDashboardParams({
       view: "category",
-      categoryId: "C15",
+      categoryId: "C14",
       departmentId: "d-1",
       ageRange: "30-45",
     });
     const cleared = clearDashboardFilters(state);
 
     expect(cleared.view).toBe("category");
-    expect(cleared.categoryId).toBe("C15");
+    expect(cleared.categoryId).toBe("C14");
     expect(Object.values(cleared.filters).filter(Boolean)).toHaveLength(0);
   });
 
   it("la query resultante conserva la categoría y no arrastra filtros", () => {
     const cleared = clearDashboardFilters(
-      parseDashboardParams({ view: "category", categoryId: "C15", cropId: "c-1" }),
+      parseDashboardParams({ view: "category", categoryId: "C14", cropId: "c-1" }),
     );
     const query = buildDashboardQuery(cleared);
 
-    expect(query).toContain("categoryId=C15");
+    expect(query).toContain("categoryId=C14");
     expect(query).not.toContain("cropId");
   });
 });

@@ -171,7 +171,7 @@ export default function GlobalFilterBar({
       const exportFilters: DashboardFilters = { ...filters, categoryId: state.categoryId };
       const stamp = new Date().toISOString().slice(0, 10);
 
-      if (!state.categoryId && !filters.instrumentId) {
+      if (!state.categoryId) {
         const kpis = await fetchKpis(exportFilters);
         downloadCsv(`sosagro-resumen-general-${stamp}.csv`, kpisToCsv(kpis));
       } else {

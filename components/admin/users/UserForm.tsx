@@ -146,6 +146,7 @@ export default function UserForm({
         </label>
         <input
           type="password"
+          autoComplete="new-password"
           required={mode === "create"}
           minLength={8}
           maxLength={72}

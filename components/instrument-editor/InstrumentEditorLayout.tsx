@@ -18,6 +18,7 @@ import SectionForm from "./SectionForm";
 import QuestionForm from "./QuestionForm";
 import NewQuestionForm from "./NewQuestionForm";
 import SaveStatusIndicator from "./SaveStatusIndicator";
+import { formatDateOnly } from "@/lib/dateOnly";
 
 interface InstrumentEditorLayoutProps {
   instrumentId: string;
@@ -94,7 +95,7 @@ export default function InstrumentEditorLayout({
   const storeReady = storeInstrumentId === instrumentId;
 
   const formattedPublishDate = instrumentPublishDate
-    ? new Date(instrumentPublishDate).toLocaleDateString("es-CO")
+    ? formatDateOnly(instrumentPublishDate)
     : null;
 
   useEffect(() => {

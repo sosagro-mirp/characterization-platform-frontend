@@ -9,6 +9,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Keep process isolation: tests such as lib/dateOnly.test.ts change
+    // process.env.TZ at runtime, which worker threads do not apply.
+    pool: "forks",
     include: ["**/*.test.ts"],
   },
 });

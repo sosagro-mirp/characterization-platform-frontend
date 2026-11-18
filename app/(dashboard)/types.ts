@@ -5,6 +5,8 @@
  * página vive por separado en `DashboardPageState.categoryId`
  * (`lib/dashboard/filters.ts`, D6) — no lo agregues a `FILTER_KEYS` ahí. */
 export interface DashboardFilters {
+  /** @deprecated Spec 107: la consulta por instrumento ya no es pública; el
+   * dashboard ignora este filtro. */
   instrumentId?: string;
   categoryId?: string;
   departmentId?: string;
@@ -62,17 +64,39 @@ export interface DashboardKpi {
 export interface AggregationOption {
   optionId: string;
   text: string;
-  count: number;
-  percentage: number;
+  /** null si suppressed=true (spec 66, D2): la celda tiene menos de
+   * MIN_CELL_SIZE respondientes y no se expone, aunque la muestra total
+   * supere el umbral global de privacidad. */
+  count: number | null;
+  /** null si suppressed=true, mismo criterio que count. */
+  percentage: number | null;
   value: number | null;
+  /** true si esta opción tiene menos de MIN_CELL_SIZE respondientes. Nunca
+   * se representa como 0 ni se omite del listado en silencio — los
+   * componentes de gráfica deben mostrarla como oculta por privacidad. */
+  suppressed: boolean;
 }
 
 export interface AggregationYesNo {
   type: "yes_no";
-  yesCount: number;
-  noCount: number;
-  yesPercentage: number;
-  noPercentage: number;
+  /** `null` si la celda está suprimida (spec 107, P18-b/d). */
+  yesCount: number | null;
+  noCount: number | null;
+  yesPercentage: number | null;
+  noPercentage: number | null;
+  /** Supresión complementaria: llegan las dos suprimidas o ninguna. */
+  yesSuppressed: boolean;
+  noSuppressed: boolean;
+}
+
+/** Intervalo del histograma calculado en el backend (spec 107, P24).
+ * `from: null` = «menos de `to`»; `to: null` = «`from` o más». */
+export interface AggregationBin {
+  from: number | null;
+  to: number | null;
+  count: number | null;
+  percentage: number | null;
+  suppressed: boolean;
 }
 
 export interface AggregationChoices {
@@ -92,28 +116,28 @@ export interface AggregationNumeric {
   count: number;
   average: number | null;
   median: number | null;
-  min: number | null;
-  max: number | null;
   stdDev: number | null;
   q1: number | null;
   q3: number | null;
-  distribution?: number[];
+  bins: AggregationBin[];
 }
 
 /** Un grupo por unidad; estadísticas en `null` si el grupo no alcanza el umbral. */
 export interface AggregationUnitGroup {
   optionId: string;
   unit: string;
-  count: number;
-  percentage: number;
+  /** null si suppressed=true (spec 66, D2): el grupo tiene menos de MIN_CELL_SIZE respuestas. */
+  count: number | null;
+  /** null si suppressed=true, mismo criterio que count. */
+  percentage: number | null;
+  /** true si el grupo no alcanza MIN_CELL_SIZE: conteo, porcentaje y estadísticas en null. */
+  suppressed: boolean;
   average: number | null;
   median: number | null;
   q1: number | null;
   q3: number | null;
-  min: number | null;
-  max: number | null;
   stdDev: number | null;
-  distribution?: number[];
+  bins: AggregationBin[];
 }
 
 /** `numeric_with_unit`: agrupado por unidad, sin convertir entre unidades. */
@@ -140,6 +164,9 @@ export interface DashboardQuestion {
   instrumentId?: string;
   instrumentName?: string;
   systemField: string | null;
+  /** Gráfica curada explícitamente (spec 66, D3), o null si no se curó
+   * ninguna — ver `lib/dashboard/chartHint.ts`. */
+  chartHint: string | null;
   isInverted: boolean;
   answeredCount: number;
   suppressed: boolean;
