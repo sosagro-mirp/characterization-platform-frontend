@@ -1,48 +1,25 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { DashboardQuestion } from "../../types";
+import { BarDatum, toBarDatum } from "@/lib/dashboard/suppressedOption";
+import HorizontalBarChart from "./HorizontalBarChart";
 
 interface SingleChoiceChartProps {
   question: DashboardQuestion;
 }
 
+/** Spec 66 (Fase 3, ajuste de estilo 2026-08-05): mismo estilo de barras
+ * que `MultipleChoiceChart` (mockup "Etapas de la cadena"), a pedido del
+ * usuario — ver `HorizontalBarChart`, componente compartido. */
 export default function SingleChoiceChart({ question }: SingleChoiceChartProps) {
   if (question.aggregation?.type !== "single_choice") return null;
 
-  const data = [...question.aggregation.options]
-    .sort((a, b) => b.count - a.count)
-    .map((opt) => ({ name: opt.text, percentage: opt.percentage, count: opt.count }));
+  // D2 (spec 66): el orden se decide sobre las opciones reales (una celda
+  // suprimida sigue existiendo, solo deja de mostrar su valor) antes de
+  // mapear al placeholder de la barra.
+  const data: BarDatum[] = [...question.aggregation.options]
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
+    .map(toBarDatum);
 
-  const height = Math.max(120, data.length * 36);
-
-  return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-        <CartesianGrid horizontal={false} stroke="var(--border)" />
-        <XAxis
-          type="number"
-          domain={[0, 100]}
-          tickFormatter={(v) => `${v}%`}
-          tick={{ fontSize: 11 }}
-        />
-        <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-        <Tooltip
-          formatter={(value, _name, item) => [
-            `${Number(value).toFixed(1)}% (${(item.payload as { count: number }).count})`,
-            "Respuestas",
-          ]}
-        />
-        <Bar dataKey="percentage" fill="#15803d" radius={[0, 4, 4, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
+  return <HorizontalBarChart data={data} />;
 }

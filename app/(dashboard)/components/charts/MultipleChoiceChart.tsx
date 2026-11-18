@@ -1,45 +1,30 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { DashboardQuestion } from "../../types";
+import { BarDatum, toBarDatum } from "@/lib/dashboard/suppressedOption";
+import HorizontalBarChart from "./HorizontalBarChart";
 
 interface MultipleChoiceChartProps {
   question: DashboardQuestion;
 }
 
+/** Spec 66 (Fase 3, ajuste de estilo 2026-08-05): rediseño según mockup del
+ * usuario ("Etapas de la cadena", aplicado de forma genérica a todo
+ * BarrasH) — ver `HorizontalBarChart`, componente compartido con
+ * `SingleChoiceChart` (mismo pedido de estilo para "Perfil del
+ * productor"). */
 export default function MultipleChoiceChart({ question }: MultipleChoiceChartProps) {
   if (question.aggregation?.type !== "multiple_choice") return null;
 
-  const data = [...question.aggregation.options]
-    .sort((a, b) => b.count - a.count)
-    .map((opt) => ({ name: opt.text, percentage: opt.percentage, count: opt.count }));
-
-  const height = Math.max(120, data.length * 36);
+  // D2 (spec 66): orden sobre el conteo real antes de aplicar el
+  // placeholder de celdas suprimidas.
+  const data: BarDatum[] = [...question.aggregation.options]
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
+    .map(toBarDatum);
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-          <CartesianGrid horizontal={false} stroke="var(--border)" />
-          <XAxis type="number" tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
-          <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-          <Tooltip
-            formatter={(value, _name, item) => [
-              `${Number(value).toFixed(1)}% (${(item.payload as { count: number }).count})`,
-              "Respuestas",
-            ]}
-          />
-          <Bar dataKey="percentage" fill="#166534" radius={[0, 4, 4, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <HorizontalBarChart data={data} />
       <p className="text-xs text-text-muted mt-1">
         El porcentaje es sobre el total de encuestados que respondieron. La suma
         puede superar el 100%.

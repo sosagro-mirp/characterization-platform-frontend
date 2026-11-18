@@ -1,8 +1,13 @@
 import { AggregationOption } from "../types";
+import { SUPPRESSED_TOOLTIP_LABEL } from "@/lib/dashboard/suppressedOption";
 
 interface OptionBarsProps {
   options: AggregationOption[];
 }
+
+/** D2 (spec 66): altura mínima de barra para una opción suprimida — nunca 0,
+ * nunca ausente del ranking (criterio de aceptación 3). */
+const SUPPRESSED_BAR_PLACEHOLDER = 2;
 
 /** Ranking horizontal genérico (spec 43, D7) — barreras de adopción,
  * habilidades digitales, plataformas, canal preferido: mismo shape
@@ -12,30 +17,41 @@ export default function OptionBars({ options }: OptionBarsProps) {
     return <p className="text-sm text-text-muted">Sin datos suficientes.</p>;
   }
 
-  // Spec 109: una celda suprimida llega con `percentage: null`; va al final
-  // y se muestra como «—», nunca como cero.
-  const pct = (option: AggregationOption): number | null =>
-    (option.percentage as number | null) ?? null;
-  const sorted = [...options].sort((a, b) => (pct(b) ?? -1) - (pct(a) ?? -1));
+  // D2 (spec 66): orden sobre el conteo real (una celda suprimida sigue
+  // existiendo, solo deja de mostrar su valor) antes de aplicar el
+  // placeholder de la barra.
+  const sorted = [...options].sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
 
   return (
     <div className="flex flex-col gap-2">
-      {sorted.map((option) => (
-        <div key={option.optionId} className="flex items-center gap-2">
-          <span className="w-28 shrink-0 truncate text-right text-xs text-text-primary">
-            {option.text}
-          </span>
-          <div className="h-2.5 flex-1 rounded-full bg-surface-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-brand"
-              style={{ width: `${pct(option) ?? 0}%` }}
-            />
+      {sorted.map((option) => {
+        const displayPercentage = option.suppressed
+          ? SUPPRESSED_BAR_PLACEHOLDER
+          : (option.percentage ?? 0);
+        return (
+          <div key={option.optionId} className="flex items-center gap-2">
+            <span className="w-28 shrink-0 truncate text-right text-xs text-text-primary">
+              {option.text}
+            </span>
+            <div className="h-2.5 flex-1 rounded-full bg-surface-muted overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${displayPercentage}%`,
+                  backgroundColor: option.suppressed
+                    ? "var(--warning-fg)"
+                    : "var(--color-brand)",
+                  opacity: option.suppressed ? 0.5 : 1,
+                }}
+                title={option.suppressed ? SUPPRESSED_TOOLTIP_LABEL : undefined}
+              />
+            </div>
+            <span className="w-10 shrink-0 text-xs font-semibold text-text-muted">
+              {option.suppressed ? "—" : `${displayPercentage.toFixed(0)}%`}
+            </span>
           </div>
-          <span className="w-10 shrink-0 text-xs font-semibold text-text-muted">
-            {pct(option) === null ? "—" : `${pct(option)!.toFixed(0)}%`}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

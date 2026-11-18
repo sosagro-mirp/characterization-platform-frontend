@@ -1,10 +1,12 @@
 "use client";
 
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { resolveServedChartKind } from "@/lib/dashboard/chartHint";
 import { buildDivergingRows, type LikertBatteryItem } from "@/lib/dashboard/likert";
 import {
   ComplianceChart,
+  DepartmentMap,
+  DonutChart,
+  HarvestCalendarChart,
   LikertChart,
   MultipleChoiceChart,
   NumericChart,
@@ -13,8 +15,6 @@ import {
   UnsupportedQuestionType,
   YesNoChart,
 } from "./charts";
-import ColombiaMap from "./ColombiaMap";
-import HarvestCalendar from "./HarvestCalendar";
 import IndexBars from "./IndexBars";
 import LikertDivergingMatrix from "./LikertDivergingMatrix";
 import OptionBars from "./OptionBars";
@@ -28,81 +28,48 @@ import type {
   ServedSeries,
 } from "../types";
 
-const DONUT_COLORS = ["#15803d", "#facc15", "#0ea5e9", "#a855f7", "#f97316", "#64748b"];
+/**
+ * Agregación de la serie en la forma de los gráficos del 43/66. Los buckets
+ * de una métrica de conteo (P13 del 108) se presentan como opciones de una
+ * selección única, para reutilizar dona, barras y mapa.
+ */
+function aggregationOf(series: ServedSeries): DashboardAggregation | null {
+  const agg = series.aggregation as
+    | (DashboardAggregation & { buckets?: undefined })
+    | { buckets: ServedMetricBucket[] }
+    | null;
+  if (!agg) return null;
+  if ("buckets" in agg && agg.buckets) {
+    const options: AggregationOption[] = agg.buckets.map((b) => ({
+      optionId: b.id,
+      text: b.name,
+      count: b.count,
+      percentage: b.percentage,
+      value: null,
+      suppressed: b.suppressed ?? false,
+    }));
+    return { type: "single_choice", options };
+  }
+  return agg as DashboardAggregation;
+}
 
-/** Adapta una serie servida a la forma por pregunta de los gráficos del 43/66. */
+/** Adapta una serie servida a la forma por pregunta de los gráficos existentes. */
 function asQuestion(chart: ServedChart, series: ServedSeries): DashboardQuestion {
+  const aggregation = aggregationOf(series);
   return {
     questionId: `${chart.chartId}:${series.seriesKey}`,
     questionText: chart.title,
-    questionType: chart.questionType ?? "",
+    questionType:
+      chart.sourceKind === "entity_metric"
+        ? (aggregation?.type ?? "")
+        : (chart.questionType ?? ""),
     sectionName: "",
     systemField: null,
-    isInverted:
-      (series.aggregation as { isInverted?: boolean } | null)?.isInverted ?? false,
+    isInverted: (aggregation as { isInverted?: boolean } | null)?.isInverted ?? false,
     answeredCount: series.answeredCount,
     suppressed: series.suppressed,
-    aggregation: series.aggregation as DashboardAggregation | null,
-  };
-}
-
-/** Opciones de una agregación por opciones, o los buckets de una métrica como opciones. */
-function optionsOf(aggregation: unknown): AggregationOption[] {
-  const agg = aggregation as
-    | { options?: AggregationOption[]; buckets?: ServedMetricBucket[] }
-    | null;
-  if (agg?.options) return agg.options;
-  if (agg?.buckets) {
-    return agg.buckets.map((b) => ({
-      optionId: b.id,
-      text: b.name,
-      count: b.count as number,
-      percentage: b.percentage as number,
-      value: null,
-    }));
-  }
-  return [];
-}
-
-function OptionsDonut({ options }: { options: AggregationOption[] }) {
-  const data = options
-    .filter((o) => o.count !== null && o.count !== undefined)
-    .map((o, i) => ({
-      name: o.text,
-      value: o.count,
-      percentage: o.percentage,
-      color: DONUT_COLORS[i % DONUT_COLORS.length],
-    }));
-  const hidden = options.length - data.length;
-  return (
-    <div>
-      <ResponsiveContainer width="100%" height={220}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            innerRadius={50}
-            outerRadius={80}
-            paddingAngle={2}
-            label={({ payload }) => `${Number(payload.percentage).toFixed(0)}%`}
-          >
-            {data.map((entry) => (
-              <Cell key={entry.name} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip formatter={(value, name) => [`${value}`, name]} />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
-      {hidden > 0 && (
-        <p className="text-xs text-text-muted">
-          {hidden === 1 ? "Una opción se oculta" : `${hidden} opciones se ocultan`} por
-          tener muy pocas respuestas.
-        </p>
-      )}
-    </div>
-  );
+    aggregation,
+  } as DashboardQuestion;
 }
 
 function yesPercentOf(series: ServedSeries): number | null {
@@ -129,8 +96,8 @@ interface ServedChartFactoryProps {
 
 /**
  * Spec 109 — dibuja un gráfico servido con el componente de su `chartKind`.
- * En comparación (`compare`), las barras «% Sí» y la matriz Likert usan todas
- * las series; el resto de gráficos dibuja la serie única de una fusión.
+ * En comparación, las barras «% Sí» y la matriz Likert usan todas las series;
+ * el resto dibuja la serie única de una fusión.
  */
 export default function ServedChartFactory({ chart }: ServedChartFactoryProps) {
   const kind = resolveServedChartKind(chart);
@@ -160,38 +127,32 @@ export default function ServedChartFactory({ chart }: ServedChartFactoryProps) {
     return <SuppressedDataCard />;
   }
   const question = asQuestion(chart, series);
-  const options = optionsOf(series.aggregation);
+  const type = question.aggregation?.type;
 
   switch (kind) {
     case "donut":
-      return chart.questionType === "yes_no" ? (
+      return type === "yes_no" ? (
         <YesNoChart question={question} />
       ) : (
-        <OptionsDonut options={options} />
+        <DonutChart question={question} />
       );
     case "bars":
-      if (chart.questionType === "compliance") return <ComplianceChart question={question} />;
-      if (chart.questionType === "single_choice") return <SingleChoiceChart question={question} />;
-      if (chart.questionType === "multiple_choice") {
-        return <MultipleChoiceChart question={question} />;
-      }
-      return <OptionBars options={options} />;
+      if (type === "compliance") return <ComplianceChart question={question} />;
+      if (type === "multiple_choice") return <MultipleChoiceChart question={question} />;
+      return <SingleChoiceChart question={question} />;
     case "horizontal-bars":
-      return <OptionBars options={options} />;
-    case "map":
+      if (type === "multiple_choice") return <MultipleChoiceChart question={question} />;
       return (
-        <ColombiaMap
-          data={options
-            .filter((o) => o.count !== null && o.count !== undefined)
-            .map((o) => ({
-              departmentId: o.optionId,
-              departmentName: o.text,
-              count: o.count,
-            }))}
+        <OptionBars
+          options={
+            (question.aggregation as { options?: AggregationOption[] } | null)?.options ?? []
+          }
         />
       );
+    case "map":
+      return <DepartmentMap question={question} />;
     case "harvest-calendar":
-      return <HarvestCalendar options={options} />;
+      return <HarvestCalendarChart question={question} />;
     case "diverging":
       return <LikertChart question={question} />;
     case "histogram":
