@@ -79,6 +79,16 @@ export function ProductionUnitsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--border)]">
+          {rows.length === 0 && (
+            <tr>
+              <td
+                colSpan={FIXED.length + 2 + columns.length}
+                className="px-6 py-12 text-center text-sm text-[var(--text-muted)]"
+              >
+                Ninguna finca cumple los filtros.
+              </td>
+            </tr>
+          )}
           {rows.map((row) => (
             <tr key={row.farmId} className="hover:bg-[var(--surface-muted)]">
               <td className="px-3 py-2.5 font-medium text-[var(--text-primary)]">

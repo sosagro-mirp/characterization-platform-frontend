@@ -408,21 +408,18 @@ export default function ProductionUnitsPage() {
             </p>
           )}
 
-          {filtered.length > 0 ? (
-            <ProductionUnitsTable
-              rows={filtered}
-              columns={data.instruments}
-              columnFilters={columnFilters}
-              onColumnFilter={(key, value) =>
-                setColumnFilters((current) => ({ ...current, [key]: value }))
-              }
-              onDecide={setDeciding}
-            />
-          ) : (
-            <p className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-12 text-center text-sm text-[var(--text-muted)]">
-              Ninguna finca cumple los filtros.
-            </p>
-          )}
+          {/* La tabla debe renderizarse siempre: sus encabezados alojan los
+              inputs de filtro y, si se desmonta con 0 resultados, el usuario
+              no puede editarlos. El mensaje vacío vive dentro de la tabla. */}
+          <ProductionUnitsTable
+            rows={filtered}
+            columns={data.instruments}
+            columnFilters={columnFilters}
+            onColumnFilter={(key, value) =>
+              setColumnFilters((current) => ({ ...current, [key]: value }))
+            }
+            onDecide={setDeciding}
+          />
 
           <p className="text-[11px] text-[var(--text-muted)]">
             * La celda usa una encuesta fuera del alcance declarado o con
