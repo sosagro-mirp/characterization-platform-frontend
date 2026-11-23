@@ -90,6 +90,7 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
     reordering.current = true;
     setOrder(next);
     setError(null);
+    setPrivateOnlyChart(null);
     try {
       await reorderBuilderCharts(categoryId, next);
       setStatus(
