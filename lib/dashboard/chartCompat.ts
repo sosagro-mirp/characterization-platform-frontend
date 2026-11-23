@@ -27,6 +27,8 @@ export interface ChartSource {
   options: string[];
   selectable: boolean;
   blockedReason?: string | null;
+  /** Spec 109 (Fase 6): dato sensible, solo para gráficos de audiencia privada. */
+  privateOnlyReason?: string | null;
 }
 
 export interface NumericWithUnitSettings {
@@ -271,6 +273,19 @@ const OPTION_MATCH_TYPES = new Set([
   "compliance",
 ]);
 
+export const PRIVATE_ONLY_AUDIENCE_ERROR =
+  "Hay datos sensibles entre las fuentes: el gráfico tiene que ser de audiencia privada.";
+
+/** Motivos (sin repetir) por los que las fuentes solo admiten audiencia privada. */
+export function privateOnlyReasons(
+  sources: { privateOnlyReason?: string | null }[],
+): string[] {
+  const reasons = sources
+    .map((s) => s.privateOnlyReason?.trim())
+    .filter((r): r is string => !!r);
+  return [...new Set(reasons)];
+}
+
 /** Validaciones del formulario del constructor (criterio 11). */
 export function validateChartForm(
   values: ChartFormValues,
@@ -282,6 +297,11 @@ export function validateChartForm(
   if (!values.categoryId) errors.categoryId = "Elige una categoría.";
   if (values.audience !== "public" && values.audience !== "private") {
     errors.audience = "La audiencia debe ser pública o privada.";
+  } else if (
+    values.audience === "public" &&
+    privateOnlyReasons(values.sources).length > 0
+  ) {
+    errors.audience = PRIVATE_ONLY_AUDIENCE_ERROR;
   }
   if (values.layout !== "normal" && values.layout !== "wide") {
     errors.layout = "El ancho debe ser normal o ancho.";
