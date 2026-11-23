@@ -286,6 +286,32 @@ export function privateOnlyReasons(
   return [...new Set(reasons)];
 }
 
+/** Código con el que el backend rechaza un gráfico público con fuentes de dato sensible. */
+export const SOURCE_PRIVATE_ONLY_CODE = "DASHBOARD_SOURCE_PRIVATE_ONLY";
+
+/** ¿El cuerpo de un error de la API es el rechazo por «solo audiencia privada»? */
+export function isPrivateOnlyErrorBody(body: unknown): boolean {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    (body as { code?: unknown }).code === SOURCE_PRIVATE_ONLY_CODE
+  );
+}
+
+/**
+ * ¿Hay conflicto entre la audiencia y las fuentes? Un gráfico público no puede
+ * usar preguntas ni métricas de dato sensible (spec 109, Fase 6).
+ */
+export function hasPrivateOnlyConflict(input: {
+  audience: ChartAudience;
+  sources?: { privateOnlyReason?: string | null }[];
+  metric?: { privateOnlyReason?: string | null } | null;
+}): boolean {
+  if (input.audience !== "public") return false;
+  if (input.metric?.privateOnlyReason?.trim()) return true;
+  return privateOnlyReasons(input.sources ?? []).length > 0;
+}
+
 /** Validaciones del formulario del constructor (criterio 11). */
 export function validateChartForm(
   values: ChartFormValues,
@@ -298,8 +324,7 @@ export function validateChartForm(
   if (values.audience !== "public" && values.audience !== "private") {
     errors.audience = "La audiencia debe ser pública o privada.";
   } else if (
-    values.audience === "public" &&
-    privateOnlyReasons(values.sources).length > 0
+    hasPrivateOnlyConflict({ audience: values.audience, sources: values.sources })
   ) {
     errors.audience = PRIVATE_ONLY_AUDIENCE_ERROR;
   }

@@ -15,8 +15,8 @@ import {
   chartKindLabel,
   commonQuestionType,
   optionsDifference,
+  hasPrivateOnlyConflict,
   PRIVATE_ONLY_AUDIENCE_ERROR,
-  privateOnlyReasons,
   validateChartForm,
   type ChartCompatMatrix,
   type ChartFormField,
@@ -89,6 +89,8 @@ export function pickedFromCatalog(q: BuilderCatalogQuestion): PickedSource {
     instrumentName: q.instrumentName,
   };
 }
+
+const PRIVATE_ONLY_NOTICE_ID = "chart-audience-private-only";
 
 const OPTION_MATCH_TYPES = new Set(["single_choice", "multiple_choice", "compliance"]);
 
@@ -169,7 +171,7 @@ function validate(
     else if (!metric.charts.includes(form.chartKind)) {
       errors.chartKind = "Elige un gráfico para la métrica.";
     }
-    if (form.audience === "public" && metric?.privateOnlyReason) {
+    if (hasPrivateOnlyConflict({ audience: form.audience, metric })) {
       errors.audience = PRIVATE_ONLY_AUDIENCE_ERROR;
     }
     return errors;
@@ -356,10 +358,9 @@ export default function ChartForm({
       ? optionsDifference(allSources)
       : null;
   const privateOnlyConflict =
-    form.audience === "public" &&
-    (form.sourceKind === "entity_metric"
-      ? !!metric?.privateOnlyReason
-      : privateOnlyReasons(allSources).length > 0);
+    form.sourceKind === "entity_metric"
+      ? hasPrivateOnlyConflict({ audience: form.audience, metric })
+      : hasPrivateOnlyConflict({ audience: form.audience, sources: allSources });
   const units = [...new Set(allSources.flatMap((s) => s.options))];
   const nwu = form.settings.numericWithUnit;
 
@@ -781,7 +782,18 @@ export default function ChartForm({
                   className="accent-green-700"
                   checked={form.audience === audience}
                   onChange={() => set("audience", audience)}
-                  {...(audience === "public" ? invalidProps("audience") : {})}
+                  {...(audience === "public"
+                    ? {
+                        "aria-invalid": shown.audience ? true : false,
+                        "aria-describedby":
+                          [
+                            shown.audience ? `${FIELD_IDS.audience}-error` : null,
+                            privateOnlyConflict ? PRIVATE_ONLY_NOTICE_ID : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || undefined,
+                      }
+                    : {})}
                 />
                 {audience === "public"
                   ? "Pública (dashboard abierto)"
@@ -790,24 +802,24 @@ export default function ChartForm({
             ))}
           </fieldset>
           {errorText("audience")}
-          {privateOnlyConflict && (
-            <p
-              id="chart-audience-private-only"
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--warning-fg)]"
-            >
-              <span className="flex items-start gap-1">
-                <Lock size={14} className="mt-px shrink-0" aria-hidden="true" />
-                Este gráfico usa datos sensibles y solo puede ser de audiencia privada.
-              </span>
-              <button
-                type="button"
-                className={ghostButton + " underline"}
-                onClick={() => set("audience", "private")}
-              >
-                Cambiar a privada
-              </button>
-            </p>
-          )}
+          {/* Región viva siempre montada: el aviso se anuncia al aparecer su contenido. */}
+          <div id={PRIVATE_ONLY_NOTICE_ID} role="status">
+            {privateOnlyConflict && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--warning-fg)]">
+                <span className="flex items-start gap-1">
+                  <Lock size={14} className="mt-px shrink-0" aria-hidden="true" />
+                  Este gráfico usa datos sensibles y solo puede ser de audiencia privada.
+                </span>
+                <button
+                  type="button"
+                  className={ghostButton + " underline"}
+                  onClick={() => set("audience", "private")}
+                >
+                  Cambiar a privada
+                </button>
+              </div>
+            )}
+          </div>
         </fieldset>
 
         {saveNotice}

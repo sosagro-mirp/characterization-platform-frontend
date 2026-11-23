@@ -4,10 +4,12 @@ import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { BuilderChart } from "@/app/(admin)/types";
-import { chartKindLabel, moveChart } from "@/lib/dashboard/chartCompat";
+import { chartKindLabel, isPrivateOnlyErrorBody, moveChart } from "@/lib/dashboard/chartCompat";
+import { ApiError } from "@/lib/apiClient";
 import {
   builderChartAction,
   reorderBuilderCharts,
+  updateBuilderChart,
   type BuilderChartAction,
 } from "@/services/dashboard-builder.service";
 import {
@@ -44,6 +46,8 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Spec 109 (Fase 6): borrador público con fuentes de dato sensible que no se pudo publicar.
+  const [privateOnlyChart, setPrivateOnlyChart] = useState<BuilderChart | null>(null);
   const [pending, setPending] = useState<{ chart: BuilderChart; action: BuilderChartAction } | null>(
     null,
   );
@@ -103,12 +107,31 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
   async function runAction(chart: BuilderChart, action: BuilderChartAction) {
     setBusy(true);
     setError(null);
+    setPrivateOnlyChart(null);
     try {
       await builderChartAction(chart.chartId, action);
       setStatus(`${ACTION_LABELS[action]}: «${chart.title}».`);
       onChanged();
     } catch (err) {
       setError(errorMessage(err, `No se pudo ${ACTION_LABELS[action].toLowerCase()}.`));
+      if (action === "publish" && err instanceof ApiError && isPrivateOnlyErrorBody(err.body)) {
+        setPrivateOnlyChart(chart);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function makePrivate(chart: BuilderChart) {
+    setBusy(true);
+    try {
+      await updateBuilderChart(chart.chartId, { audience: "private" });
+      setError(null);
+      setPrivateOnlyChart(null);
+      setStatus(`«${chart.title}» pasó a audiencia privada; ya se puede publicar.`);
+      onChanged();
+    } catch (err) {
+      setError(errorMessage(err, "No se pudo pasar a privada."));
     } finally {
       setBusy(false);
     }
@@ -126,9 +149,30 @@ export default function ChartList({ categoryId, charts, archived, onChanged }: C
         {status}
       </p>
       {error && (
-        <p className="rounded-md bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-fg)]">
-          {error}
-        </p>
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-fg)]"
+        >
+          <p>{error}</p>
+          {privateOnlyChart && (
+            <span className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={ghostButton + " underline"}
+                disabled={busy}
+                onClick={() => makePrivate(privateOnlyChart)}
+              >
+                Pasar «{privateOnlyChart.title}» a privada
+              </button>
+              <Link
+                href={`/admin/dashboard-builder/charts/${privateOnlyChart.chartId}`}
+                className={ghostButton + " underline"}
+              >
+                Abrir el gráfico
+              </Link>
+            </span>
+          )}
+        </div>
       )}
       {ordered.length === 0 ? (
         <p className="rounded-md border border-dashed border-[var(--border)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">
