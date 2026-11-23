@@ -5,7 +5,7 @@ import { Lock, Plus, Search } from "lucide-react";
 import type { BuilderCatalogQuestion } from "@/app/(admin)/types";
 import { questionBlockReason } from "@/lib/dashboard/chartCompat";
 import { searchBuilderQuestions } from "@/services/dashboard-builder.service";
-import { errorMessage, ghostButton, inputClass, labelClass } from "./ui";
+import { errorMessage, ghostButton, inputClass, labelClass, PrivateOnlyBadge } from "./ui";
 
 const TYPE_LABELS: Record<string, string> = {
   yes_no: "Sí/No",
@@ -27,6 +27,8 @@ interface QuestionPickerProps {
   selectedIds: Set<string>;
   /** Tipo de las fuentes ya elegidas: las de otro tipo se marcan como incompatibles. */
   lockedType: string | null;
+  /** Audiencia elegida: con «Pública», las fuentes de dato sensible avisan que hay que pasar a privada. */
+  audience: "public" | "private";
   onAdd: (question: BuilderCatalogQuestion) => void;
 }
 
@@ -35,7 +37,7 @@ interface QuestionPickerProps {
  * privacidad o por tipo se listan con su motivo y no se pueden agregar
  * (criterio 11).
  */
-export default function QuestionPicker({ selectedIds, lockedType, onAdd }: QuestionPickerProps) {
+export default function QuestionPicker({ selectedIds, lockedType, audience, onAdd }: QuestionPickerProps) {
   const inputId = useId();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<BuilderCatalogQuestion[]>([]);
@@ -124,6 +126,16 @@ export default function QuestionPicker({ selectedIds, lockedType, onAdd }: Quest
                       <Lock size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
                       {reason}
                     </p>
+                  )}
+                  {!blocked && q.privateOnlyReason && (
+                    <>
+                      <PrivateOnlyBadge reason={q.privateOnlyReason} />
+                      {audience === "public" && (
+                        <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
+                          Para usarla, cambia la audiencia del gráfico a «Privada».
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
                 <button

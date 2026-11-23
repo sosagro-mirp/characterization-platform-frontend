@@ -23,10 +23,10 @@ export const metadata: Metadata = {
 
 /**
  * Mientras sea `true`, la página muestra solo el aviso de «en construcción» y
- * no consulta la API. Volver a `false` al corregir `numeric_with_unit` en el
- * dashboard (ver `spec/backlog.md`, incidente del 2026-10-16).
+ * no consulta la API. Encendido (`false`) en el spec 109, Fase 6 (2026-11-23),
+ * tras la revisión de punta a punta del constructor (TC-109-027).
  */
-const DASHBOARD_UNDER_CONSTRUCTION = true;
+const DASHBOARD_UNDER_CONSTRUCTION = false;
 
 /** Superconjunto de `DashboardFilters` + `view`/`categoryId` (D6) — Next no
  * valida esta forma en tiempo de ejecución, es solo el contrato asumido.

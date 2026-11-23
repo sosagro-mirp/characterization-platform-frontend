@@ -616,6 +616,8 @@ export interface BuilderCatalogQuestion {
   archivedAt: string | null;
   selectable: boolean;
   blockedReason: string | null;
+  /** Spec 109 (Fase 6): dato sensible; solo se puede usar en gráficos de audiencia privada. */
+  privateOnlyReason?: string | null;
   compatibleCharts: string[];
   options: string[];
 }
@@ -626,6 +628,8 @@ export interface BuilderEntityMetric {
   entity: string;
   charts: string[];
   filters: string[];
+  /** Spec 109 (Fase 6): solo se puede usar en gráficos de audiencia privada. */
+  privateOnlyReason?: string | null;
 }
 
 export interface BuilderPreviewSeries {

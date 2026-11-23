@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Lock } from "lucide-react";
 import { ApiError } from "@/lib/apiClient";
 import { PUBLIC_CACHE_MINUTES } from "@/lib/dashboard/chartCompat";
 
@@ -40,6 +40,21 @@ export function CacheNotice() {
       Los cambios en gráficos públicos pueden tardar hasta {PUBLIC_CACHE_MINUTES} minutos en
       verse en el dashboard público. El dashboard privado los muestra de inmediato.
     </p>
+  );
+}
+
+/**
+ * Spec 109 (Fase 6): marca una fuente de datos sensibles. El icono y el texto
+ * (no solo el color) dicen que solo sirve en gráficos de audiencia privada.
+ */
+export function PrivateOnlyBadge({ reason }: { reason: string }) {
+  return (
+    <span className="mt-1 flex items-start gap-1 text-xs text-[var(--warning-fg)]">
+      <Lock size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <span>
+        <strong className="font-medium">Solo privada.</strong> {reason}
+      </span>
+    </span>
   );
 }
 
