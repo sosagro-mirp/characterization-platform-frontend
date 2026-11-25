@@ -153,7 +153,12 @@ export default function ServedChartFactory({ chart }: ServedChartFactoryProps) {
         />
       );
     case "map":
-      return <DepartmentMap question={question} />;
+      return (
+        <DepartmentMap
+          question={question}
+          source={{ sourceKind: chart.sourceKind, metricKey: chart.metricKey ?? null }}
+        />
+      );
     case "harvest-calendar":
       return <HarvestCalendarChart question={question} />;
     case "diverging":
