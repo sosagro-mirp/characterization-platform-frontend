@@ -83,7 +83,13 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
   // debajo del umbral, ninguna fila curada tendría datos reales que mostrar
   // — un solo mensaje es más claro que 7 tarjetas diciendo "Sin datos" cada
   // una por separado.
+  const charts = overviewCharts?.charts ?? [];
+
   if (overview.suppressed) {
+    // Spec 111: las métricas de entidad (p. ej. el mapa de unidades
+    // productivas) no dependen de la muestra de encuestas y traen su propia
+    // supresión; se siguen mostrando debajo del aviso.
+    const entityCharts = charts.filter((c) => c.sourceKind === "entity_metric");
     return (
       <div className="space-y-4">
         {overview.totalCount === 0 ? (
@@ -91,11 +97,10 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
         ) : (
           <SuppressedDataCard reason={`La muestra global con estos filtros es insuficiente para mostrar datos (${overview.totalCount} encuestas, se requieren al menos 5).`} />
         )}
+        {entityCharts.length > 0 && <ChartsGrid charts={entityCharts} />}
       </div>
     );
   }
-
-  const charts = overviewCharts?.charts ?? [];
 
   return (
     <div className="space-y-4">
