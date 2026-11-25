@@ -15,6 +15,7 @@ import {
   OUTSIDE_PROJECT_NOTE,
   accessibleRows,
   classifyDepartments,
+  projectDepartments,
   projectFeatureCollection,
   tooltipText,
   unitFor,
@@ -224,12 +225,15 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
         <Geographies geography={geo.geojson}>
           {({ geographies }) => {
             // Los de fuera primero, para que el borde resaltado de la región
-            // quede encima.
-            const sorted = [...geographies].sort((a, b) => {
-              const ia = model.cellFor(a.properties?.DeNombre ?? "").inProject ? 1 : 0;
-              const ib = model.cellFor(b.properties?.DeNombre ?? "").inProject ? 1 : 0;
-              return ia - ib;
-            });
+            // quede encima; los del proyecto en el orden de `territories`,
+            // que es también el orden del recorrido con Tab.
+            const order = (name: string) => {
+              const i = projectDepartments().findIndex((p) => model.cellFor(name).name === p);
+              return i === -1 ? -1 : i;
+            };
+            const sorted = [...geographies].sort(
+              (a, b) => order(a.properties?.DeNombre ?? "") - order(b.properties?.DeNombre ?? ""),
+            );
             return sorted.map((g) => {
               const name: string = g.properties?.DeNombre ?? "";
               const cell = model.cellFor(name);
@@ -242,6 +246,10 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
                   <Geography
                     key={g.rsmKey}
                     geography={g}
+                    // `Geography` es enfocable por defecto (tabIndex 0): un
+                    // departamento de fuera está oculto al lector de pantalla
+                    // y no debe recibir foco (TC-111-006).
+                    tabIndex={-1}
                     aria-hidden="true"
                     style={{ default: style, hover: style, pressed: style }}
                   />
