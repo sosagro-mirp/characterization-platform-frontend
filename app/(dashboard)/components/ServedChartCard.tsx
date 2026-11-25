@@ -40,8 +40,8 @@ export default function ServedChartCard({ chart }: ServedChartCardProps) {
 
       {chart.suppressed && chart.combineMode === "merge" ? (
         <p className="text-sm text-warning-fg bg-warning-bg/40 rounded-md px-3 py-2">
-          Muestra insuficiente para este gráfico (se requieren al menos 5
-          respuestas).
+          Muestra insuficiente para este gráfico (se requieren al menos 5{" "}
+          {chart.sourceKind === "entity_metric" ? "registros" : "respuestas"}).
         </p>
       ) : (
         <ServedChartFactory chart={chart} />
@@ -53,7 +53,10 @@ export default function ServedChartCard({ chart }: ServedChartCardProps) {
             <p>Fuente: {chart.instrumentNames.join(" · ")}</p>
           )}
           {ignored.length > 0 && (
-            <p>No se filtra por {ignored.join(", ")}: es un conteo de productores o fincas.</p>
+            <p>
+              No se filtra por {ignored.join(", ")}: es un conteo de productores, fincas o
+              unidades productivas.
+            </p>
           )}
         </footer>
       )}

@@ -129,6 +129,11 @@ interface HorizontalBarChartProps {
    * (`data.length * 24`, mínimo 120). `DepartmentMap` lo fuerza a un valor
    * mayor para que la barra iguale la altura visual del mapa contiguo. */
   height?: number;
+  /** Texto del tooltip; default `formatBarTooltip` (spec 111: el mapa pasa
+   * el texto de privacidad de A1, que no afirma «menos de 5»). */
+  formatTooltip?: (entry: BarDatum) => string;
+  /** Etiqueta del valor en el tooltip; default «Respuestas». */
+  tooltipLabel?: string;
 }
 
 /**
@@ -145,6 +150,8 @@ export default function HorizontalBarChart({
   colorForEntry = defaultColorForEntry,
   yAxisWidth = 140,
   height: explicitHeight,
+  formatTooltip = formatBarTooltip,
+  tooltipLabel = "Respuestas",
 }: HorizontalBarChartProps) {
   // Ajuste de estilo (2026-08-05): menos separación entre barras — el alto
   // por fila bajó de 36 a 24 (el grosor de la barra, `barSize={14}` más
@@ -190,8 +197,8 @@ export default function HorizontalBarChart({
           <Tooltip
             cursor={false}
             formatter={(_value, _name, item) => [
-              formatBarTooltip(item.payload as BarDatum),
-              "Respuestas",
+              formatTooltip(item.payload as BarDatum),
+              tooltipLabel,
             ]}
           />
           <Bar
