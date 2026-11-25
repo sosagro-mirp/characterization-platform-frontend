@@ -93,6 +93,16 @@ const METRIC_UNITS: Record<string, MapUnit> = {
 const ANSWERS_UNIT: MapUnit = { plural: "respuestas", emptyLabel: "Sin respuestas" };
 const GENERIC_UNIT: MapUnit = { plural: "registros", emptyLabel: "Sin registros" };
 
+/**
+ * Nota de privacidad de la leyenda con la unidad de la fuente (A1 + A2): el
+ * texto de `SUPPRESSION_LEGEND_NOTE` con la unidad del mapa («unidades
+ * productivas», «respuestas», «fincas»…). Bug hallado en producción
+ * (TC-111-009): en el mapa de preguntas decía «unidades».
+ */
+export function suppressionNoteFor(unit: MapUnit): string {
+  return `Se ocultan los departamentos con menos de 5 ${unit.plural} y, si hace falta, otro más para que el dato no se pueda deducir`;
+}
+
 /** Unidad de los conteos según la fuente del gráfico (A2). */
 export function unitFor(source: ChartSource): MapUnit {
   if (source.sourceKind === "questions") return ANSWERS_UNIT;
