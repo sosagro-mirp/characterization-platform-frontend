@@ -20,6 +20,7 @@ import {
   classifyDepartments,
   projectDepartments,
   projectFeatureCollection,
+  suppressionNoteFor,
   tooltipText,
   unitFor,
   type ChartSource,
@@ -411,7 +412,7 @@ function MapLegend({ model, unit, patternId }: MapLegendProps) {
           </li>
         )}
       </ul>
-      {hasSuppressed && <p>{model.legend.suppressedNote}.</p>}
+      {hasSuppressed && <p>{suppressionNoteFor(unit)}.</p>}
     </div>
   );
 }
