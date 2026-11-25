@@ -72,20 +72,20 @@ export const CATEGORICAL_BAR_COLORS = [
   "#F2C230",
 ] as const;
 
-/**
- * Spec 66 (Fase 3, ajuste de estilo 2026-08-05): colores fijos para la
- * torta de "Género del productor(a)" (mockup del usuario), específicos de
- * esta pregunta — no una paleta genérica para cualquier `DonutChart` futuro
- * (decisión explícita: cada pregunta curada a torta define la suya si hace
- * falta). Clave = texto exacto de la opción.
- */
+
 /**
  * Spec 111 (A7): rampa secuencial de los mapas por departamento, de claro a
  * oscuro, idéntica en ambos temas (codifica un valor). El índice 0
  * (`SUPPRESSED_STEP` de `departmentMap.ts`) queda reservado a la celda
  * suprimida, que además lleva un patrón para no depender solo del color; los
- * índices 1..N-1 son la escala de valores. Extremos validados ≥ 3:1 contra
- * `--surface` de los dos temas (test e2e-111, C11).
+ * índices 1..N-1 son la escala de valores.
+ *
+ * Contraste: una rampa secuencial no puede tener todos sus tonos a 3:1 contra
+ * un fondo blanco y uno oscuro a la vez (los tonos claros fallan en claro y los
+ * oscuros en oscuro). Por eso cada departamento lleva un borde `REGION_STROKE`
+ * (≥ 3:1 en ambos temas) y el mapa tiene tabla alternativa; el test e2e-111
+ * (C11) verifica el borde, el orden de luminancia y que cada tono esté a ≥ 3:1
+ * del fondo de al menos un tema (decisión del usuario, 2026-11-25).
  */
 export const MAP_SEQUENTIAL_RAMP = [
   "#bbf7d0",
@@ -96,6 +96,13 @@ export const MAP_SEQUENTIAL_RAMP = [
   "#14532d",
 ] as const;
 
+/**
+ * Spec 66 (Fase 3, ajuste de estilo 2026-08-05): colores fijos para la
+ * torta de "Género del productor(a)" (mockup del usuario), específicos de
+ * esta pregunta — no una paleta genérica para cualquier `DonutChart` futuro
+ * (decisión explícita: cada pregunta curada a torta define la suya si hace
+ * falta). Clave = texto exacto de la opción.
+ */
 export const GENDER_DONUT_COLORS: Record<string, string> = {
   Hombre: "#14532d",
   Mujer: "#65a30d",

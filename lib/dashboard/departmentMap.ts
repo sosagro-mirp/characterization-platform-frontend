@@ -22,6 +22,15 @@ export const SUPPRESSION_LEGEND_NOTE =
   "Se ocultan los departamentos con menos de 5 unidades y, si hace falta, otro más para que el dato no se pueda deducir";
 export const OUTSIDE_PROJECT_NOTE = "Fuera de la región del proyecto";
 
+/**
+ * Token del borde de los departamentos del proyecto. La rampa no puede tener
+ * todos sus tonos a 3:1 contra un fondo blanco y uno oscuro a la vez; el borde
+ * sí (≥ 3:1 contra `--surface` en ambos temas, verificado en e2e-111, C11), y
+ * es el que delimita cada departamento (decisión del usuario, 2026-11-25).
+ */
+export const REGION_STROKE_TOKEN = "--text-muted";
+export const REGION_STROKE = `var(${REGION_STROKE_TOKEN})`;
+
 /** Pasos de valor disponibles (el índice 0 es el de suprimido). */
 const VALUE_STEPS = MAP_SEQUENTIAL_RAMP.length - 1;
 

@@ -69,6 +69,8 @@ import {
   OUTSIDE_PROJECT_NOTE,
   PRIVACY_ROW_TEXT,
   PRIVACY_TOOLTIP,
+  REGION_STROKE,
+  REGION_STROKE_TOKEN,
   SUPPRESSED_STEP,
   SUPPRESSION_LEGEND_NOTE,
   accessibleRows,
@@ -444,10 +446,26 @@ describe("C11 — rampa secuencial fija en `palette.ts` (A7)", () => {
     }
   });
 
-  it("contraste ≥ 3:1 de los extremos contra `--surface`: el más oscuro en claro y el más claro en oscuro", () => {
-    const darkest = MAP_SEQUENTIAL_RAMP[MAP_SEQUENTIAL_RAMP.length - 1];
-    const lightest = MAP_SEQUENTIAL_RAMP[0];
-    expect(contrast(darkest, SURFACE_LIGHT)).toBeGreaterThanOrEqual(3);
-    expect(contrast(lightest, SURFACE_DARK)).toBeGreaterThanOrEqual(3);
+  it("cada tono está a ≥ 3:1 del fondo de al menos un tema (ninguno se pierde en ambos)", () => {
+    for (const hex of MAP_SEQUENTIAL_RAMP) {
+      const best = Math.max(contrast(hex, SURFACE_LIGHT), contrast(hex, SURFACE_DARK));
+      expect(best, hex).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  // Decisión del usuario (2026-11-25, auditoría 117): la rampa no puede
+  // tener todos sus tonos a 3:1 contra ambos fondos; el borde de cada
+  // departamento del proyecto sí, y es el que los delimita.
+  it("el borde de los departamentos (`REGION_STROKE`) tiene ≥ 3:1 contra `--surface` en claro y en oscuro", () => {
+    expect(REGION_STROKE).toBe(`var(${REGION_STROKE_TOKEN})`);
+    const css = readFileSync(resolve(__dirname, "../../app/globals.css"), "utf8");
+    const values = [...css.matchAll(new RegExp(`${REGION_STROKE_TOKEN}:\\s*(#[0-9a-fA-F]{6})`, "g"))].map(
+      (m) => m[1],
+    );
+    const surfaces = [...css.matchAll(/--surface:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
+    expect(values).toHaveLength(2);
+    expect(surfaces).toEqual([SURFACE_LIGHT, SURFACE_DARK]);
+    expect(contrast(values[0], SURFACE_LIGHT)).toBeGreaterThanOrEqual(3);
+    expect(contrast(values[1], SURFACE_DARK)).toBeGreaterThanOrEqual(3);
   });
 });

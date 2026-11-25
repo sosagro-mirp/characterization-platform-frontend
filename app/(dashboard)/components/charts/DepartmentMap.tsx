@@ -5,6 +5,7 @@ import {
   useId,
   useState,
   type FocusEvent as ReactFocusEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { geoMercator, type ExtendedFeatureCollection, type GeoProjection } from "d3-geo";
@@ -13,6 +14,8 @@ import { AggregationOption, DashboardQuestion } from "../../types";
 import { toBarDatum } from "@/lib/dashboard/suppressedOption";
 import {
   OUTSIDE_PROJECT_NOTE,
+  PRIVACY_TOOLTIP,
+  REGION_STROKE,
   accessibleRows,
   classifyDepartments,
   projectDepartments,
@@ -155,8 +158,11 @@ function geographyStyle(cell: DepartmentCell, patternId: string, active: boolean
     ...base,
     fill,
     fillOpacity: cell.state === "empty" ? EMPTY_FILL_OPACITY : 1,
-    stroke: active ? "var(--text-primary)" : "var(--border-strong)",
-    strokeWidth: active ? 2 : 1,
+    // Borde ≥ 3:1 contra `--surface` en ambos temas: separa cada departamento
+    // del fondo y de sus vecinos aunque el relleno de la rampa sea muy claro
+    // (en claro) o muy oscuro (en oscuro). Decisión del usuario (2026-11-25).
+    stroke: active ? "var(--text-primary)" : REGION_STROKE,
+    strokeWidth: active ? 2 : 1.25,
     cursor: "default",
   };
 }
@@ -172,6 +178,13 @@ interface DepartmentMapSvgProps {
 function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: DepartmentMapSvgProps) {
   const geo = useProjectGeo(GEO_URL);
   const [active, setActive] = useState<ActiveState | null>(null);
+  // WCAG 1.4.13: el tooltip abierto por foco persiste aunque el puntero salga
+  // del mapa, y Escape lo cierra sin mover el foco.
+  const [focused, setFocused] = useState<ActiveState | null>(null);
+
+  function clearPointer() {
+    setActive(focused);
+  }
 
   function positionFrom(container: HTMLElement | null, clientX: number, clientY: number) {
     const rect = container?.getBoundingClientRect();
@@ -203,7 +216,7 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
   return (
     <div
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => setActive(null)}
+      onMouseLeave={clearPointer}
       className="relative w-full shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-surface"
       style={{ maxWidth: MAP_WIDTH }}
     >
@@ -271,12 +284,28 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
                   onMouseEnter={(e: ReactMouseEvent<SVGPathElement>) =>
                     activate(e.clientX, e.clientY, e.currentTarget)
                   }
-                  onMouseLeave={() => setActive(null)}
+                  onMouseLeave={clearPointer}
                   onFocus={(e: ReactFocusEvent<SVGPathElement>) => {
                     const box = e.currentTarget.getBoundingClientRect();
-                    activate(box.left + box.width / 2, box.top + box.height / 2, e.currentTarget);
+                    const container = e.currentTarget.closest("div");
+                    const state = {
+                      cell,
+                      ...positionFrom(
+                        container,
+                        box.left + box.width / 2,
+                        box.top + box.height / 2,
+                      ),
+                    };
+                    setFocused(state);
+                    setActive(state);
                   }}
-                  onBlur={() => setActive(null)}
+                  onBlur={() => {
+                    setFocused(null);
+                    setActive(null);
+                  }}
+                  onKeyDown={(e: ReactKeyboardEvent<SVGPathElement>) => {
+                    if (e.key === "Escape") setActive(null);
+                  }}
                   style={{ default: style, hover: style, pressed: style }}
                 />
               );
@@ -478,6 +507,13 @@ export default function DepartmentMap({
             data={barData}
             yAxisWidth={160}
             colorForEntry={(entry) => model.cellFor(entry.name).color ?? OUTSIDE_BAR_FILL}
+            // A1: la barra protegida no afirma «menos de 5»; la unidad es la de la fuente.
+            formatTooltip={(entry) =>
+              entry.suppressed
+                ? PRIVACY_TOOLTIP
+                : `${entry.percentage.toFixed(1)}% (${entry.count})`
+            }
+            tooltipLabel={unit.plural[0].toUpperCase() + unit.plural.slice(1)}
           />
         </div>
       </div>
