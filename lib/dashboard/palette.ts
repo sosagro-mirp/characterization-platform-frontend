@@ -79,6 +79,23 @@ export const CATEGORICAL_BAR_COLORS = [
  * (decisión explícita: cada pregunta curada a torta define la suya si hace
  * falta). Clave = texto exacto de la opción.
  */
+/**
+ * Spec 111 (A7): rampa secuencial de los mapas por departamento, de claro a
+ * oscuro, idéntica en ambos temas (codifica un valor). El índice 0
+ * (`SUPPRESSED_STEP` de `departmentMap.ts`) queda reservado a la celda
+ * suprimida, que además lleva un patrón para no depender solo del color; los
+ * índices 1..N-1 son la escala de valores. Extremos validados ≥ 3:1 contra
+ * `--surface` de los dos temas (test e2e-111, C11).
+ */
+export const MAP_SEQUENTIAL_RAMP = [
+  "#bbf7d0",
+  "#86efac",
+  "#4ade80",
+  "#16a34a",
+  "#15803d",
+  "#14532d",
+] as const;
+
 export const GENDER_DONUT_COLORS: Record<string, string> = {
   Hombre: "#14532d",
   Mujer: "#65a30d",

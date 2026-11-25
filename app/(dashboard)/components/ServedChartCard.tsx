@@ -53,7 +53,10 @@ export default function ServedChartCard({ chart }: ServedChartCardProps) {
             <p>Fuente: {chart.instrumentNames.join(" · ")}</p>
           )}
           {ignored.length > 0 && (
-            <p>No se filtra por {ignored.join(", ")}: es un conteo de productores o fincas.</p>
+            <p>
+              No se filtra por {ignored.join(", ")}: es un conteo de productores, fincas o
+              unidades productivas.
+            </p>
           )}
         </footer>
       )}

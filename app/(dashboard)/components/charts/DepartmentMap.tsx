@@ -1,37 +1,51 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useState,
+  type FocusEvent as ReactFocusEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { geoMercator, type ExtendedFeatureCollection, type GeoProjection } from "d3-geo";
 import { ComposableMap, Geographies, Geography, type ProjectionFunction } from "react-simple-maps";
 import { AggregationOption, DashboardQuestion } from "../../types";
-import { SUPPRESSED_TOOLTIP_LABEL, toBarDatum } from "@/lib/dashboard/suppressedOption";
+import { toBarDatum } from "@/lib/dashboard/suppressedOption";
+import {
+  OUTSIDE_PROJECT_NOTE,
+  accessibleRows,
+  classifyDepartments,
+  projectFeatureCollection,
+  tooltipText,
+  unitFor,
+  type ChartSource,
+  type DepartmentCell,
+  type DepartmentMapModel,
+  type MapUnit,
+} from "@/lib/dashboard/departmentMap";
 import HorizontalBarChart from "./HorizontalBarChart";
 
-/** Mismo GeoJSON que la landing y `ColombiaMap.tsx` (Resumen general) —
- * no se reutiliza `ColombiaMap` en sí porque esa fuente de datos
- * (`/api/dashboard/department-counts`) omite en silencio los departamentos
- * por debajo del umbral (D2), mientras que acá cada opción ya trae su
- * propio `suppressed: true` explícito que hay que distinguir visualmente
- * de "sin datos" — dos estados distintos, no uno. */
+/** Mismo GeoJSON que la landing. */
 const GEO_URL = "/maps/colombia.geo.json";
 
 /** Tamaño del lienzo SVG del mapa. */
 const MAP_WIDTH = 380;
 const MAP_HEIGHT = 400;
-/** Margen interno mínimo entre el país y el borde del lienzo. */
-const MAP_PADDING = 12;
+/** Margen interno entre la región del proyecto y el borde del lienzo. */
+const MAP_PADDING = 16;
 
-/** Ajuste de estilo (2026-08-10): antes se afinaban `scale`/`center` a ojo
- * (`projectionConfig`) y siempre quedaba de sobra espacio en blanco
- * alrededor de Colombia dentro del lienzo fijo — sobre todo porque el
- * GeoJSON incluye San Andrés y Providencia, muy al noroeste, lo que obliga
- * a un lienzo ancho aunque el continente ocupe la mitad derecha. En vez de
- * seguir ajustando números a mano, se calcula la proyección con
- * `fitExtent` de `d3-geo` sobre el GeoJSON real — encuadra el contenido
- * exacto dentro de `[MAP_PADDING, MAP_WIDTH/HEIGHT - MAP_PADDING]`, sin
- * espacio de sobra más allá del margen mínimo fijado. */
-function useFittedProjection(geoUrl: string): GeoProjection | null {
-  const [projection, setProjection] = useState<GeoProjection | null>(null);
+interface GeoData {
+  geojson: ExtendedFeatureCollection;
+  projection: GeoProjection;
+}
+
+/**
+ * Spec 111 (D3): la proyección se ajusta con `fitExtent` a los seis
+ * departamentos del proyecto, no al país entero; el resto de Colombia se
+ * sigue dibujando (recortado por el lienzo) como contexto atenuado.
+ */
+function useProjectGeo(geoUrl: string): GeoData | null {
+  const [data, setData] = useState<GeoData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,81 +53,103 @@ function useFittedProjection(geoUrl: string): GeoProjection | null {
       .then((res) => res.json())
       .then((geojson: ExtendedFeatureCollection) => {
         if (cancelled) return;
-        const fitted = geoMercator().fitExtent(
+        const region = projectFeatureCollection(
+          geojson as unknown as {
+            type: "FeatureCollection";
+            features: { properties: { DeNombre?: string } | null }[];
+          },
+        ) as unknown as ExtendedFeatureCollection;
+        const projection = geoMercator().fitExtent(
           [
             [MAP_PADDING, MAP_PADDING],
             [MAP_WIDTH - MAP_PADDING, MAP_HEIGHT - MAP_PADDING],
           ],
-          geojson,
+          region,
         );
-        setProjection(() => fitted);
+        setData({ geojson, projection });
       })
       .catch(() => {
-        // Sin proyección ajustada, `ComposableMap` cae a su default
-        // (`geoEqualEarth`, sin encuadre óptimo) — degradación aceptable,
-        // no un estado de error que valga la pena mostrarle al usuario.
+        // Sin GeoJSON el mapa no se dibuja; la tabla y las barras siguen
+        // mostrando los datos.
       });
     return () => {
       cancelled = true;
     };
   }, [geoUrl]);
 
-  return projection;
+  return data;
 }
 
-/** Ajuste de estilo (2026-08-10): el extremo claro original (`#dcfce7`,
- * casi blanco) no tenía contraste suficiente contra el fondo blanco de la
- * tarjeta en tema claro (`--surface: #ffffff`) — los departamentos "sin
- * datos" se volvían casi invisibles. Se oscureció al tono emerald-200
- * (`#a7f3d0`), sigue siendo claramente el extremo más claro de la rampa
- * pero se distingue del fondo en ambos temas. */
-const LIGHT_GREEN = { r: 167, g: 243, b: 208 };
-const DARK_GREEN = { r: 20, g: 83, b: 45 };
-
-/** Ajuste de estilo (2026-08-10): heatmap continuo a pedido del usuario —
- * "sin datos" (`ratio = 0`) ya no es un gris plano (`NO_DATA_FILL`) sino el
- * extremo más claro de la misma rampa verde, así la intensidad crece de
- * forma continua con la cantidad de encuestas. La única excepción es la
- * celda **suprimida por privacidad**: su conteo real es `null` a propósito
- * (D2) — incluirla en la escala continua revelaría por intensidad de color
- * la magnitud que la supresión existe para ocultar, así que se queda con
- * un color propio (ámbar) fuera de la escala, sin importar el ajuste. */
-function densityColor(ratio: number): string {
-  const r = Math.round(LIGHT_GREEN.r + (DARK_GREEN.r - LIGHT_GREEN.r) * ratio);
-  const g = Math.round(LIGHT_GREEN.g + (DARK_GREEN.g - LIGHT_GREEN.g) * ratio);
-  const b = Math.round(LIGHT_GREEN.b + (DARK_GREEN.b - LIGHT_GREEN.b) * ratio);
-  return `rgb(${r}, ${g}, ${b})`;
+/** Rayas sobre el tono reservado de la rampa: marca la celda protegida. */
+function ProtectedPattern({ id, color }: { id: string; color: string }) {
+  return (
+    <pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill={color} />
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--border-strong)" strokeWidth="2" />
+    </pattern>
+  );
 }
 
-interface HoverState {
-  name: string;
-  option: AggregationOption | undefined;
+interface ActiveState {
+  cell: DepartmentCell;
   x: number;
   y: number;
 }
 
-interface DepartmentMapSvgProps {
-  questionText: string;
-  optionByName: Map<string, AggregationOption>;
-  maxCount: number;
+/** Relleno y borde de cada estado. La rampa (valores) es fija; el resto usa tokens. */
+function geographyStyle(cell: DepartmentCell, patternId: string, active: boolean) {
+  const base = {
+    outline: "none",
+    transition: "fill 150ms ease, stroke-width 150ms ease",
+  };
+  if (!cell.inProject) {
+    return {
+      ...base,
+      fill: "var(--surface-muted)",
+      stroke: "var(--border)",
+      strokeWidth: 0.5,
+      pointerEvents: "none" as const,
+    };
+  }
+  const fill =
+    cell.state === "suppressed"
+      ? `url(#${patternId})`
+      : cell.state === "value"
+        ? (cell.color as string)
+        : "var(--border)";
+  return {
+    ...base,
+    fill,
+    stroke: active ? "var(--text-primary)" : "var(--border-strong)",
+    strokeWidth: active ? 2 : 1,
+    cursor: "default",
+  };
 }
 
-function DepartmentMapSvg({ questionText, optionByName, maxCount }: DepartmentMapSvgProps) {
-  const [hover, setHover] = useState<HoverState | null>(null);
-  const projection = useFittedProjection(GEO_URL);
+interface DepartmentMapSvgProps {
+  title: string;
+  model: DepartmentMapModel;
+  unit: MapUnit;
+  patternId: string;
+  suppressedColor: string;
+}
 
-  function handleMouseMove(e: ReactMouseEvent<HTMLDivElement>) {
-    if (!hover) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    setHover((prev) =>
-      prev ? { ...prev, x: e.clientX - rect.left, y: e.clientY - rect.top } : prev,
-    );
+function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: DepartmentMapSvgProps) {
+  const geo = useProjectGeo(GEO_URL);
+  const [active, setActive] = useState<ActiveState | null>(null);
+
+  function positionFrom(container: HTMLElement | null, clientX: number, clientY: number) {
+    const rect = container?.getBoundingClientRect();
+    return { x: rect ? clientX - rect.left : 0, y: rect ? clientY - rect.top : 0 };
   }
 
-  if (!projection) {
-    // Evita un flash con la proyección default (`geoEqualEarth`, sin
-    // encuadre) mientras se calcula `fitExtent` — mismo tamaño de lienzo,
-    // sin mapa dibujado todavía.
+  function handleMouseMove(e: ReactMouseEvent<HTMLDivElement>) {
+    if (!active) return;
+    const { x, y } = positionFrom(e.currentTarget, e.clientX, e.clientY);
+    setActive((prev) => (prev ? { ...prev, x, y } : prev));
+  }
+
+  if (!geo) {
     return (
       <div
         style={{ width: MAP_WIDTH, height: MAP_HEIGHT, maxWidth: "100%" }}
@@ -122,156 +158,267 @@ function DepartmentMapSvg({ questionText, optionByName, maxCount }: DepartmentMa
     );
   }
 
+  const tip = active ? tooltipText(active.cell, unit) : null;
+
   return (
     <div
-      role="img"
-      aria-label={`Mapa de Colombia — ${questionText}`}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHover(null)}
+      onMouseLeave={() => setActive(null)}
       className="relative w-full shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-surface"
       style={{ maxWidth: MAP_WIDTH }}
     >
       <ComposableMap
-        // Bug encontrado en verificación visual (2026-08-10): pese a que
-        // `@types/react-simple-maps` tipa `projection` como
-        // `(width, height, config) => GeoProjection` (una fábrica),
-        // internamente solo hace `typeof projection === "function" ?
-        // projection : ...` — si es función, la usa **tal cual** como la
-        // proyección ya construida, sin invocarla. Envolverla en
-        // `() => projection` (como sugiere el tipo) rompía todo: el
-        // wrapper no tiene `.stream()`, de ahí "projectionStream is not a
-        // function". Se pasa la instancia de `GeoProjection` directamente.
-        projection={projection as unknown as ProjectionFunction}
+        // `react-simple-maps` usa la función recibida tal cual como proyección
+        // ya construida (no la invoca como fábrica, pese a su tipo).
+        projection={geo.projection as unknown as ProjectionFunction}
         width={MAP_WIDTH}
         height={MAP_HEIGHT}
+        role="group"
+        aria-label={`Mapa de los departamentos del proyecto — ${title}`}
         style={{ width: "100%", height: "auto", display: "block" }}
       >
-        <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies.map((geo) => {
-              const name: string = geo.properties?.DeNombre ?? "";
-              const option = optionByName.get(name);
-              const fill = option?.suppressed
-                ? "var(--warning-fg)"
-                : densityColor((option?.count ?? 0) / maxCount);
+        <defs>
+          {/* Celda protegida: tono más claro de la rampa con rayas, para no
+              depender solo del color (WCAG 1.4.1). */}
+          <ProtectedPattern id={patternId} color={suppressedColor} />
+        </defs>
+        <Geographies geography={geo.geojson}>
+          {({ geographies }) => {
+            // Los de fuera primero, para que el borde resaltado de la región
+            // quede encima.
+            const sorted = [...geographies].sort((a, b) => {
+              const ia = model.cellFor(a.properties?.DeNombre ?? "").inProject ? 1 : 0;
+              const ib = model.cellFor(b.properties?.DeNombre ?? "").inProject ? 1 : 0;
+              return ia - ib;
+            });
+            return sorted.map((g) => {
+              const name: string = g.properties?.DeNombre ?? "";
+              const cell = model.cellFor(name);
+              const isActive = active?.cell.name === cell.name;
+              const style = geographyStyle(cell, patternId, isActive);
+              const label = tooltipText(cell, unit);
+
+              if (!cell.interactive) {
+                return (
+                  <Geography
+                    key={g.rsmKey}
+                    geography={g}
+                    aria-hidden="true"
+                    style={{ default: style, hover: style, pressed: style }}
+                  />
+                );
+              }
+
+              const activate = (clientX: number, clientY: number, target: Element) => {
+                const container = target.closest("div");
+                setActive({ cell, ...positionFrom(container, clientX, clientY) });
+              };
 
               return (
                 <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  aria-label={name}
-                  onMouseEnter={(e) => {
-                    const rect = (
-                      e.currentTarget.ownerSVGElement?.parentElement as HTMLDivElement | null
-                    )?.getBoundingClientRect();
-                    setHover({
-                      name,
-                      option,
-                      x: rect ? e.clientX - rect.left : 0,
-                      y: rect ? e.clientY - rect.top : 0,
-                    });
+                  key={g.rsmKey}
+                  geography={g}
+                  tabIndex={0}
+                  role="img"
+                  aria-label={label ? `${label.title}: ${label.detail}` : name}
+                  onMouseEnter={(e: ReactMouseEvent<SVGPathElement>) =>
+                    activate(e.clientX, e.clientY, e.currentTarget)
+                  }
+                  onMouseLeave={() => setActive(null)}
+                  onFocus={(e: ReactFocusEvent<SVGPathElement>) => {
+                    const box = e.currentTarget.getBoundingClientRect();
+                    activate(box.left + box.width / 2, box.top + box.height / 2, e.currentTarget);
                   }}
-                  onMouseLeave={() => setHover(null)}
-                  style={{
-                    default: {
-                      fill,
-                      fillOpacity: option?.suppressed ? 0.5 : 1,
-                      stroke: "var(--border)",
-                      strokeWidth: 0.5,
-                      outline: "none",
-                      transition: "fill 150ms ease",
-                    },
-                    hover: {
-                      fill,
-                      fillOpacity: option?.suppressed ? 0.5 : 0.85,
-                      stroke: "var(--border)",
-                      strokeWidth: 0.5,
-                      outline: "none",
-                      cursor: "pointer",
-                    },
-                    pressed: {
-                      fill,
-                      stroke: "var(--border)",
-                      strokeWidth: 0.5,
-                      outline: "none",
-                    },
-                  }}
+                  onBlur={() => setActive(null)}
+                  style={{ default: style, hover: style, pressed: style }}
                 />
               );
-            })
-          }
+            });
+          }}
         </Geographies>
       </ComposableMap>
 
-      {hover && (
+      {tip && active && (
+        // El nombre y el valor ya están en el `aria-label` del departamento
+        // enfocado: el tooltip es solo visual.
         <div
-          role="status"
-          aria-live="polite"
-          style={{ left: hover.x + 14, top: hover.y + 14 }}
+          aria-hidden="true"
+          style={{ left: active.x + 14, top: active.y + 14 }}
           className="pointer-events-none absolute z-10 rounded-lg border border-[var(--border)] bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm"
         >
-          <p className="text-sm font-medium text-text-primary">{hover.name}</p>
-          <p className="text-xs text-text-muted">
-            {hover.option?.suppressed
-              ? SUPPRESSED_TOOLTIP_LABEL
-              : hover.option?.count
-                ? `${hover.option.count} encuestas`
-                : "Sin datos"}
-          </p>
+          <p className="text-sm font-medium text-text-primary">{tip.title}</p>
+          <p className="text-xs text-text-muted">{tip.detail}</p>
         </div>
       )}
     </div>
   );
 }
 
+interface MapLegendProps {
+  model: DepartmentMapModel;
+  unit: MapUnit;
+  patternId: string;
+}
+
+function Swatch({ fill, border = "var(--border-strong)" }: { fill: string; border?: string }) {
+  return (
+    <svg aria-hidden="true" width="14" height="14" className="shrink-0">
+      <rect x="0.5" y="0.5" width="13" height="13" rx="2" fill={fill} stroke={border} />
+    </svg>
+  );
+}
+
+function MapLegend({ model, unit, patternId }: MapLegendProps) {
+  const numbers = new Intl.NumberFormat("es-CO", { useGrouping: "always" });
+  const hasSuppressed = model.cells.some((c) => c.state === "suppressed");
+  const hasOutside = model.cells.some((c) => !c.inProject);
+  return (
+    <div className="space-y-2 text-[11px] text-text-muted">
+      {model.legend.steps.length > 0 && (
+        <div>
+          <p className="mb-1">{unit.plural[0].toUpperCase() + unit.plural.slice(1)}</p>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1" role="list">
+            {model.legend.steps.map((s) => (
+              <li key={s.step} className="flex items-center gap-1">
+                <Swatch fill={s.color} />
+                {s.min === s.max
+                  ? numbers.format(s.min)
+                  : `${numbers.format(s.min)}–${numbers.format(s.max)}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <ul className="flex flex-wrap gap-x-3 gap-y-1" role="list">
+        {hasSuppressed && (
+          <li className="flex items-center gap-1">
+            <svg aria-hidden="true" width="14" height="14" className="shrink-0">
+              <defs>
+                <ProtectedPattern id={`${patternId}-legend`} color={model.legend.suppressedColor} />
+              </defs>
+              <rect
+                x="0.5"
+                y="0.5"
+                width="13"
+                height="13"
+                rx="2"
+                fill={`url(#${patternId}-legend)`}
+                stroke="var(--border-strong)"
+              />
+            </svg>
+            Dato protegido
+          </li>
+        )}
+        <li className="flex items-center gap-1">
+          <Swatch fill="var(--border)" />
+          {unit.emptyLabel}
+        </li>
+        {hasOutside && (
+          <li className="flex items-center gap-1">
+            <Swatch fill="var(--surface-muted)" border="var(--border)" />
+            {OUTSIDE_PROJECT_NOTE}
+          </li>
+        )}
+      </ul>
+      {hasSuppressed && <p>{model.legend.suppressedNote}.</p>}
+    </div>
+  );
+}
+
+interface DepartmentDataTableProps {
+  title: string;
+  model: DepartmentMapModel;
+  unit: MapUnit;
+}
+
+/** C10: alternativa textual con todos los departamentos con dato. */
+function DepartmentDataTable({ title, model, unit }: DepartmentDataTableProps) {
+  const rows = accessibleRows(model, unit);
+  if (rows.length === 0) return null;
+  return (
+    <details className="text-xs text-text-muted">
+      <summary className="cursor-pointer select-none text-text-primary">
+        Ver los datos en una tabla
+      </summary>
+      <table className="mt-2 w-full border-collapse text-left">
+        <caption className="sr-only">{title} por departamento</caption>
+        <thead>
+          <tr className="border-b border-[var(--border)]">
+            <th scope="col" className="py-1 pr-2 font-medium">Departamento</th>
+            <th scope="col" className="py-1 font-medium">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.department} className="border-b border-[var(--border)] last:border-0">
+              <th scope="row" className="py-1 pr-2 font-normal text-text-primary">
+                {row.department}
+                {row.note && <span className="text-text-muted"> ({row.note.toLowerCase()})</span>}
+              </th>
+              <td className="py-1">{row.valueText}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
 interface DepartmentMapProps {
   question: DashboardQuestion;
+  /** Fuente del gráfico, para la unidad de los conteos (A2). */
+  source?: ChartSource;
 }
 
 /**
- * Spec 66 (Fase 4, D6): mapa de Colombia + `HorizontalBarChart` lado a lado
- * en el mismo contenedor, a partir de `aggregation.options` de una pregunta
- * `single_choice` cuyas opciones son nombres de departamento (ej.
- * "Departamento" en C2, `chartHint: "map"`).
+ * Spec 66 (D6) + spec 111: mapa de calor de los departamentos del proyecto y
+ * barras horizontales lado a lado, a partir de `aggregation.options` (una
+ * pregunta de departamento o los buckets de una métrica por departamento).
  *
- * Ajuste de estilo (2026-08-10, a pedido del usuario): agregado el
- * `HorizontalBarChart` junto al mapa, reutilizando el mismo componente
- * compartido y estilo que "Perfil del productor" / grupos-territorios (sin
- * ejes, un color por barra, porcentaje al final, sin resaltado de hover) en
- * vez de construir una tercera variante de barra para esta pregunta. El
- * mapa en sí también tuvo su propio ajuste (heatmap continuo, sin borde
- * resaltado — ver notas en `DepartmentMapSvg`).
+ * Spec 111: zoom a la región del proyecto, escala por pasos con leyenda,
+ * estados protegido / sin datos / fuera del proyecto, tooltip por puntero y
+ * teclado con la unidad de la fuente, y tabla accesible con los valores.
  */
-export default function DepartmentMap({ question }: DepartmentMapProps) {
-  if (question.aggregation?.type !== "single_choice") return null;
-  const options = question.aggregation.options;
+export default function DepartmentMap({
+  question,
+  source = { sourceKind: "questions" },
+}: DepartmentMapProps) {
+  const patternId = `map-protected-${useId().replace(/:/g, "")}`;
+  const options: AggregationOption[] =
+    question.aggregation?.type === "single_choice" ? question.aggregation.options : [];
 
-  const optionByName = new Map(options.map((o) => [o.text, o]));
-  const maxCount = Math.max(1, ...options.map((o) => o.count ?? 0));
+  // A lo sumo ~33 departamentos: no vale la pena memoizar.
+  const model = classifyDepartments(
+    options.map((o) => ({ name: o.text, count: o.count, suppressed: o.suppressed })),
+  );
+  const unit = unitFor(source);
+
+  if (question.aggregation?.type !== "single_choice") return null;
 
   const barData = [...options]
     .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
     .map(toBarDatum);
 
   return (
-    <div className="flex w-full flex-col items-start gap-4 sm:flex-row">
-      <DepartmentMapSvg
-        questionText={question.questionText}
-        optionByName={optionByName}
-        maxCount={maxCount}
-      />
-      {/* Ajuste de estilo (2026-08-10): antes se forzaba `height={400}` para
-       * igualar el alto del mapa, pero con solo 6 barras Recharts las
-       * repartía a lo ancho de todo ese alto — quedaban muy separadas. Se
-       * volvió al alto natural de `HorizontalBarChart` (compacto, filas de
-       * 24px) y se centra ese bloque más chico dentro de un contenedor del
-       * alto del mapa, en vez de estirar las barras para llenarlo. */}
-      <div
-        className="flex w-full flex-col justify-center"
-        style={{ minHeight: MAP_HEIGHT }}
-      >
-        <HorizontalBarChart data={barData} yAxisWidth={160} />
+    <figure className="flex w-full flex-col gap-3">
+      <div className="flex w-full flex-col items-start gap-4 sm:flex-row">
+        <div className="flex w-full flex-col gap-2" style={{ maxWidth: MAP_WIDTH }}>
+          <DepartmentMapSvg
+            title={question.questionText}
+            model={model}
+            unit={unit}
+            patternId={patternId}
+            suppressedColor={model.legend.suppressedColor}
+          />
+          <MapLegend model={model} unit={unit} patternId={patternId} />
+        </div>
+        <div className="flex w-full flex-col justify-center" style={{ minHeight: MAP_HEIGHT }}>
+          <HorizontalBarChart data={barData} yAxisWidth={160} />
+        </div>
       </div>
-    </div>
+      <figcaption>
+        <DepartmentDataTable title={question.questionText} model={model} unit={unit} />
+      </figcaption>
+    </figure>
   );
 }
