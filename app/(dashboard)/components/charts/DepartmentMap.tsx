@@ -94,7 +94,40 @@ interface ActiveState {
   cell: DepartmentCell;
   x: number;
   y: number;
+  width: number;
+  height: number;
 }
+
+/**
+ * El tooltip se abre hacia el lado con más espacio para no quedar recortado
+ * por el borde del mapa (hallazgo de TC-111-005 con Caquetá, abajo a la derecha).
+ */
+const TOOLTIP_WIDTH = 200;
+
+function tooltipPosition({ x, y, width, height }: ActiveState): React.CSSProperties {
+  const OFFSET = 14;
+  const EDGE = 4;
+  const fitsRight = x + OFFSET + TOOLTIP_WIDTH <= width - EDGE;
+  const left = fitsRight
+    ? x + OFFSET
+    : Math.max(EDGE, Math.min(x - OFFSET - TOOLTIP_WIDTH, width - EDGE - TOOLTIP_WIDTH));
+  return {
+    left,
+    width: TOOLTIP_WIDTH,
+    ...(y > height / 2 ? { bottom: height - y + OFFSET } : { top: y + OFFSET }),
+  };
+}
+
+/**
+ * «Sin unidades» dentro de la región: `--border-strong` a media opacidad, para
+ * que se distinga de «fuera de la región» (`--surface-muted`) también en modo
+ * oscuro (hallazgo de TC-111-002: con `--border` los dos grises casi se
+ * confundían).
+ */
+const EMPTY_FILL = "var(--border-strong)";
+const EMPTY_FILL_OPACITY = 0.5;
+/** Barras de departamentos fuera de la región: neutras, fuera de la rampa (A3). */
+const OUTSIDE_BAR_FILL = "var(--border-strong)";
 
 /** Relleno y borde de cada estado. La rampa (valores) es fija; el resto usa tokens. */
 function geographyStyle(cell: DepartmentCell, patternId: string, active: boolean) {
@@ -116,10 +149,11 @@ function geographyStyle(cell: DepartmentCell, patternId: string, active: boolean
       ? `url(#${patternId})`
       : cell.state === "value"
         ? (cell.color as string)
-        : "var(--border)";
+        : EMPTY_FILL;
   return {
     ...base,
     fill,
+    fillOpacity: cell.state === "empty" ? EMPTY_FILL_OPACITY : 1,
     stroke: active ? "var(--text-primary)" : "var(--border-strong)",
     strokeWidth: active ? 2 : 1,
     cursor: "default",
@@ -140,7 +174,12 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
 
   function positionFrom(container: HTMLElement | null, clientX: number, clientY: number) {
     const rect = container?.getBoundingClientRect();
-    return { x: rect ? clientX - rect.left : 0, y: rect ? clientY - rect.top : 0 };
+    return {
+      x: rect ? clientX - rect.left : 0,
+      y: rect ? clientY - rect.top : 0,
+      width: rect?.width ?? MAP_WIDTH,
+      height: rect?.height ?? MAP_HEIGHT,
+    };
   }
 
   function handleMouseMove(e: ReactMouseEvent<HTMLDivElement>) {
@@ -243,7 +282,7 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
         // enfocado: el tooltip es solo visual.
         <div
           aria-hidden="true"
-          style={{ left: active.x + 14, top: active.y + 14 }}
+          style={tooltipPosition(active)}
           className="pointer-events-none absolute z-10 rounded-lg border border-[var(--border)] bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm"
         >
           <p className="text-sm font-medium text-text-primary">{tip.title}</p>
@@ -310,7 +349,18 @@ function MapLegend({ model, unit, patternId }: MapLegendProps) {
           </li>
         )}
         <li className="flex items-center gap-1">
-          <Swatch fill="var(--border)" />
+          <svg aria-hidden="true" width="14" height="14" className="shrink-0">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="13"
+              height="13"
+              rx="2"
+              fill={EMPTY_FILL}
+              fillOpacity={EMPTY_FILL_OPACITY}
+              stroke="var(--border-strong)"
+            />
+          </svg>
           {unit.emptyLabel}
         </li>
         {hasOutside && (
@@ -413,7 +463,14 @@ export default function DepartmentMap({
           <MapLegend model={model} unit={unit} patternId={patternId} />
         </div>
         <div className="flex w-full flex-col justify-center" style={{ minHeight: MAP_HEIGHT }}>
-          <HorizontalBarChart data={barData} yAxisWidth={160} />
+          {/* Las barras usan el mismo color que el departamento en el mapa;
+              las de fuera de la región, un neutro (A3). Las protegidas
+              conservan el tratamiento común del dashboard (barra mínima, «—»). */}
+          <HorizontalBarChart
+            data={barData}
+            yAxisWidth={160}
+            colorForEntry={(entry) => model.cellFor(entry.name).color ?? OUTSIDE_BAR_FILL}
+          />
         </div>
       </div>
       <figcaption>
