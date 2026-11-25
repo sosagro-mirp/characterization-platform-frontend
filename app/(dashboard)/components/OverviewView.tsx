@@ -6,7 +6,6 @@ import {
 import { AGE_RANGE_BUCKETS, OVERVIEW_CATEGORY_CODE } from "@/lib/dashboard/filters";
 import { DashboardFilters, DashboardQuestion } from "../types";
 import CropDonut from "./CropDonut";
-import ColombiaMap from "./ColombiaMap";
 import { NumericChart } from "./charts";
 import LikertDivergingMatrix from "./LikertDivergingMatrix";
 import IndexBars from "./IndexBars";
@@ -51,14 +50,13 @@ function wrapNumericAggregation(
 }
 
 /**
- * Vista "Resumen general" (spec 43, Fase 6, layout `1a`; spec 109, P3).
- * Bloques fijos en código: tira de KPIs, dona de cultivos y mapa
- * (`/overview`), rango de edad (`/overview`, decisión del usuario del
- * 2026-11-18: sin métrica P13) y la matriz de demanda digital
- * (`/digital-demand`). Todo lo demás —género, etapas de la cadena,
- * calendario de cosecha…— son los gráficos publicados de la categoría
- * reservada `OVERVIEW`, armados en el constructor: ya no se buscan
- * preguntas por texto.
+ * Vista "Resumen general" (spec 43, Fase 6, layout `1a`; spec 109, P3;
+ * spec 111). Bloques fijos en código: dona de cultivos y rango de edad
+ * (`/overview`, decisión del usuario del 2026-11-18: sin métrica P13) y la
+ * matriz de demanda digital (`/digital-demand`). Todo lo demás —el mapa de
+ * unidades productivas por departamento (spec 111), género, etapas de la
+ * cadena, calendario de cosecha…— son los gráficos publicados de la
+ * categoría reservada `OVERVIEW`, armados en el constructor.
  */
 export default async function OverviewView({ filters }: OverviewViewProps) {
   const [overview, overviewCharts, digitalDemand] = await Promise.all([
@@ -66,12 +64,6 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
     fetchServedChartsOrNull(OVERVIEW_CATEGORY_CODE, filters),
     fetchDigitalDemand(filters),
   ]);
-
-  const departmentCounts = overview.byDepartment.map((bucket) => ({
-    departmentId: bucket.id,
-    departmentName: bucket.name,
-    count: bucket.count,
-  }));
 
   const ageByBucketLabel = new Map(
     digitalDemand.indexByCut.age.map((bucket) => [bucket.label, bucket]),
@@ -103,39 +95,31 @@ export default async function OverviewView({ filters }: OverviewViewProps) {
     );
   }
 
+  const charts = overviewCharts?.charts ?? [];
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
-        <div className={CARD_CLASS}>
-          {cardHeader("Distribución por cultivo", "S1b/S_REG·4-7 · Dona")}
-          <CropDonut data={overview.byCrop} />
-        </div>
-        <div className={CARD_CLASS}>
-          {cardHeader("Cobertura geográfica", "S1a/S_REG·Ubicación · Mapa")}
-          {/* D6 (Fase 6): el mapa se muestra siempre — `/department-counts`
-              (y aquí `/overview`.byDepartment) ya ignora departmentId/townId
-              por diseño del backend (spec 30), así que ocultarlo cuando hay
-              un departamento activo (como hacía page.tsx antes de la Fase 5)
-              no evitaba ningún dato incorrecto: la distribución nacional es
-              la misma con o sin ese filtro. */}
-          <ColombiaMap data={departmentCounts} />
-        </div>
-      </div>
-
-      {/* Spec 109 (P3): edad queda como bloque fijo (sin métrica P13); el
-          resto de la fila son los gráficos publicados de OVERVIEW. */}
+      {/* Spec 111 (A6): el mapa de unidades productivas es un gráfico
+          publicado de OVERVIEW (posición 0, ancho completo) y va primero; la
+          dona de cultivos y la edad (bloques fijos de `/overview`, sin
+          métrica P13) van después, y luego el resto de gráficos publicados. */}
       <ChartsGrid
-        charts={overviewCharts?.charts ?? []}
-        leading={
-          <div className={`${CARD_CLASS} h-full`}>
+        charts={charts}
+        leadingAfter={charts[0]?.chartKind === "map" ? 1 : 0}
+        leading={[
+          <div key="crop" className={`${CARD_CLASS} h-full`}>
+            {cardHeader("Distribución por cultivo", "S1b/S_REG·4-7 · Dona")}
+            <CropDonut data={overview.byCrop} />
+          </div>,
+          <div key="age" className={`${CARD_CLASS} h-full`}>
             {cardHeader("Rango de edad", "S1a/S_REG·16 · Histograma")}
             {overview.age ? (
               <NumericChart question={wrapNumericAggregation(overview.age)} />
             ) : (
               <p className="text-sm text-text-muted">Sin datos</p>
             )}
-          </div>
-        }
+          </div>,
+        ]}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
