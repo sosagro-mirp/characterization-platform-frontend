@@ -304,7 +304,11 @@ function DepartmentMapSvg({ title, model, unit, patternId, suppressedColor }: De
                     setActive(null);
                   }}
                   onKeyDown={(e: ReactKeyboardEvent<SVGPathElement>) => {
-                    if (e.key === "Escape") setActive(null);
+                    if (e.key === "Escape") {
+                      // También olvida el foco para que el puntero no lo reabra.
+                      setFocused(null);
+                      setActive(null);
+                    }
                   }}
                   style={{ default: style, hover: style, pressed: style }}
                 />

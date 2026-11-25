@@ -72,7 +72,6 @@ export const CATEGORICAL_BAR_COLORS = [
   "#F2C230",
 ] as const;
 
-
 /**
  * Spec 111 (A7): rampa secuencial de los mapas por departamento, de claro a
  * oscuro, idéntica en ambos temas (codifica un valor). El índice 0
