@@ -3,6 +3,11 @@
 import Link from "next/link";
 import type { CoverageColumn, UnitRow } from "@/lib/production-units/types";
 import { SELECTION_LABELS } from "@/lib/production-units/selection";
+import {
+  formatProgress,
+  type Progress,
+  type ProgressSummary,
+} from "@/lib/production-units/progress";
 import { StatusChip } from "@/components/common/StatusChip";
 
 interface ProductionUnitsTableProps {
@@ -11,6 +16,33 @@ interface ProductionUnitsTableProps {
   columnFilters: Record<string, string>;
   onColumnFilter: (key: string, value: string) => void;
   onDecide: (row: UnitRow) => void;
+  /** Spec 112 — avance sobre las filas filtradas. */
+  progress?: ProgressSummary;
+}
+
+const EMPTY_PROGRESS: ProgressSummary = {
+  global: { done: 0, possible: 0, percent: null },
+  byColumn: {},
+  byRow: {},
+};
+
+function ProgressCell({ value }: { value: Progress | undefined }) {
+  if (!value || value.percent === null) {
+    return <span className="text-[var(--text-muted)]">—</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+      <progress
+        max={1}
+        value={value.percent}
+        aria-label={`Avance ${formatProgress(value)}`}
+        className="h-2 w-16 accent-[var(--brand)]"
+      />
+      <span className="tabular-nums text-[var(--text-muted)]">
+        {formatProgress(value)}
+      </span>
+    </span>
+  );
 }
 
 const FIXED: { key: string; label: string }[] = [
@@ -35,6 +67,7 @@ export function ProductionUnitsTable({
   columnFilters,
   onColumnFilter,
   onDecide,
+  progress = EMPTY_PROGRESS,
 }: ProductionUnitsTableProps) {
   return (
     <div className="overflow-auto rounded-md border border-[var(--border)] bg-[var(--surface)] max-h-[60vh]">
@@ -48,6 +81,7 @@ export function ProductionUnitsTable({
             ))}
             <th className="px-3 py-2.5 text-left align-top">Decisión</th>
             <th className="px-3 py-2.5 text-left align-top">Encuestas</th>
+            <th className="px-3 py-2.5 text-left align-top">Avance</th>
             {columns.map((c) => (
               <th
                 key={c.instrumentId}
@@ -73,6 +107,7 @@ export function ProductionUnitsTable({
             ))}
             <th />
             <th />
+            <th />
             {columns.map((c) => (
               <th key={c.instrumentId} />
             ))}
@@ -82,7 +117,7 @@ export function ProductionUnitsTable({
           {rows.length === 0 && (
             <tr>
               <td
-                colSpan={FIXED.length + 2 + columns.length}
+                colSpan={FIXED.length + 3 + columns.length}
                 className="px-6 py-12 text-center text-sm text-[var(--text-muted)]"
               >
                 Ninguna finca cumple los filtros.
@@ -150,6 +185,9 @@ export function ProductionUnitsTable({
                   </span>
                 ) : null}
               </td>
+              <td className="px-3 py-2.5">
+                <ProgressCell value={progress.byRow[row.farmId]} />
+              </td>
               {columns.map((c) => (
                 <td key={c.instrumentId} className="px-3 py-2.5">
                   <StatusChip cell={row.coverage[c.instrumentId]} />
@@ -158,6 +196,31 @@ export function ProductionUnitsTable({
             </tr>
           ))}
         </tbody>
+        <tfoot className="sticky bottom-0 border-t border-[var(--border)] bg-[var(--surface-muted)] text-[11px] font-medium text-[var(--text-primary)]">
+          <tr>
+            <th
+              scope="row"
+              colSpan={FIXED.length + 2}
+              className="px-3 py-2 text-left"
+            >
+              Avance por instrumento (filas filtradas)
+            </th>
+            <td className="px-3 py-2">
+              <ProgressCell value={progress.global} />
+            </td>
+            {columns.map((c) => (
+              <td key={c.instrumentId} className="px-3 py-2 whitespace-nowrap">
+                {formatProgress(
+                  progress.byColumn[c.instrumentId] ?? {
+                    done: 0,
+                    possible: 0,
+                    percent: null,
+                  },
+                )}
+              </td>
+            ))}
+          </tr>
+        </tfoot>
       </table>
     </div>
   );

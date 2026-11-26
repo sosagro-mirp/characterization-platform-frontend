@@ -37,6 +37,10 @@ function detail(cell: CoverageCell): string | null {
   ) {
     return `${cell.coveredFarmers} de ${cell.totalFarmers}`;
   }
+  // Spec 112 — en cultivos, un parcial dice cuántos de cuántos.
+  if (cell.status === "parcial" && cell.cropUnits && cell.possible) {
+    return `${cell.done ?? 0} de ${cell.possible}`;
+  }
   return null;
 }
 

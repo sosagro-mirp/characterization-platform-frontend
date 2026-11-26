@@ -11,6 +11,10 @@ import {
   exportFileName,
 } from "@/lib/production-units/filters";
 import {
+  formatProgress,
+  summarizeProgress,
+} from "@/lib/production-units/progress";
+import {
   NO_DECISION_LABEL,
   SELECTION_LABELS,
 } from "@/lib/production-units/selection";
@@ -159,6 +163,17 @@ export default function ProductionUnitsPage() {
     ],
   );
 
+  // Spec 112 — el avance sigue a los filtros; el cultivo filtrado recorta farm_crop.
+  const progress = useMemo(
+    () =>
+      summarizeProgress(
+        filtered,
+        (data?.instruments ?? []).map((c) => c.instrumentId),
+        { cropIds: cropId ? [cropId] : [] },
+      ),
+    [filtered, data, cropId],
+  );
+
   const toggleStatus = (status: CoverageStatus) =>
     setStatuses((current) =>
       current.includes(status)
@@ -184,6 +199,7 @@ export default function ProductionUnitsPage() {
           columns: columnFilters,
           selection: selectionFilter,
         },
+        cropId ? [cropId] : [],
       );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -224,6 +240,27 @@ export default function ProductionUnitsPage() {
             ? `${filtered.length} de ${data.summary.farms} fincas · ${data.summary.totalSurveys} encuestas`
             : "Cobertura de instrumentos por finca, según el alcance de cada uno."}
         </p>
+        {data && (
+          <p
+            className="mt-1 flex items-center gap-2 text-sm text-[var(--text-primary)]"
+            data-testid="global-progress"
+          >
+            <span className="font-medium">Avance global:</span>
+            <progress
+              max={1}
+              value={progress.global.percent ?? 0}
+              hidden={progress.global.percent === null}
+              aria-label={`Avance global ${formatProgress(progress.global)}`}
+              className="h-2 w-32 accent-[var(--brand)]"
+            />
+            <span className="tabular-nums">
+              {formatProgress(progress.global)}
+            </span>
+            <span className="text-xs text-[var(--text-muted)]">
+              encuestas realizadas / posibles de lo filtrado
+            </span>
+          </p>
+        )}
       </div>
 
       {error && (
@@ -419,6 +456,7 @@ export default function ProductionUnitsPage() {
               setColumnFilters((current) => ({ ...current, [key]: value }))
             }
             onDecide={setDeciding}
+            progress={progress}
           />
 
           <p className="text-[11px] text-[var(--text-muted)]">

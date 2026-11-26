@@ -3,8 +3,20 @@
 export type ScopeLevel = "farmer" | "farm" | "farm_crop";
 export type CoverageStatus = "aplicado" | "parcial" | "falta" | "no_aplica";
 
+/** Spec 112 — cultivo aplicable de la finca y si quedó cubierto. */
+export interface CropUnit {
+  farmCropId: string;
+  cropId: string;
+  covered: boolean;
+}
+
 export interface CoverageCell {
   status: CoverageStatus;
+  /** Spec 112 — encuestas posibles y realizadas (0 de 0 si no aplica). */
+  possible?: number;
+  done?: number;
+  /** Spec 112 — solo en `farm_crop`. */
+  cropUnits?: CropUnit[];
   surveyId?: string | null;
   surveyCount?: number;
   coveredFarmers?: number;

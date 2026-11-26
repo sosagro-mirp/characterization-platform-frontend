@@ -12,10 +12,13 @@ export function getProductionUnits(): Promise<ProductionUnitsResponse> {
 export function exportProductionUnits(
   farmIds: string[],
   filters: Record<string, unknown>,
+  progressCropIds: string[] = [],
 ): Promise<Blob> {
   return apiClient.post<Blob>(
     "/api/production-units/export",
-    { farmIds, filters },
+    progressCropIds.length
+      ? { farmIds, filters, progressCropIds }
+      : { farmIds, filters },
     { blob: true },
   );
 }
